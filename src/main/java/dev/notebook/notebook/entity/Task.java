@@ -6,13 +6,17 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.time.LocalDate;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Getter
 @Setter
 @Entity
 @Table(name = "tasks")
+@NoArgsConstructor
+@AllArgsConstructor
 public class Task {
 
   @Id
@@ -22,9 +26,6 @@ public class Task {
   private String description;
   private LocalDate dueDate;
   private boolean completed;
-
-  public Task() {
-  }
 
   public Task(String title, String description, LocalDate dueDate, boolean completed) {
     this.title = title;

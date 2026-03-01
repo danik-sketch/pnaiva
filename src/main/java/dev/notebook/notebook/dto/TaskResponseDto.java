@@ -1,11 +1,15 @@
 package dev.notebook.notebook.dto;
 
 import java.time.LocalDate;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Setter
 @Getter
+@NoArgsConstructor
+@AllArgsConstructor
 public class TaskResponseDto {
 
   private Long id;
@@ -13,20 +17,5 @@ public class TaskResponseDto {
   private String description;
   private LocalDate dueDate;
   private boolean completed;
-
-  public TaskResponseDto() {
-  }
-
-  public TaskResponseDto(Long id,
-      String title,
-      String description,
-      LocalDate dueDate,
-      boolean completed) {
-    this.id = id;
-    this.title = title;
-    this.description = description;
-    this.dueDate = dueDate;
-    this.completed = completed;
-  }
 
 }

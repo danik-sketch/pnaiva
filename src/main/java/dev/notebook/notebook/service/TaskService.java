@@ -18,6 +18,15 @@ public class TaskService {
     this.repository = repository;
   }
 
+  public List<TaskResponseDto> getAll() {
+    List<Task> tasks = repository.findAll();
+    List<TaskResponseDto> dtos = new ArrayList<>();
+    for (Task task : tasks) {
+      dtos.add(TaskMapper.toDto(task));
+    }
+    return dtos;
+  }
+
   public TaskResponseDto getById(Long id) {
     Task task = repository.findById(id)
         .orElseThrow(() -> new IllegalArgumentException("Task not found"));

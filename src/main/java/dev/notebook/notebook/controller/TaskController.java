@@ -42,7 +42,6 @@ public class TaskController {
       return service.getByCompleted(completed);
     }
 
-    throw new IllegalArgumentException(
-        "Provide at least one parameter: completed, dueDate, or title");
+    return service.getAll();
   }
 }
