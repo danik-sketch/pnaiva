@@ -7,13 +7,11 @@ import org.jspecify.annotations.NonNull;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
-@SuppressWarnings("checkstyle:MissingJavadocType")
 @Component
 public class DataLoader implements CommandLineRunner {
 
   private final TaskRepository repository;
 
-  @SuppressWarnings("checkstyle:MissingJavadocMethod")
   public DataLoader(TaskRepository repository) {
     this.repository = repository;
   }

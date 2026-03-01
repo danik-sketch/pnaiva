@@ -24,6 +24,24 @@ public class TaskService {
     return TaskMapper.toDto(task);
   }
 
+  public List<TaskResponseDto> getByTitle(String title) {
+    List<Task> tasks = repository.findByTitle(title);
+    List<TaskResponseDto> dtos = new ArrayList<>();
+    for (Task task : tasks) {
+      dtos.add(TaskMapper.toDto(task));
+    }
+    return dtos;
+  }
+
+  public List<TaskResponseDto> getByDescription(String description) {
+    List<Task> tasks = repository.findByDescription(description);
+    List<TaskResponseDto> dtos = new ArrayList<>();
+    for (Task task : tasks) {
+      dtos.add(TaskMapper.toDto(task));
+    }
+    return dtos;
+  }
+
   public List<TaskResponseDto> getByCompleted(boolean completed) {
     List<Task> tasks = repository.findByCompleted(completed);
     List<TaskResponseDto> dtos = new ArrayList<>();

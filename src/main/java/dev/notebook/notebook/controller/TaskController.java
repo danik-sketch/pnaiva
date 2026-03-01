@@ -26,15 +26,23 @@ public class TaskController {
   }
 
   @GetMapping
-  public List<TaskResponseDto> getTasks(@RequestParam(required = false) Boolean completed,
-      @RequestParam(required = false) String dueDate) {
+  public List<TaskResponseDto> getTasks(
+      @RequestParam(required = false) String title,
+      @RequestParam(required = false) String description,
+      @RequestParam(required = false) String dueDate,
+      @RequestParam(required = false) Boolean completed) {
 
-    if (completed != null) {
-      return service.getByCompleted(completed);
+    if (title != null) {
+      return service.getByTitle(title);
+    } else if (description != null) {
+      return service.getByDescription(description);
     } else if (dueDate != null) {
       return service.getByDueDate(LocalDate.parse(dueDate));
+    } else if (completed != null) {
+      return service.getByCompleted(completed);
     }
 
-    throw new IllegalArgumentException("Provide completed or dueDate parameter");
+    throw new IllegalArgumentException(
+        "Provide at least one parameter: completed, dueDate, or title");
   }
 }

@@ -99,19 +99,24 @@
         <plugins>
 
 
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-checkstyle-plugin</artifactId>
-                <version>3.3.1</version>
-                <configuration>
-                    <configLocation>google_checks.xml</configLocation>
-                    <consoleOutput>true</consoleOutput>
-                    <propertyExpansion>
-                      checkstyle.javadoc.type.severity=ignore
-                      checkstyle.javadoc.method.severity=ignore
-                    </propertyExpansion>
-                </configuration>
-            </plugin>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-checkstyle-plugin</artifactId>
+            <version>3.3.1</version>
+            <dependencies>
+              <dependency>
+                <groupId>com.puppycrawl.tools</groupId>
+                <artifactId>checkstyle</artifactId>
+                <version>10.12.4</version>
+              </dependency>
+            </dependencies>
+            <configuration>
+              <configLocation>google_checks.xml</configLocation>
+              <consoleOutput>true</consoleOutput>
+              <failsOnError>true</failsOnError>
+              <suppressionsLocation>checkstyle-suppressions.xml</suppressionsLocation>
+            </configuration>
+          </plugin>
 
 
             <plugin>

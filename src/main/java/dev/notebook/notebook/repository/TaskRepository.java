@@ -9,8 +9,12 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface TaskRepository extends JpaRepository<Task, Long> {
 
-  List<Task> findByCompleted(boolean completed);
+  List<Task> findByTitle(String title);
+
+  List<Task> findByDescription(String description);
 
   List<Task> findByDueDate(LocalDate dueDate);
+
+  List<Task> findByCompleted(boolean completed);
 
 }
