@@ -1,3 +1,5 @@
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=danik-sketch_pnaiva&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=danik-sketch_pnaiva)
+
 # Ежедневник / To-Do List
 
 Простое консольное приложение для управления списком задач. Помогает не забывать о важных делах в течение дня.
