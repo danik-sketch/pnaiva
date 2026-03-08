@@ -1,20 +1,37 @@
 package dev.notebook.notebook.mapper;
 
 import dev.notebook.notebook.dto.TaskResponseDto;
+import dev.notebook.notebook.entity.Category;
+import dev.notebook.notebook.entity.Reminder;
 import dev.notebook.notebook.entity.Task;
+import java.util.stream.Collectors;
 
-public final class TaskMapper {
-
-  private TaskMapper() {
-  }
+public class TaskMapper {
 
   public static TaskResponseDto toDto(Task task) {
-    return new TaskResponseDto(
-        task.getId(),
-        task.getTitle(),
-        task.getDescription(),
-        task.getDueDate(),
-        task.isCompleted()
-    );
+    TaskResponseDto dto = new TaskResponseDto();
+    dto.setId(task.getId());
+    dto.setTitle(task.getTitle());
+    dto.setDescription(task.getDescription());
+    dto.setDueDate(task.getDueDate());
+    dto.setCompleted(task.isCompleted());
+
+    if (task.getProject() != null) {
+      dto.setProjectName(task.getProject().getName());
+    }
+
+    if (task.getCategories() != null) {
+      dto.setCategories(task.getCategories().stream()
+          .map(Category::getTitle)
+          .collect(Collectors.toList()));
+    }
+
+    if (task.getReminders() != null) {
+      dto.setReminders(task.getReminders().stream()
+          .map(Reminder::getMessage)
+          .collect(Collectors.toList()));
+    }
+
+    return dto;
   }
 }
