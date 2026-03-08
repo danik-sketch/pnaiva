@@ -18,7 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
+@Transactional
 public class ProjectService {
 
   private static final String USER_NOT_FOUND_MESSAGE = "User not found";
@@ -88,54 +88,35 @@ public class ProjectService {
     return result;
   }
 
-  public void createProjectWithTasksNonTransactional(Long userId) {
+  private void saveProjectAndTasks(Long userId, String projectName, String projectDesc, int taskCount) {
     User user = userRepository.findById(userId)
         .orElseThrow(() -> new IllegalArgumentException(USER_NOT_FOUND_MESSAGE));
 
     Project project = new Project();
-    project.setName("Non-Transactional Project");
-    project.setDescription("Partial save demo");
+    project.setName(projectName);
+    project.setDescription(projectDesc);
     project.setUser(user);
     project = projectRepository.save(project);
 
-    Task firstTask = new Task();
-    firstTask.setTitle("First task");
-    firstTask.setDescription("Will be persisted before failure");
-    firstTask.setDueDate(LocalDateTime.now().plusDays(1));
-    firstTask.setCompleted(false);
-    firstTask.setProject(project);
-    taskRepository.save(firstTask);
+    for (int i = 1; i <= taskCount; i++) {
+      Task task = new Task();
+      task.setTitle(projectName + " - Task " + i);
+      task.setDescription("Task part of " + projectDesc);
+      task.setDueDate(LocalDateTime.now().plusDays(i));
+      task.setCompleted(false);
+      task.setProject(project);
+      taskRepository.save(task);
+    }
 
-    throw new IllegalStateException("Intentional failure without @Transactional");
+    throw new IllegalStateException("Intentional failure for: " + projectName);
+  }
+
+  public void createProjectWithTasksNonTransactional(Long userId) {
+    saveProjectAndTasks(userId, "Non-Transactional Project", "Partial save demo", 1);
   }
 
   @Transactional
   public void createProjectWithTasksTransactional(Long userId) {
-    User user = userRepository.findById(userId)
-        .orElseThrow(() -> new IllegalArgumentException(USER_NOT_FOUND_MESSAGE));
-
-    Project project = new Project();
-    project.setName("Transactional Project");
-    project.setDescription("Rollback demo");
-    project.setUser(user);
-    project = projectRepository.save(project);
-
-    Task firstTask = new Task();
-    firstTask.setTitle("First transactional task");
-    firstTask.setDescription("Will be rolled back");
-    firstTask.setDueDate(LocalDateTime.now().plusDays(1));
-    firstTask.setCompleted(false);
-    firstTask.setProject(project);
-    taskRepository.save(firstTask);
-
-    Task secondTask = new Task();
-    secondTask.setTitle("Second transactional task");
-    secondTask.setDescription("Will be rolled back too");
-    secondTask.setDueDate(LocalDateTime.now().plusDays(2));
-    secondTask.setCompleted(false);
-    secondTask.setProject(project);
-    taskRepository.save(secondTask);
-
-    throw new IllegalStateException("Intentional failure with @Transactional");
+    saveProjectAndTasks(userId, "Transactional Project", "Rollback demo", 2);
   }
 }

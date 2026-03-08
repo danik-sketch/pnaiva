@@ -50,8 +50,7 @@ public class ProjectController {
       projectService.createProjectWithTasksNonTransactional(userId);
     } catch (IllegalStateException e) {
       return "ОШИБКА: " + e.getMessage()
-          + ". Проверь БД: Проект 'Non-Transactional Project' и одна задача УЖЕ ТАМ, "
-          + "хотя метод упал.";
+          + ". Проверь БД: Проект и одна задача уже там.";
     }
     return "Успех";
   }
@@ -62,7 +61,7 @@ public class ProjectController {
       projectService.createProjectWithTasksTransactional(userId);
     } catch (IllegalStateException e) {
       return "ОШИБКА: " + e.getMessage()
-          + ". Проверь БД: В базе ПУСТО. Проект и задачи откатились (Rollback).";
+          + ". Проверь БД: В базе ПУСТО. Проект и задачи откатились.";
     }
     return "Успех";
   }
