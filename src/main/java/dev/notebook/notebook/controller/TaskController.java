@@ -53,6 +53,11 @@ public class TaskController {
     return service.getAll();
   }
 
+  @GetMapping("/optimized")
+  public List<TaskResponseDto> getTasksOptimized() {
+    return service.getAllOptimized();
+  }
+
   @GetMapping("/{id}")
   public TaskResponseDto getById(@PathVariable Long id) {
     return service.getById(id);
@@ -65,8 +70,8 @@ public class TaskController {
   }
 
   @PutMapping("/{id}")
-  public TaskResponseDto update(@PathVariable Long id, @RequestBody TaskRequestDto requestDto) {
-    return service.update(id, requestDto);
+  public TaskResponseDto update(@PathVariable Long id, @RequestBody TaskRequestDto dto) {
+    return service.update(id, dto);
   }
 
   @DeleteMapping("/{id}")

@@ -30,14 +30,14 @@ public class TaskService {
     return TaskMapper.toDto(savedTask);
   }
 
-  public TaskResponseDto update(Long id, TaskRequestDto taskDetails) {
+  public TaskResponseDto update(Long id, TaskRequestDto dto) {
     Task task = repository.findById(id)
         .orElseThrow(() -> new IllegalArgumentException("Task not found"));
 
-    task.setTitle(taskDetails.title());
-    task.setDescription(taskDetails.description());
-    task.setDueDate(taskDetails.dueDate());
-    task.setCompleted(taskDetails.completed());
+    task.setTitle(dto.title());
+    task.setDescription(dto.description());
+    task.setDueDate(dto.dueDate());
+    task.setCompleted(dto.completed());
 
     return TaskMapper.toDto(repository.save(task));
   }
@@ -47,6 +47,7 @@ public class TaskService {
   }
 
   public List<TaskResponseDto> getAll() {
+    // Демонстрация N+1: используется ленивое получение связей
     List<Task> tasks = repository.findAll();
     List<TaskResponseDto> dtos = new ArrayList<>();
     for (Task task : tasks) {
@@ -90,6 +91,15 @@ public class TaskService {
 
   public List<TaskResponseDto> getByDueDate(LocalDate dueDate) {
     List<Task> tasks = repository.findByDueDate(dueDate.atStartOfDay());
+    List<TaskResponseDto> dtos = new ArrayList<>();
+    for (Task task : tasks) {
+      dtos.add(TaskMapper.toDto(task));
+    }
+    return dtos;
+  }
+
+  public List<TaskResponseDto> getAllOptimized() {
+    List<Task> tasks = repository.findAllWithRelations();
     List<TaskResponseDto> dtos = new ArrayList<>();
     for (Task task : tasks) {
       dtos.add(TaskMapper.toDto(task));

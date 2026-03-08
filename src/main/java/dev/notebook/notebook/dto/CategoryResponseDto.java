@@ -1,6 +1,5 @@
 package dev.notebook.notebook.dto;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -13,14 +12,10 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 @Data
-public class TaskResponseDto {
+public class CategoryResponseDto {
 
   private Long id;
   private String title;
-  private String description;
-  private LocalDateTime dueDate;
-  private boolean completed;
-  private String projectName;
-  private List<String> categories;
-  private List<String> reminders;
+  private List<String> tasks;
 }
+
