@@ -1,5 +1,6 @@
 package dev.notebook.notebook.controller;
 
+import dev.notebook.notebook.dto.TaskRequestDto;
 import dev.notebook.notebook.dto.TaskResponseDto;
 import dev.notebook.notebook.entity.Task;
 import dev.notebook.notebook.service.TaskService;
@@ -59,13 +60,13 @@ public class TaskController {
 
   @PostMapping
   @ResponseStatus(HttpStatus.CREATED)
-  public TaskResponseDto create(@RequestBody Task task) {
-    return service.create(task);
+  public TaskResponseDto create(@RequestBody TaskRequestDto requestDto) {
+    return service.create(requestDto);
   }
 
   @PutMapping("/{id}")
-  public TaskResponseDto update(@PathVariable Long id, @RequestBody Task task) {
-    return service.update(id, task);
+  public TaskResponseDto update(@PathVariable Long id, @RequestBody TaskRequestDto requestDto) {
+    return service.update(id, requestDto);
   }
 
   @DeleteMapping("/{id}")

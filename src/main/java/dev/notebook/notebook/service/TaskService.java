@@ -1,11 +1,11 @@
 package dev.notebook.notebook.service;
 
+import dev.notebook.notebook.dto.TaskRequestDto;
 import dev.notebook.notebook.dto.TaskResponseDto;
 import dev.notebook.notebook.entity.Task;
 import dev.notebook.notebook.mapper.TaskMapper;
 import dev.notebook.notebook.repository.TaskRepository;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import org.springframework.stereotype.Service;
@@ -19,19 +19,25 @@ public class TaskService {
     this.repository = repository;
   }
 
-  public TaskResponseDto create(Task task) {
+  public TaskResponseDto create(TaskRequestDto dto) {
+    Task task = new Task();
+    task.setTitle(dto.title());
+    task.setDescription(dto.description());
+    task.setDueDate(dto.dueDate());
+    task.setCompleted(dto.completed());
+
     Task savedTask = repository.save(task);
     return TaskMapper.toDto(savedTask);
   }
 
-  public TaskResponseDto update(Long id, Task taskDetails) {
+  public TaskResponseDto update(Long id, TaskRequestDto taskDetails) {
     Task task = repository.findById(id)
         .orElseThrow(() -> new IllegalArgumentException("Task not found"));
 
-    task.setTitle(taskDetails.getTitle());
-    task.setDescription(taskDetails.getDescription());
-    task.setDueDate(taskDetails.getDueDate());
-    task.setCompleted(taskDetails.isCompleted());
+    task.setTitle(taskDetails.title());
+    task.setDescription(taskDetails.description());
+    task.setDueDate(taskDetails.dueDate());
+    task.setCompleted(taskDetails.completed());
 
     return TaskMapper.toDto(repository.save(task));
   }

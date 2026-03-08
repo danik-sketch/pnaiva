@@ -16,6 +16,4 @@ public record TaskRequestDto(
     boolean completed,
 
     Long projectId
-) {
-
-}
+) {}
