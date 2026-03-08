@@ -9,13 +9,16 @@ import java.util.ArrayList;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class UserService {
 
   private final UserRepository userRepository;
 
+  @Transactional
   public UserResponseDto create(UserRequestDto dto) {
     User user = new User();
     user.setUsername(dto.username());
@@ -25,6 +28,7 @@ public class UserService {
     return UserMapper.toDto(saved);
   }
 
+  @Transactional
   public UserResponseDto update(Long id, UserRequestDto dto) {
     User user = userRepository.findById(id)
         .orElseThrow(() -> new IllegalArgumentException("User not found"));
@@ -37,6 +41,7 @@ public class UserService {
     return UserMapper.toDto(saved);
   }
 
+  @Transactional
   public void delete(Long id) {
     userRepository.deleteById(id);
   }

@@ -9,13 +9,16 @@ import java.util.ArrayList;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class CategoryService {
 
   private final CategoryRepository categoryRepository;
 
+  @Transactional
   public CategoryResponseDto create(CategoryRequestDto dto) {
     Category category = new Category();
     category.setTitle(dto.title());
@@ -23,6 +26,7 @@ public class CategoryService {
     return CategoryMapper.toDto(saved);
   }
 
+  @Transactional
   public CategoryResponseDto update(Long id, CategoryRequestDto dto) {
     Category category = categoryRepository.findById(id)
         .orElseThrow(() -> new IllegalArgumentException("Category not found"));
@@ -32,6 +36,7 @@ public class CategoryService {
     return CategoryMapper.toDto(saved);
   }
 
+  @Transactional
   public void delete(Long id) {
     categoryRepository.deleteById(id);
   }

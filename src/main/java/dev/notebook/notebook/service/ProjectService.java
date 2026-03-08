@@ -9,21 +9,23 @@ import dev.notebook.notebook.mapper.ProjectMapper;
 import dev.notebook.notebook.repository.ProjectRepository;
 import dev.notebook.notebook.repository.TaskRepository;
 import dev.notebook.notebook.repository.UserRepository;
-import jakarta.transaction.Transactional;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class ProjectService {
 
   private final ProjectRepository projectRepository;
   private final UserRepository userRepository;
   private final TaskRepository taskRepository;
 
+  @Transactional
   public ProjectResponseDto create(ProjectRequestDto dto) {
     User user = userRepository.findById(dto.userId())
         .orElseThrow(() -> new IllegalArgumentException("User not found"));
@@ -37,6 +39,7 @@ public class ProjectService {
     return ProjectMapper.toDto(saved);
   }
 
+  @Transactional
   public ProjectResponseDto update(Long id, ProjectRequestDto dto) {
     Project project = projectRepository.findById(id)
         .orElseThrow(() -> new IllegalArgumentException("Project not found"));
@@ -54,6 +57,7 @@ public class ProjectService {
     return ProjectMapper.toDto(saved);
   }
 
+  @Transactional
   public void delete(Long id) {
     projectRepository.deleteById(id);
   }
@@ -82,41 +86,27 @@ public class ProjectService {
     return result;
   }
 
-  /**
-   * Метод, демонстрирующий частичное сохранение без @Transactional.
-   * После создания проекта и первой задачи выбрасывается исключение,
-   * данные частично останутся в БД.
-   */
   public void createProjectWithTasksNonTransactional(Long userId) {
     User user = userRepository.findById(userId)
         .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
     Project project = new Project();
     project.setName("Non-Transactional Project");
-    project.setDescription("Частичное сохранение без @Transactional");
+    project.setDescription("Partial save demo");
     project.setUser(user);
     project = projectRepository.save(project);
 
     Task firstTask = new Task();
     firstTask.setTitle("First task");
-    firstTask.setDescription("Создана до ошибки");
+    firstTask.setDescription("Will be persisted before failure");
     firstTask.setDueDate(LocalDateTime.now().plusDays(1));
     firstTask.setCompleted(false);
     firstTask.setProject(project);
     taskRepository.save(firstTask);
 
-    // Искусственно вызываем ошибку после части сохранений
-    if (true) {
-      throw new RuntimeException("Искусственная ошибка без @Transactional");
-    }
-
-    // Вторая задача никогда не будет сохранена
+    throw new RuntimeException("Intentional failure without @Transactional");
   }
 
-  /**
-   * Метод, демонстрирующий полное откатывание с @Transactional.
-   * При возникновении исключения ни проект, ни задачи не будут сохранены.
-   */
   @Transactional
   public void createProjectWithTasksTransactional(Long userId) {
     User user = userRepository.findById(userId)
@@ -124,13 +114,13 @@ public class ProjectService {
 
     Project project = new Project();
     project.setName("Transactional Project");
-    project.setDescription("Полное откатывание с @Transactional");
+    project.setDescription("Rollback demo");
     project.setUser(user);
     project = projectRepository.save(project);
 
     Task firstTask = new Task();
     firstTask.setTitle("First transactional task");
-    firstTask.setDescription("Будет откатена при ошибке");
+    firstTask.setDescription("Will be rolled back");
     firstTask.setDueDate(LocalDateTime.now().plusDays(1));
     firstTask.setCompleted(false);
     firstTask.setProject(project);
@@ -138,16 +128,12 @@ public class ProjectService {
 
     Task secondTask = new Task();
     secondTask.setTitle("Second transactional task");
-    secondTask.setDescription("Тоже будет откатена");
+    secondTask.setDescription("Will be rolled back too");
     secondTask.setDueDate(LocalDateTime.now().plusDays(2));
     secondTask.setCompleted(false);
     secondTask.setProject(project);
     taskRepository.save(secondTask);
 
-    // Искусственно вызываем ошибку — вся транзакция откатывается
-    if (true) {
-      throw new RuntimeException("Искусственная ошибка с @Transactional");
-    }
+    throw new RuntimeException("Intentional failure with @Transactional");
   }
-
 }

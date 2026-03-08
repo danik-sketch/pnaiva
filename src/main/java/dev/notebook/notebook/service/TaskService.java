@@ -9,8 +9,10 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
+@Transactional(readOnly = true)
 public class TaskService {
 
   private final TaskRepository repository;
@@ -19,6 +21,7 @@ public class TaskService {
     this.repository = repository;
   }
 
+  @Transactional
   public TaskResponseDto create(TaskRequestDto dto) {
     Task task = new Task();
     task.setTitle(dto.title());
@@ -30,6 +33,7 @@ public class TaskService {
     return TaskMapper.toDto(savedTask);
   }
 
+  @Transactional
   public TaskResponseDto update(Long id, TaskRequestDto dto) {
     Task task = repository.findById(id)
         .orElseThrow(() -> new IllegalArgumentException("Task not found"));
@@ -42,6 +46,7 @@ public class TaskService {
     return TaskMapper.toDto(repository.save(task));
   }
 
+  @Transactional
   public void delete(Long id) {
     repository.deleteById(id);
   }

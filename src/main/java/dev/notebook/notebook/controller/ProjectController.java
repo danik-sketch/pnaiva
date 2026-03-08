@@ -44,6 +44,16 @@ public class ProjectController {
     return projectService.create(dto);
   }
 
+  @PostMapping("/non-transactional/{userId}")
+  public void demoNonTransactional(@PathVariable Long userId) {
+    projectService.createProjectWithTasksNonTransactional(userId);
+  }
+
+  @PostMapping("/transactional/{userId}")
+  public void demoTransactional(@PathVariable Long userId) {
+    projectService.createProjectWithTasksTransactional(userId);
+  }
+
   @PutMapping("/{id}")
   public ProjectResponseDto update(@PathVariable Long id, @RequestBody ProjectRequestDto dto) {
     return projectService.update(id, dto);
@@ -54,17 +64,4 @@ public class ProjectController {
   public void delete(@PathVariable Long id) {
     projectService.delete(id);
   }
-
-  @PostMapping("/withot-transactional/{userId}")
-  @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-  public void createProjectWithTasksNonTransactional(@PathVariable Long userId) {
-    projectService.createProjectWithTasksNonTransactional(userId);
-  }
-
-  @PostMapping("/with-transactional/{userId}")
-  @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-  public void createProjectWithTasksTransactional(@PathVariable Long userId) {
-    projectService.createProjectWithTasksTransactional(userId);
-  }
 }
-

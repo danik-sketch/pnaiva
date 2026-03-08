@@ -11,14 +11,17 @@ import java.util.ArrayList;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class ReminderService {
 
   private final ReminderRepository reminderRepository;
   private final TaskRepository taskRepository;
 
+  @Transactional
   public ReminderResponseDto create(ReminderRequestDto dto) {
     Task task = taskRepository.findById(dto.taskId())
         .orElseThrow(() -> new IllegalArgumentException("Task not found"));
@@ -33,6 +36,7 @@ public class ReminderService {
     return ReminderMapper.toDto(saved);
   }
 
+  @Transactional
   public ReminderResponseDto update(Long id, ReminderRequestDto dto) {
     Reminder reminder = reminderRepository.findById(id)
         .orElseThrow(() -> new IllegalArgumentException("Reminder not found"));
@@ -49,6 +53,7 @@ public class ReminderService {
     return ReminderMapper.toDto(saved);
   }
 
+  @Transactional
   public void delete(Long id) {
     reminderRepository.deleteById(id);
   }
