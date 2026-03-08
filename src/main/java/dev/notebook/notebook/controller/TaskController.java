@@ -2,7 +2,6 @@ package dev.notebook.notebook.controller;
 
 import dev.notebook.notebook.dto.TaskRequestDto;
 import dev.notebook.notebook.dto.TaskResponseDto;
-import dev.notebook.notebook.entity.Task;
 import dev.notebook.notebook.service.TaskService;
 import java.time.LocalDate;
 import java.time.LocalDateTime;

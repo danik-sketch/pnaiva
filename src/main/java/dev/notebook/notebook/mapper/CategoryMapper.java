@@ -5,7 +5,9 @@ import dev.notebook.notebook.entity.Category;
 import dev.notebook.notebook.entity.Task;
 import java.util.ArrayList;
 import java.util.List;
+import lombok.NoArgsConstructor;
 
+@NoArgsConstructor
 public class CategoryMapper {
 
   public static CategoryResponseDto toDto(Category category) {

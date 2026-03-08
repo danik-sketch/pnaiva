@@ -5,7 +5,9 @@ import dev.notebook.notebook.entity.Project;
 import dev.notebook.notebook.entity.User;
 import java.util.ArrayList;
 import java.util.List;
+import lombok.NoArgsConstructor;
 
+@NoArgsConstructor
 public class UserMapper {
 
   public static UserResponseDto toDto(User user) {

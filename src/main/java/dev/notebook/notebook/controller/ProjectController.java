@@ -44,14 +44,27 @@ public class ProjectController {
     return projectService.create(dto);
   }
 
-  @PostMapping("/non-transactional/{userId}")
-  public void demoNonTransactional(@PathVariable Long userId) {
-    projectService.createProjectWithTasksNonTransactional(userId);
+  @PostMapping("/without-transactional/{userId}")
+  public String createProjectWithTasksNonTransactional(@PathVariable Long userId) {
+    try {
+      projectService.createProjectWithTasksNonTransactional(userId);
+    } catch (IllegalStateException e) {
+      return "ОШИБКА: " + e.getMessage()
+          + ". Проверь БД: Проект 'Non-Transactional Project' и одна задача УЖЕ ТАМ, "
+          + "хотя метод упал.";
+    }
+    return "Успех";
   }
 
-  @PostMapping("/transactional/{userId}")
-  public void demoTransactional(@PathVariable Long userId) {
-    projectService.createProjectWithTasksTransactional(userId);
+  @PostMapping("/with-transactional/{userId}")
+  public String createProjectWithTasksTransactional(@PathVariable Long userId) {
+    try {
+      projectService.createProjectWithTasksTransactional(userId);
+    } catch (IllegalStateException e) {
+      return "ОШИБКА: " + e.getMessage()
+          + ". Проверь БД: В базе ПУСТО. Проект и задачи откатились (Rollback).";
+    }
+    return "Успех";
   }
 
   @PutMapping("/{id}")

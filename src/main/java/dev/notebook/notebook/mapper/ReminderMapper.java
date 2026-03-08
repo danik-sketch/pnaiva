@@ -2,7 +2,9 @@ package dev.notebook.notebook.mapper;
 
 import dev.notebook.notebook.dto.ReminderResponseDto;
 import dev.notebook.notebook.entity.Reminder;
+import lombok.NoArgsConstructor;
 
+@NoArgsConstructor
 public class ReminderMapper {
 
   public static ReminderResponseDto toDto(Reminder reminder) {

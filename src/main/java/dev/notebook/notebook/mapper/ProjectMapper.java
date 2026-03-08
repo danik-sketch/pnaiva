@@ -5,7 +5,9 @@ import dev.notebook.notebook.entity.Project;
 import dev.notebook.notebook.entity.Task;
 import java.util.ArrayList;
 import java.util.List;
+import lombok.NoArgsConstructor;
 
+@NoArgsConstructor
 public class ProjectMapper {
 
   public static ProjectResponseDto toDto(Project project) {
