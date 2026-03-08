@@ -9,9 +9,13 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface TaskRepository extends JpaRepository<Task, Long> {
+
   List<Task> findByTitleContaining(String title);
+
   List<Task> findByCompleted(boolean completed);
+
   List<Task> findByDueDate(LocalDateTime dueDate);
+
   List<Task> findByDescription(String description);
 
   @EntityGraph(attributePaths = {"project", "categories", "reminders"})
