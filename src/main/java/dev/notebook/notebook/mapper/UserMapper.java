@@ -5,9 +5,10 @@ import dev.notebook.notebook.entity.Project;
 import dev.notebook.notebook.entity.User;
 import java.util.ArrayList;
 import java.util.List;
+import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 
-@NoArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class UserMapper {
 
   public static UserResponseDto toDto(User user) {

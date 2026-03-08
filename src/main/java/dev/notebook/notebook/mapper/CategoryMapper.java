@@ -5,9 +5,10 @@ import dev.notebook.notebook.entity.Category;
 import dev.notebook.notebook.entity.Task;
 import java.util.ArrayList;
 import java.util.List;
+import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 
-@NoArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class CategoryMapper {
 
   public static CategoryResponseDto toDto(Category category) {

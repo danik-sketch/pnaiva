@@ -5,9 +5,10 @@ import dev.notebook.notebook.entity.Category;
 import dev.notebook.notebook.entity.Reminder;
 import dev.notebook.notebook.entity.Task;
 import java.util.stream.Collectors;
+import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 
-@NoArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class TaskMapper {
 
   public static TaskResponseDto toDto(Task task) {
