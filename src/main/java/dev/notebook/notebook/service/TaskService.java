@@ -52,7 +52,6 @@ public class TaskService {
   }
 
   public List<TaskResponseDto> getAll() {
-    // Демонстрация N+1: используется ленивое получение связей
     List<Task> tasks = repository.findAll();
     List<TaskResponseDto> dtos = new ArrayList<>();
     for (Task task : tasks) {
@@ -104,7 +103,7 @@ public class TaskService {
   }
 
   public List<TaskResponseDto> getAllOptimized() {
-    List<Task> tasks = repository.findAllWithRelations();
+    List<Task> tasks = repository.findAllBy();
     List<TaskResponseDto> dtos = new ArrayList<>();
     for (Task task : tasks) {
       dtos.add(TaskMapper.toDto(task));

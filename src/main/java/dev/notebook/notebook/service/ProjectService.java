@@ -80,7 +80,7 @@ public class ProjectService {
   }
 
   public List<ProjectResponseDto> getAllOptimized() {
-    List<Project> projects = projectRepository.findAllWithUserAndTasks();
+    List<Project> projects = projectRepository.findAllBy();
     List<ProjectResponseDto> result = new ArrayList<>();
     for (Project project : projects) {
       result.add(ProjectMapper.toDto(project));
@@ -88,7 +88,8 @@ public class ProjectService {
     return result;
   }
 
-  private void saveProjectAndTasks(Long userId, String projectName, String projectDesc, int taskCount) {
+  private void saveProjectAndTasks(Long userId, String projectName,
+      String projectDesc, int taskCount) {
     User user = userRepository.findById(userId)
         .orElseThrow(() -> new IllegalArgumentException(USER_NOT_FOUND_MESSAGE));
 
