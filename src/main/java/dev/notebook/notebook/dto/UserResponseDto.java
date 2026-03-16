@@ -19,4 +19,3 @@ public class UserResponseDto {
   private String email;
   private List<String> projects;
 }
-

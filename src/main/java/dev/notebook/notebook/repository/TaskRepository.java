@@ -15,10 +15,13 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
   List<Task> findByTitleContaining(String title);
 
   @EntityGraph(attributePaths = {"project", "categories", "reminders"})
-  List<Task> findByCompleted(boolean completed);
+  List<Task> findByCompletedIsNotNull();
 
   @EntityGraph(attributePaths = {"project", "categories", "reminders"})
-  List<Task> findByDueDate(LocalDateTime dueDate);
+  List<Task> findByCompletedIsNull();
+
+  @EntityGraph(attributePaths = {"project", "categories", "reminders"})
+  List<Task> findByDueDateBetween(LocalDateTime start, LocalDateTime end);
 
   @EntityGraph(attributePaths = {"project", "categories", "reminders"})
   List<Task> findByDescription(String description);

@@ -1,5 +1,6 @@
 package dev.notebook.notebook.entity;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -24,9 +25,9 @@ public class Reminder {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
 
-  private LocalDateTime reminderTime;
+  @Column(name = "time")
+  private LocalDateTime time;
   private String message;
-  private String type;
 
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "task_id")

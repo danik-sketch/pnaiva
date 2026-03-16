@@ -11,9 +11,8 @@ public class ReminderMapper {
   public static ReminderResponseDto toDto(Reminder reminder) {
     ReminderResponseDto dto = new ReminderResponseDto();
     dto.setId(reminder.getId());
-    dto.setReminderTime(reminder.getReminderTime());
+    dto.setReminderTime(reminder.getTime());
     dto.setMessage(reminder.getMessage());
-    dto.setType(reminder.getType());
     if (reminder.getTask() != null) {
       dto.setTaskId(reminder.getTask().getId());
     }

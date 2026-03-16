@@ -7,7 +7,6 @@ import java.time.LocalDateTime;
 public record ReminderRequestDto(
     @NotNull LocalDateTime reminderTime,
     @NotBlank String message,
-    @NotBlank String type,
     @NotNull Long taskId
 ) {}
 

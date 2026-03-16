@@ -5,17 +5,8 @@ import jakarta.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 
 public record TaskRequestDto(
-    @NotBlank(message = "Заголовок не может быть пустым")
-    String title,
-
+    @NotBlank String title,
     String description,
-
-    @NotNull(message = "Дата выполнения обязательна")
-    LocalDateTime dueDate,
-
-    boolean completed,
-
-    Long projectId
-) {
-
-}
+    @NotNull LocalDateTime dueDate,
+    LocalDateTime completed
+) {}

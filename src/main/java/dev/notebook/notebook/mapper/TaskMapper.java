@@ -17,7 +17,7 @@ public class TaskMapper {
     dto.setTitle(task.getTitle());
     dto.setDescription(task.getDescription());
     dto.setDueDate(task.getDueDate());
-    dto.setCompleted(task.isCompleted());
+    dto.setCompleted(task.getCompleted());
 
     if (task.getProject() != null) {
       dto.setProjectName(task.getProject().getName());

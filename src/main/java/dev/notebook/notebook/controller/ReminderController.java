@@ -40,7 +40,8 @@ public class ReminderController {
   }
 
   @PutMapping("/{id}")
-  public ReminderResponseDto update(@PathVariable Long id, @RequestBody ReminderRequestDto dto) {
+  public ReminderResponseDto update(@PathVariable Long id,
+      @RequestBody ReminderRequestDto dto) {
     return reminderService.update(id, dto);
   }
 
@@ -50,4 +51,3 @@ public class ReminderController {
     reminderService.delete(id);
   }
 }
-

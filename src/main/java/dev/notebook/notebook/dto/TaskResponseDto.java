@@ -19,7 +19,7 @@ public class TaskResponseDto {
   private String title;
   private String description;
   private LocalDateTime dueDate;
-  private boolean completed;
+  private LocalDateTime completed;
   private String projectName;
   private List<String> categories;
   private List<String> reminders;

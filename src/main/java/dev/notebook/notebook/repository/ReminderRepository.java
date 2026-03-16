@@ -9,6 +9,5 @@ public interface ReminderRepository extends JpaRepository<Reminder, Long> {
 
   List<Reminder> findByTaskId(Long taskId);
 
-  List<Reminder> findByReminderTimeBefore(LocalDateTime time);
+  List<Reminder> findByTimeBefore(LocalDateTime time);
 }
-

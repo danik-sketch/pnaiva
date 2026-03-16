@@ -4,7 +4,6 @@ import dev.notebook.notebook.dto.TaskRequestDto;
 import dev.notebook.notebook.dto.TaskResponseDto;
 import dev.notebook.notebook.service.TaskService;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -32,15 +31,14 @@ public class TaskController {
       @RequestParam(required = false) String title,
       @RequestParam(required = false) String description,
       @RequestParam(required = false) @DateTimeFormat(
-          iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime dueDate,
+          iso = DateTimeFormat.ISO.DATE) LocalDate dueDate,
       @RequestParam(required = false) Boolean completed) {
 
     if (title != null) {
       return service.getByTitleContaining(title);
     }
     if (dueDate != null) {
-      return service.getByDueDate(
-          LocalDate.from(LocalDate.from(dueDate).atStartOfDay()));
+      return service.getByDueDate(dueDate);
     }
     if (completed != null) {
       return service.getByCompleted(completed);
@@ -50,11 +48,6 @@ public class TaskController {
     }
 
     return service.getAll();
-  }
-
-  @GetMapping("/optimized")
-  public List<TaskResponseDto> getTasksOptimized() {
-    return service.getAllOptimized();
   }
 
   @GetMapping("/{id}")

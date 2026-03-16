@@ -36,7 +36,7 @@ public class Task {
   private String title;
   private String description;
   private LocalDateTime dueDate;
-  private boolean completed;
+  private LocalDateTime completed;
 
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "project_id")

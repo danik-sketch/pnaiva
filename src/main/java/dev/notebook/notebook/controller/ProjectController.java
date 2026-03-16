@@ -28,11 +28,6 @@ public class ProjectController {
     return projectService.getAll();
   }
 
-  @GetMapping("/optimized")
-  public List<ProjectResponseDto> getAllOptimized() {
-    return projectService.getAllOptimized();
-  }
-
   @GetMapping("/{id}")
   public ProjectResponseDto getById(@PathVariable Long id) {
     return projectService.getById(id);
@@ -42,28 +37,6 @@ public class ProjectController {
   @ResponseStatus(HttpStatus.CREATED)
   public ProjectResponseDto create(@RequestBody ProjectRequestDto dto) {
     return projectService.create(dto);
-  }
-
-  @PostMapping("/without-transactional/{userId}")
-  public String createProjectWithTasksNonTransactional(@PathVariable Long userId) {
-    try {
-      projectService.createProjectWithTasksNonTransactional(userId);
-    } catch (IllegalStateException e) {
-      return "ОШИБКА: " + e.getMessage()
-          + ". Проверь БД: Проект и одна задача уже там.";
-    }
-    return "Успех";
-  }
-
-  @PostMapping("/with-transactional/{userId}")
-  public String createProjectWithTasksTransactional(@PathVariable Long userId) {
-    try {
-      projectService.createProjectWithTasksTransactional(userId);
-    } catch (IllegalStateException e) {
-      return "ОШИБКА: " + e.getMessage()
-          + ". Проверь БД: В базе ПУСТО. Проект и задачи откатились.";
-    }
-    return "Успех";
   }
 
   @PutMapping("/{id}")

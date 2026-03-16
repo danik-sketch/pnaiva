@@ -27,9 +27,8 @@ public class ReminderService {
         .orElseThrow(() -> new IllegalArgumentException("Task not found"));
 
     Reminder reminder = new Reminder();
-    reminder.setReminderTime(dto.reminderTime());
+    reminder.setTime(dto.reminderTime());
     reminder.setMessage(dto.message());
-    reminder.setType(dto.type());
     reminder.setTask(task);
 
     Reminder saved = reminderRepository.save(reminder);
@@ -44,9 +43,8 @@ public class ReminderService {
     Task task = taskRepository.findById(dto.taskId())
         .orElseThrow(() -> new IllegalArgumentException("Task not found"));
 
-    reminder.setReminderTime(dto.reminderTime());
+    reminder.setTime(dto.reminderTime());
     reminder.setMessage(dto.message());
-    reminder.setType(dto.type());
     reminder.setTask(task);
 
     Reminder saved = reminderRepository.save(reminder);
@@ -72,5 +70,4 @@ public class ReminderService {
     }
     return result;
   }
-
 }

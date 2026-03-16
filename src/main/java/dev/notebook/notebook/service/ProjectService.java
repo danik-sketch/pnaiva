@@ -2,6 +2,7 @@ package dev.notebook.notebook.service;
 
 import dev.notebook.notebook.dto.ProjectRequestDto;
 import dev.notebook.notebook.dto.ProjectResponseDto;
+import dev.notebook.notebook.dto.TaskRequestDto;
 import dev.notebook.notebook.entity.Project;
 import dev.notebook.notebook.entity.Task;
 import dev.notebook.notebook.entity.User;
@@ -21,7 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 public class ProjectService {
 
-  private static final String USER_NOT_FOUND_MESSAGE = "User not found";
+  private static final String USER_NOT_FOUND = "User not found";
 
   private final ProjectRepository projectRepository;
   private final UserRepository userRepository;
@@ -30,12 +31,24 @@ public class ProjectService {
   @Transactional
   public ProjectResponseDto create(ProjectRequestDto dto) {
     User user = userRepository.findById(dto.userId())
-        .orElseThrow(() -> new IllegalArgumentException(USER_NOT_FOUND_MESSAGE));
+        .orElseThrow(() -> new IllegalArgumentException(USER_NOT_FOUND));
 
     Project project = new Project();
     project.setName(dto.name());
     project.setDescription(dto.description());
     project.setUser(user);
+
+    if (dto.tasks() != null && !dto.tasks().isEmpty()) {
+      for (TaskRequestDto taskDto : dto.tasks()) {
+        Task task = new Task();
+        task.setTitle(taskDto.title());
+        task.setDescription(taskDto.description());
+        task.setDueDate(taskDto.dueDate());
+        task.setCompleted(taskDto.completed());
+        task.setProject(project);
+        project.getTasks().add(task);
+      }
+    }
 
     Project saved = projectRepository.save(project);
     return ProjectMapper.toDto(saved);
@@ -51,7 +64,7 @@ public class ProjectService {
 
     if (!project.getUser().getId().equals(dto.userId())) {
       User user = userRepository.findById(dto.userId())
-          .orElseThrow(() -> new IllegalArgumentException(USER_NOT_FOUND_MESSAGE));
+          .orElseThrow(() -> new IllegalArgumentException(USER_NOT_FOUND));
       project.setUser(user);
     }
 
@@ -79,34 +92,26 @@ public class ProjectService {
     return result;
   }
 
-  public List<ProjectResponseDto> getAllOptimized() {
-    List<Project> projects = projectRepository.findAllBy();
-    List<ProjectResponseDto> result = new ArrayList<>();
-    for (Project project : projects) {
-      result.add(ProjectMapper.toDto(project));
-    }
-    return result;
-  }
-
   private void saveProjectAndTasks(Long userId, String projectName,
       String projectDesc, int taskCount) {
     User user = userRepository.findById(userId)
-        .orElseThrow(() -> new IllegalArgumentException(USER_NOT_FOUND_MESSAGE));
+        .orElseThrow(() -> new IllegalArgumentException(USER_NOT_FOUND));
 
     Project project = new Project();
     project.setName(projectName);
     project.setDescription(projectDesc);
     project.setUser(user);
-    project = projectRepository.save(project);
+
+    project = projectRepository.saveAndFlush(project);
 
     for (int i = 1; i <= taskCount; i++) {
       Task task = new Task();
       task.setTitle(projectName + " - Task " + i);
       task.setDescription("Task part of " + projectDesc);
       task.setDueDate(LocalDateTime.now().plusDays(i));
-      task.setCompleted(false);
       task.setProject(project);
-      taskRepository.save(task);
+
+      taskRepository.saveAndFlush(task);
     }
 
     throw new IllegalStateException("Intentional failure for: " + projectName);

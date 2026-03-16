@@ -17,7 +17,6 @@ public class ReminderResponseDto {
   private Long id;
   private LocalDateTime reminderTime;
   private String message;
-  private String type;
   private Long taskId;
 }
 
