@@ -49,4 +49,14 @@ public class ProjectController {
   public void delete(@PathVariable Long id) {
     projectService.delete(id);
   }
+
+  @PostMapping("/non-transactional")
+  public void withNonTransactional(@RequestBody ProjectRequestDto dto) {
+    projectService.createNonTransactional(dto);
+  }
+
+  @PostMapping("/transactional")
+  public void withTransactional(@RequestBody ProjectRequestDto dto) {
+    projectService.createTransactional(dto);
+  }
 }

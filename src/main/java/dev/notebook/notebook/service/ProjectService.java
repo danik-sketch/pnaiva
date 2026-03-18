@@ -10,7 +10,6 @@ import dev.notebook.notebook.mapper.ProjectMapper;
 import dev.notebook.notebook.repository.ProjectRepository;
 import dev.notebook.notebook.repository.TaskRepository;
 import dev.notebook.notebook.repository.UserRepository;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -19,7 +18,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
-@Transactional
 public class ProjectService {
 
   private static final String USER_NOT_FOUND = "User not found";
@@ -92,37 +90,44 @@ public class ProjectService {
     return result;
   }
 
-  private void saveProjectAndTasks(Long userId, String projectName,
-      String projectDesc, int taskCount) {
-    User user = userRepository.findById(userId)
-        .orElseThrow(() -> new IllegalArgumentException(USER_NOT_FOUND));
 
-    Project project = new Project();
-    project.setName(projectName);
-    project.setDescription(projectDesc);
-    project.setUser(user);
 
-    project = projectRepository.saveAndFlush(project);
 
-    for (int i = 1; i <= taskCount; i++) {
-      Task task = new Task();
-      task.setTitle(projectName + " - Task " + i);
-      task.setDescription("Task part of " + projectDesc);
-      task.setDueDate(LocalDateTime.now().plusDays(i));
-      task.setProject(project);
-
-      taskRepository.saveAndFlush(task);
-    }
-
-    throw new IllegalStateException("Intentional failure for: " + projectName);
-  }
-
-  public void createProjectWithTasksNonTransactional(Long userId) {
-    saveProjectAndTasks(userId, "Non-Transactional Project", "Partial save demo", 1);
+  public void createNonTransactional(ProjectRequestDto dto) {
+    saveWithFailure(dto);
   }
 
   @Transactional
-  public void createProjectWithTasksTransactional(Long userId) {
-    saveProjectAndTasks(userId, "Transactional Project", "Rollback demo", 2);
+  public void createTransactional(ProjectRequestDto dto) {
+    saveWithFailure(dto);
+  }
+
+  private void saveWithFailure(ProjectRequestDto dto) {
+    User user = userRepository.findById(dto.userId())
+        .orElseThrow(() -> new IllegalArgumentException(USER_NOT_FOUND));
+
+    Project project = new Project();
+    project.setName(dto.name());
+    project.setDescription(dto.description());
+    project.setUser(user);
+
+    project = projectRepository.save(project);
+
+    int index = 0;
+    for (TaskRequestDto taskDto : dto.tasks()) {
+      Task task = new Task();
+      task.setTitle(taskDto.title());
+      task.setDescription(taskDto.description());
+      task.setDueDate(taskDto.dueDate());
+      task.setCompleted(taskDto.completed());
+      task.setProject(project);
+
+      taskRepository.save(task);
+
+      if (index == 0) {
+        throw new IllegalStateException("Intentional failure after first task");
+      }
+      index++;
+    }
   }
 }

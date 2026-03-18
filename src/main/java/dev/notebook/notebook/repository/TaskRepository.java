@@ -33,7 +33,4 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
   @Override
   @EntityGraph(attributePaths = {"project", "categories", "reminders"})
   Optional<Task> findById(Long id);
-
-  @EntityGraph(attributePaths = {"project", "categories", "reminders"})
-  List<Task> findAllBy();
 }

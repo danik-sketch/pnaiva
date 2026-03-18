@@ -9,4 +9,3 @@ public record ReminderRequestDto(
     @NotBlank String message,
     @NotNull Long taskId
 ) {}
-

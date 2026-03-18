@@ -8,12 +8,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface ProjectRepository extends JpaRepository<Project, Long> {
 
-  @EntityGraph(attributePaths = {"user", "tasks"})
-  List<Project> findByNameContaining(String name);
-
-  @EntityGraph(attributePaths = {"user", "tasks"})
-  List<Project> findAllBy();
-
   @Override
   @EntityGraph(attributePaths = {"user", "tasks"})
   List<Project> findAll();

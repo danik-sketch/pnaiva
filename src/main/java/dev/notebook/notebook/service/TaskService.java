@@ -105,13 +105,4 @@ public class TaskService {
     }
     return result;
   }
-
-  public List<TaskResponseDto> getAllOptimized() {
-    List<Task> tasks = repository.findAllBy();
-    List<TaskResponseDto> dtos = new ArrayList<>();
-    for (Task task : tasks) {
-      dtos.add(TaskMapper.toDto(task));
-    }
-    return dtos;
-  }
 }
