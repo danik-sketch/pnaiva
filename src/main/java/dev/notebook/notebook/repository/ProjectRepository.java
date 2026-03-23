@@ -22,25 +22,25 @@ public interface ProjectRepository extends JpaRepository<Project, Long> {
   Optional<Project> findById(Long id);
 
   @Query("""
-    SELECT DISTINCT p
-    FROM Project p
-    LEFT JOIN FETCH p.user
-    LEFT JOIN FETCH p.tasks
-    WHERE p.name LIKE CONCAT('%', COALESCE(:projectName, ''), '%')
-      AND EXISTS (
-        SELECT 1
-        FROM Task t
-        WHERE t.project = p
-          AND t.title LIKE CONCAT('%', COALESCE(:taskTitle, ''), '%')
-          AND (
-            :completed IS NULL
-            OR (:completed = true AND t.completed IS NOT NULL)
-            OR (:completed = false AND t.completed IS NULL)
-          )
-          AND t.dueDate >= COALESCE(:dueFrom, t.dueDate)
-          AND t.dueDate <= COALESCE(:dueTo, t.dueDate)
-      )
-    """)
+      SELECT DISTINCT p
+      FROM Project p
+      LEFT JOIN FETCH p.user
+      LEFT JOIN FETCH p.tasks
+      WHERE p.name LIKE CONCAT('%', COALESCE(:projectName, ''), '%')
+        AND EXISTS (
+          SELECT 1
+          FROM Task t
+          WHERE t.project = p
+            AND t.title LIKE CONCAT('%', COALESCE(:taskTitle, ''), '%')
+            AND (
+              :completed IS NULL
+              OR (:completed = true AND t.completed IS NOT NULL)
+              OR (:completed = false AND t.completed IS NULL)
+            )
+            AND t.dueDate >= COALESCE(:dueFrom, t.dueDate)
+            AND t.dueDate <= COALESCE(:dueTo, t.dueDate)
+        )
+      """)
   Page<Project> searchByTaskJpql(
       @Param("projectName") String projectName,
       @Param("taskTitle") String taskTitle,
@@ -50,38 +50,38 @@ public interface ProjectRepository extends JpaRepository<Project, Long> {
       Pageable pageable
   );
 
-  @EntityGraph(attributePaths = {"user", "tasks"})
-  @Query(
-      value = """
-          select p.*
-          from projects p
-          where p.name like concat('%', coalesce(:projectName, ''), '%')
-            and exists (
-              select 1
-              from tasks t
-              where t.project_id = p.id
-                and t.title like concat('%', coalesce(:taskTitle, ''), '%')
-                and (:completed is null
-                  or (:completed = true and t.completed is not null)
-                  or (:completed = false and t.completed is null))
-                and (:dueFrom is null or t.due_date >= :dueFrom)
-                and (:dueTo is null or t.due_date <= :dueTo)
+  @Query(value = """
+          SELECT p.*
+          FROM projects p
+          WHERE p.name LIKE CONCAT('%', COALESCE(:projectName, ''), '%')
+            AND EXISTS (
+              SELECT 1
+              FROM tasks t
+              WHERE t.project_id = p.id
+                AND t.title LIKE CONCAT('%', COALESCE(:taskTitle, ''), '%')
+                AND (:completed IS NULL
+                  OR (:completed = true AND t.completed IS NOT NULL)
+                  OR (:completed = false AND t.completed IS NULL))
+                AND (:dueFrom IS NULL OR t.due_date >= :dueFrom)
+                AND (:dueTo IS NULL OR t.due_date <= :dueTo)
             )
+          ORDER BY p.id
+          OFFSET :offset LIMIT :limit
           """,
       countQuery = """
-          select count(p.id)
-          from projects p
-          where p.name like concat('%', coalesce(:projectName, ''), '%')
-            and exists (
-              select 1
-              from tasks t
-              where t.project_id = p.id
-                and t.title like concat('%', coalesce(:taskTitle, ''), '%')
-                and (:completed is null
-                  or (:completed = true and t.completed is not null)
-                  or (:completed = false and t.completed is null))
-                and (:dueFrom is null or t.due_date >= :dueFrom)
-                and (:dueTo is null or t.due_date <= :dueTo)
+          SELECT COUNT(p.id)
+          FROM projects p
+          WHERE p.name LIKE CONCAT('%', COALESCE(:projectName, ''), '%')
+            AND EXISTS (
+              SELECT 1
+              FROM tasks t
+              WHERE t.project_id = p.id
+                AND t.title LIKE CONCAT('%', COALESCE(:taskTitle, ''), '%')
+                AND (:completed IS NULL
+                  OR (:completed = true AND t.completed IS NOT NULL)
+                  OR (:completed = false AND t.completed IS NULL))
+                AND (:dueFrom IS NULL OR t.due_date >= :dueFrom)
+                AND (:dueTo IS NULL OR t.due_date <= :dueTo)
             )
           """,
       nativeQuery = true)
