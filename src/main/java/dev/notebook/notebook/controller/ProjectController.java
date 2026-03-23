@@ -44,7 +44,8 @@ public class ProjectController {
       LocalDateTime dueTo,
       Pageable pageable
   ) {
-    return projectService.searchByTaskJpql(projectName, taskTitle, completed, dueFrom, dueTo, pageable);
+    return projectService.searchByTaskJpql(projectName, taskTitle, completed, dueFrom, dueTo,
+        pageable);
   }
 
   @GetMapping("/search-native")

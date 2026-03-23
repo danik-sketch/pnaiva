@@ -14,13 +14,14 @@ import org.springframework.data.repository.query.Param;
 public interface ProjectRepository extends JpaRepository<Project, Long> {
 
   @Override
-  @EntityGraph(attributePaths = {"user", "tasks"})
+  @EntityGraph(attributePaths = {"user", "tasks", "tasks.categories", "tasks.reminders"})
   List<Project> findAll();
 
   @Override
-  @EntityGraph(attributePaths = {"user", "tasks"})
+  @EntityGraph(attributePaths = {"user", "tasks", "tasks.categories", "tasks.reminders"})
   Optional<Project> findById(Long id);
 
+  @EntityGraph(attributePaths = {"user", "tasks", "tasks.categories", "tasks.reminders"})
   @Query("""
       SELECT DISTINCT p
       FROM Project p
@@ -50,6 +51,7 @@ public interface ProjectRepository extends JpaRepository<Project, Long> {
       Pageable pageable
   );
 
+  @EntityGraph(attributePaths = {"user", "tasks", "tasks.categories", "tasks.reminders"})
   @Query(value = """
           SELECT p.*
           FROM projects p

@@ -18,6 +18,5 @@ public class ProjectResponseDto {
   private String name;
   private String description;
   private String username;
-  private List<String> tasks;
+  private List<TaskResponseDto> tasks;
 }
-

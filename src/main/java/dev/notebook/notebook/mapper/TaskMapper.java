@@ -4,7 +4,6 @@ import dev.notebook.notebook.dto.TaskResponseDto;
 import dev.notebook.notebook.entity.Category;
 import dev.notebook.notebook.entity.Reminder;
 import dev.notebook.notebook.entity.Task;
-import java.util.stream.Collectors;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 
@@ -26,13 +25,13 @@ public class TaskMapper {
     if (task.getCategories() != null) {
       dto.setCategories(task.getCategories().stream()
           .map(Category::getTitle)
-          .collect(Collectors.toList()));
+          .toList());
     }
 
     if (task.getReminders() != null) {
       dto.setReminders(task.getReminders().stream()
           .map(Reminder::getMessage)
-          .collect(Collectors.toList()));
+          .toList());
     }
 
     return dto;
