@@ -3,8 +3,12 @@ package dev.notebook.notebook.controller;
 import dev.notebook.notebook.dto.ProjectRequestDto;
 import dev.notebook.notebook.dto.ProjectResponseDto;
 import dev.notebook.notebook.service.ProjectService;
+import java.time.LocalDateTime;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -13,6 +17,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -26,6 +31,35 @@ public class ProjectController {
   @GetMapping
   public List<ProjectResponseDto> getAll() {
     return projectService.getAll();
+  }
+
+  @GetMapping("/search-jpql")
+  public Page<ProjectResponseDto> searchByTaskJpql(
+      @RequestParam(required = false) String projectName,
+      @RequestParam(required = false) String taskTitle,
+      @RequestParam(required = false) Boolean completed,
+      @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+      LocalDateTime dueFrom,
+      @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+      LocalDateTime dueTo,
+      Pageable pageable
+  ) {
+    return projectService.searchByTaskJpql(projectName, taskTitle, completed, dueFrom, dueTo, pageable);
+  }
+
+  @GetMapping("/search-native")
+  public Page<ProjectResponseDto> searchByTaskNative(
+      @RequestParam(required = false) String projectName,
+      @RequestParam(required = false) String taskTitle,
+      @RequestParam(required = false) Boolean completed,
+      @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+      LocalDateTime dueFrom,
+      @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+      LocalDateTime dueTo,
+      Pageable pageable
+  ) {
+    return projectService.searchByTaskNative(projectName, taskTitle, completed, dueFrom, dueTo,
+        pageable);
   }
 
   @GetMapping("/{id}")
@@ -48,15 +82,5 @@ public class ProjectController {
   @ResponseStatus(HttpStatus.NO_CONTENT)
   public void delete(@PathVariable Long id) {
     projectService.delete(id);
-  }
-
-  @PostMapping("/non-transactional")
-  public void withNonTransactional(@RequestBody ProjectRequestDto dto) {
-    projectService.createNonTransactional(dto);
-  }
-
-  @PostMapping("/transactional")
-  public void withTransactional(@RequestBody ProjectRequestDto dto) {
-    projectService.createTransactional(dto);
   }
 }
