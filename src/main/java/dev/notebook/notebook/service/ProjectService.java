@@ -11,133 +11,131 @@ import dev.notebook.notebook.repository.ProjectRepository;
 import dev.notebook.notebook.repository.TaskRepository;
 import dev.notebook.notebook.repository.UserRepository;
 import dev.notebook.notebook.service.cache.ProductSearchKey;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+@Slf4j
 @Service
 @Getter
 @Setter
 @RequiredArgsConstructor
 public class ProjectService {
 
-  private static final String USER_NOT_FOUND = "User not found";
+    private static final String USER_NOT_FOUND = "User not found";
 
-  private final ProjectRepository projectRepository;
-  private final UserRepository userRepository;
-  private final TaskRepository taskRepository;
-  private final Map<ProductSearchKey, Page<ProjectResponseDto>>
-      searchCache = new ConcurrentHashMap<>();
+    private final ProjectRepository projectRepository;
+    private final UserRepository userRepository;
+    private final TaskRepository taskRepository;
+    private final Map<ProductSearchKey, Page<ProjectResponseDto>> searchCache = new HashMap<>();
 
-  @Transactional
-  public ProjectResponseDto create(ProjectRequestDto dto) {
-    User user = userRepository.findById(dto.userId())
-        .orElseThrow(() -> new IllegalArgumentException(USER_NOT_FOUND));
+    @Transactional
+    public ProjectResponseDto create(ProjectRequestDto dto) {
+        User user = userRepository.findById(dto.userId()).orElseThrow(() -> new IllegalArgumentException(USER_NOT_FOUND));
 
-    Project project = new Project();
-    project.setName(dto.name());
-    project.setDescription(dto.description());
-    project.setUser(user);
+        Project project = new Project();
+        project.setName(dto.name());
+        project.setDescription(dto.description());
+        project.setUser(user);
 
-    if (dto.tasks() != null && !dto.tasks().isEmpty()) {
-      for (TaskRequestDto taskDto : dto.tasks()) {
-        Task task = new Task();
-        task.setTitle(taskDto.title());
-        task.setDescription(taskDto.description());
-        task.setDueDate(taskDto.dueDate());
-        task.setCompleted(taskDto.completed());
-        task.setProject(project);
-        project.getTasks().add(task);
-      }
+        if (dto.tasks() != null && !dto.tasks().isEmpty()) {
+            for (TaskRequestDto taskDto : dto.tasks()) {
+                Task task = new Task();
+                task.setTitle(taskDto.title());
+                task.setDescription(taskDto.description());
+                task.setDueDate(taskDto.dueDate());
+                task.setCompleted(taskDto.completed());
+                task.setProject(project);
+                project.getTasks().add(task);
+            }
+        }
+
+        Project saved = projectRepository.save(project);
+        invalidateSearchCache();
+        return ProjectMapper.toDto(saved);
     }
 
-    Project saved = projectRepository.save(project);
-    invalidateSearchCache();
-    return ProjectMapper.toDto(saved);
-  }
+    @Transactional
+    public ProjectResponseDto update(Long id, ProjectRequestDto dto) {
+        Project project = projectRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("Project not found"));
 
-  @Transactional
-  public ProjectResponseDto update(Long id, ProjectRequestDto dto) {
-    Project project = projectRepository.findById(id)
-        .orElseThrow(() -> new IllegalArgumentException("Project not found"));
+        project.setName(dto.name());
+        project.setDescription(dto.description());
 
-    project.setName(dto.name());
-    project.setDescription(dto.description());
+        if (!project.getUser().getId().equals(dto.userId())) {
+            User user = userRepository.findById(dto.userId()).orElseThrow(() -> new IllegalArgumentException(USER_NOT_FOUND));
+            project.setUser(user);
+        }
 
-    if (!project.getUser().getId().equals(dto.userId())) {
-      User user = userRepository.findById(dto.userId())
-          .orElseThrow(() -> new IllegalArgumentException(USER_NOT_FOUND));
-      project.setUser(user);
+        Project saved = projectRepository.save(project);
+        invalidateSearchCache();
+        return ProjectMapper.toDto(saved);
     }
 
-    Project saved = projectRepository.save(project);
-    invalidateSearchCache();
-    return ProjectMapper.toDto(saved);
-  }
-
-  @Transactional
-  public void delete(Long id) {
-    projectRepository.deleteById(id);
-    invalidateSearchCache();
-  }
-
-  public ProjectResponseDto getById(Long id) {
-    Project project = projectRepository.findById(id)
-        .orElseThrow(() -> new IllegalArgumentException("Project not found"));
-    return ProjectMapper.toDto(project);
-  }
-
-  public List<ProjectResponseDto> getAll() {
-    List<Project> projects = projectRepository.findAll();
-    List<ProjectResponseDto> result = new ArrayList<>();
-    for (Project project : projects) {
-      result.add(ProjectMapper.toDto(project));
-    }
-    return result;
-  }
-
-  @Transactional(readOnly = true)
-  public Page<ProjectResponseDto> searchByTaskJpql(String projectName, String taskTitle,
-      Boolean completed, LocalDateTime dueFrom, LocalDateTime dueTo, Pageable pageable) {
-    ProductSearchKey key = new ProductSearchKey(projectName, taskTitle, completed, dueFrom, dueTo,
-        pageable.getPageNumber(), pageable.getPageSize());
-    Page<ProjectResponseDto> cached = searchCache.get(key);
-    if (cached != null) {
-      return cached;
+    @Transactional
+    public void delete(Long id) {
+        projectRepository.deleteById(id);
+        invalidateSearchCache();
     }
 
-    Page<ProjectResponseDto> result = projectRepository.searchByTaskJpql(projectName, taskTitle,
-        completed, dueFrom, dueTo, pageable).map(ProjectMapper::toDto);
-    searchCache.put(key, result);
-    return result;
-  }
-
-  @Transactional(readOnly = true)
-  public Page<ProjectResponseDto> searchByTaskNative(String projectName, String taskTitle,
-      Boolean completed, LocalDateTime dueFrom, LocalDateTime dueTo, Pageable pageable) {
-    ProductSearchKey key = new ProductSearchKey(projectName, taskTitle, completed, dueFrom, dueTo,
-        pageable.getPageNumber(), pageable.getPageSize());
-    Page<ProjectResponseDto> cached = searchCache.get(key);
-    if (cached != null) {
-      return cached;
+    public ProjectResponseDto getById(Long id) {
+        Project project = projectRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("Project not found"));
+        return ProjectMapper.toDto(project);
     }
 
-    Page<ProjectResponseDto> result = projectRepository.searchByTaskNative(projectName, taskTitle,
-        completed, dueFrom, dueTo, pageable).map(ProjectMapper::toDto);
-    searchCache.put(key, result);
-    return result;
-  }
+    public List<ProjectResponseDto> getAll() {
+        List<Project> projects = projectRepository.findAll();
+        List<ProjectResponseDto> result = new ArrayList<>();
+        for (Project project : projects) {
+            result.add(ProjectMapper.toDto(project));
+        }
+        return result;
+    }
 
-  private void invalidateSearchCache() {
-    searchCache.clear();
-  }
+    @Transactional(readOnly = true)
+    public Page<ProjectResponseDto> searchByTaskJpql(String projectName, String taskTitle, Boolean completed, LocalDateTime dueFrom, LocalDateTime dueTo, Pageable pageable) {
+        ProductSearchKey key = new ProductSearchKey(projectName, taskTitle, completed, dueFrom, dueTo, pageable.getPageNumber(), pageable.getPageSize());
+
+        Page<ProjectResponseDto> cached = searchCache.get(key);
+        if (cached != null) {
+            return cached;
+        }
+
+        Page<ProjectResponseDto> result = projectRepository.searchByTaskJpql(projectName, taskTitle, completed, dueFrom, dueTo, pageable).map(ProjectMapper::toDto);
+        searchCache.put(key, result);
+
+        log.info("\n\nResult cached with key: {}", key);
+        log.info("Cache size after save: {}\n\n", searchCache.size());
+
+        return result;
+    }
+
+    @Transactional(readOnly = true)
+    public Page<ProjectResponseDto> searchByTaskNative(String projectName, String taskTitle, Boolean completed, LocalDateTime dueFrom, LocalDateTime dueTo, Pageable pageable) {
+        ProductSearchKey key = new ProductSearchKey(projectName, taskTitle, completed, dueFrom, dueTo, pageable.getPageNumber(), pageable.getPageSize());
+        Page<ProjectResponseDto> cached = searchCache.get(key);
+        if (cached != null) {
+            return cached;
+        }
+
+        Page<ProjectResponseDto> result = projectRepository.searchByTaskNative(projectName, taskTitle, completed, dueFrom, dueTo, pageable).map(ProjectMapper::toDto);
+        searchCache.put(key, result);
+        return result;
+    }
+
+    private void invalidateSearchCache() {
+        log.info("Data changed. Cache cleared.");
+        searchCache.clear();
+    }
 }
