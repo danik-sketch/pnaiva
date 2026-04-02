@@ -3,6 +3,7 @@ package dev.notebook.notebook.controller;
 import dev.notebook.notebook.dto.TaskRequestDto;
 import dev.notebook.notebook.dto.TaskResponseDto;
 import dev.notebook.notebook.service.TaskService;
+import jakarta.validation.Valid;
 import java.time.LocalDate;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -57,12 +58,12 @@ public class TaskController {
 
   @PostMapping
   @ResponseStatus(HttpStatus.CREATED)
-  public TaskResponseDto create(@RequestBody TaskRequestDto requestDto) {
+  public TaskResponseDto create(@Valid @RequestBody TaskRequestDto requestDto) {
     return service.create(requestDto);
   }
 
   @PutMapping("/{id}")
-  public TaskResponseDto update(@PathVariable Long id, @RequestBody TaskRequestDto dto) {
+  public TaskResponseDto update(@PathVariable Long id, @Valid @RequestBody TaskRequestDto dto) {
     return service.update(id, dto);
   }
 

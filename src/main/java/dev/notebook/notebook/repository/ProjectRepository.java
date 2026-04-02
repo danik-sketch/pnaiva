@@ -68,7 +68,6 @@ public interface ProjectRepository extends JpaRepository<Project, Long> {
                 AND (:dueTo IS NULL OR t.due_date <= :dueTo)
             )
           ORDER BY p.id
-          OFFSET :offset LIMIT :limit
           """,
       countQuery = """
           SELECT COUNT(p.id)

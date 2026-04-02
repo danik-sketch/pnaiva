@@ -9,7 +9,7 @@ public class NotebookApplication {
   private NotebookApplication() {
   }
 
-  static void main(String[] args) {
+  public static void main(String[] args) {
     SpringApplication.run(NotebookApplication.class, args);
   }
 }

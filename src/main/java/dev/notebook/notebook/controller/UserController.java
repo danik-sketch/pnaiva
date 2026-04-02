@@ -3,6 +3,7 @@ package dev.notebook.notebook.controller;
 import dev.notebook.notebook.dto.UserRequestDto;
 import dev.notebook.notebook.dto.UserResponseDto;
 import dev.notebook.notebook.service.UserService;
+import jakarta.validation.Valid;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -35,12 +36,12 @@ public class UserController {
 
   @PostMapping
   @ResponseStatus(HttpStatus.CREATED)
-  public UserResponseDto create(@RequestBody UserRequestDto dto) {
+  public UserResponseDto create(@Valid @RequestBody UserRequestDto dto) {
     return userService.create(dto);
   }
 
   @PutMapping("/{id}")
-  public UserResponseDto update(@PathVariable Long id, @RequestBody UserRequestDto dto) {
+  public UserResponseDto update(@PathVariable Long id, @Valid @RequestBody UserRequestDto dto) {
     return userService.update(id, dto);
   }
 

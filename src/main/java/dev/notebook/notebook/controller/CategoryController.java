@@ -3,6 +3,7 @@ package dev.notebook.notebook.controller;
 import dev.notebook.notebook.dto.CategoryRequestDto;
 import dev.notebook.notebook.dto.CategoryResponseDto;
 import dev.notebook.notebook.service.CategoryService;
+import jakarta.validation.Valid;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -35,12 +36,13 @@ public class CategoryController {
 
   @PostMapping
   @ResponseStatus(HttpStatus.CREATED)
-  public CategoryResponseDto create(@RequestBody CategoryRequestDto dto) {
+  public CategoryResponseDto create(@Valid @RequestBody CategoryRequestDto dto) {
     return categoryService.create(dto);
   }
 
   @PutMapping("/{id}")
-  public CategoryResponseDto update(@PathVariable Long id, @RequestBody CategoryRequestDto dto) {
+  public CategoryResponseDto update(@PathVariable Long id,
+      @Valid @RequestBody CategoryRequestDto dto) {
     return categoryService.update(id, dto);
   }
 

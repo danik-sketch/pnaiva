@@ -3,6 +3,7 @@ package dev.notebook.notebook.controller;
 import dev.notebook.notebook.dto.ReminderRequestDto;
 import dev.notebook.notebook.dto.ReminderResponseDto;
 import dev.notebook.notebook.service.ReminderService;
+import jakarta.validation.Valid;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -35,13 +36,13 @@ public class ReminderController {
 
   @PostMapping
   @ResponseStatus(HttpStatus.CREATED)
-  public ReminderResponseDto create(@RequestBody ReminderRequestDto dto) {
+  public ReminderResponseDto create(@Valid @RequestBody ReminderRequestDto dto) {
     return reminderService.create(dto);
   }
 
   @PutMapping("/{id}")
   public ReminderResponseDto update(@PathVariable Long id,
-      @RequestBody ReminderRequestDto dto) {
+      @Valid @RequestBody ReminderRequestDto dto) {
     return reminderService.update(id, dto);
   }
 

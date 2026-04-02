@@ -3,6 +3,7 @@ package dev.notebook.notebook.controller;
 import dev.notebook.notebook.dto.ProjectRequestDto;
 import dev.notebook.notebook.dto.ProjectResponseDto;
 import dev.notebook.notebook.service.ProjectService;
+import jakarta.validation.Valid;
 import java.time.LocalDateTime;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -70,12 +71,13 @@ public class ProjectController {
 
   @PostMapping
   @ResponseStatus(HttpStatus.CREATED)
-  public ProjectResponseDto create(@RequestBody ProjectRequestDto dto) {
+  public ProjectResponseDto create(@Valid @RequestBody ProjectRequestDto dto) {
     return projectService.create(dto);
   }
 
   @PutMapping("/{id}")
-  public ProjectResponseDto update(@PathVariable Long id, @RequestBody ProjectRequestDto dto) {
+  public ProjectResponseDto update(@PathVariable Long id,
+      @Valid @RequestBody ProjectRequestDto dto) {
     return projectService.update(id, dto);
   }
 
