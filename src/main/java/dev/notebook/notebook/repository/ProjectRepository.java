@@ -21,11 +21,12 @@ public interface ProjectRepository extends JpaRepository<Project, Long> {
   @EntityGraph(attributePaths = {"user", "tasks", "tasks.categories", "tasks.reminders"})
   Optional<Project> findById(Long id);
 
+  @EntityGraph(attributePaths = {"user", "tasks", "tasks.categories", "tasks.reminders"})
   @Query("""
       SELECT DISTINCT p
       FROM Project p
-      LEFT JOIN FETCH p.user
-      LEFT JOIN FETCH p.tasks
+      LEFT JOIN p.user
+      LEFT JOIN p.tasks
       WHERE p.name LIKE CONCAT('%', COALESCE(:projectName, ''), '%')
         AND EXISTS (
           SELECT 1
