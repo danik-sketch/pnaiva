@@ -21,7 +21,6 @@ public interface ProjectRepository extends JpaRepository<Project, Long> {
   @EntityGraph(attributePaths = {"user", "tasks", "tasks.categories", "tasks.reminders"})
   Optional<Project> findById(Long id);
 
-  @EntityGraph(attributePaths = {"user", "tasks", "tasks.categories", "tasks.reminders"})
   @Query("""
       SELECT DISTINCT p
       FROM Project p
