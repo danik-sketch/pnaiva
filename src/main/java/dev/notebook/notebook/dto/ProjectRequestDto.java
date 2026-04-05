@@ -9,4 +9,5 @@ public record ProjectRequestDto(
     String description,
     @NotNull Long userId,
     List<TaskRequestDto> tasks
-) {}
+) {
+}

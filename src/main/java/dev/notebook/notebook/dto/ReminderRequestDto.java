@@ -8,4 +8,5 @@ public record ReminderRequestDto(
     @NotNull LocalDateTime reminderTime,
     @NotBlank String message,
     @NotNull Long taskId
-) {}
+) {
+}

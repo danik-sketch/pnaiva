@@ -33,7 +33,8 @@ public class TaskController {
       @RequestParam(required = false) String description,
       @RequestParam(required = false) @DateTimeFormat(
           iso = DateTimeFormat.ISO.DATE) LocalDate dueDate,
-      @RequestParam(required = false) Boolean completed) {
+      @RequestParam(required = false) Boolean completed
+  ) {
 
     if (title != null) {
       return service.getByTitleContaining(title);

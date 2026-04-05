@@ -9,4 +9,5 @@ public record TaskRequestDto(
     String description,
     @NotNull LocalDateTime dueDate,
     LocalDateTime completed
-) {}
+) {
+}

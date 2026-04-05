@@ -28,8 +28,8 @@ public class CategoryService {
 
   @Transactional
   public CategoryResponseDto update(Long id, CategoryRequestDto dto) {
-    Category category = categoryRepository.findById(id)
-        .orElseThrow(() -> new IllegalArgumentException("Category not found"));
+    Category category = categoryRepository.findById(id).orElseThrow(()
+        -> new IllegalArgumentException("Category not found"));
 
     category.setTitle(dto.title());
     Category saved = categoryRepository.save(category);
@@ -42,8 +42,8 @@ public class CategoryService {
   }
 
   public CategoryResponseDto getById(Long id) {
-    Category category = categoryRepository.findById(id)
-        .orElseThrow(() -> new IllegalArgumentException("Category not found"));
+    Category category = categoryRepository.findById(id).orElseThrow(()
+        -> new IllegalArgumentException("Category not found"));
     return CategoryMapper.toDto(category);
   }
 

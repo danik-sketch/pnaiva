@@ -23,8 +23,8 @@ public class ReminderService {
 
   @Transactional
   public ReminderResponseDto create(ReminderRequestDto dto) {
-    Task task = taskRepository.findById(dto.taskId())
-        .orElseThrow(() -> new IllegalArgumentException("Task not found"));
+    Task task = taskRepository.findById(dto.taskId()).orElseThrow(()
+        -> new IllegalArgumentException("Task not found"));
 
     Reminder reminder = new Reminder();
     reminder.setTime(dto.reminderTime());
@@ -37,11 +37,11 @@ public class ReminderService {
 
   @Transactional
   public ReminderResponseDto update(Long id, ReminderRequestDto dto) {
-    Reminder reminder = reminderRepository.findById(id)
-        .orElseThrow(() -> new IllegalArgumentException("Reminder not found"));
+    Reminder reminder = reminderRepository.findById(id).orElseThrow(()
+        -> new IllegalArgumentException("Reminder not found"));
 
-    Task task = taskRepository.findById(dto.taskId())
-        .orElseThrow(() -> new IllegalArgumentException("Task not found"));
+    Task task = taskRepository.findById(dto.taskId()).orElseThrow(()
+        -> new IllegalArgumentException("Task not found"));
 
     reminder.setTime(dto.reminderTime());
     reminder.setMessage(dto.message());
@@ -57,8 +57,8 @@ public class ReminderService {
   }
 
   public ReminderResponseDto getById(Long id) {
-    Reminder reminder = reminderRepository.findById(id)
-        .orElseThrow(() -> new IllegalArgumentException("Reminder not found"));
+    Reminder reminder = reminderRepository.findById(id).orElseThrow(()
+        -> new IllegalArgumentException("Reminder not found"));
     return ReminderMapper.toDto(reminder);
   }
 
