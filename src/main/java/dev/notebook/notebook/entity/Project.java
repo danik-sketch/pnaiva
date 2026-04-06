@@ -24,7 +24,7 @@ import lombok.Setter;
 public class Project {
 
   @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, orphanRemoval = true)
-  private final Set<Task> tasks = new HashSet<>();
+  private Set<Task> tasks = new HashSet<>();
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
