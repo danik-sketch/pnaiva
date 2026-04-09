@@ -5,9 +5,11 @@ import jakarta.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 
 public record TaskRequestDto(
-    @NotBlank String title,
+    @NotBlank(message = "Title is required")
+    String title,
     String description,
-    @NotNull LocalDateTime dueDate,
+    @NotNull(message = "Due date is required")
+    LocalDateTime dueDate,
     LocalDateTime completed
 ) {
 }

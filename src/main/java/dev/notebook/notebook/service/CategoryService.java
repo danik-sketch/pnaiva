@@ -3,6 +3,7 @@ package dev.notebook.notebook.service;
 import dev.notebook.notebook.dto.CategoryRequestDto;
 import dev.notebook.notebook.dto.CategoryResponseDto;
 import dev.notebook.notebook.entity.Category;
+import dev.notebook.notebook.exception.NotFoundException;
 import dev.notebook.notebook.mapper.CategoryMapper;
 import dev.notebook.notebook.repository.CategoryRepository;
 import java.util.ArrayList;
@@ -29,7 +30,7 @@ public class CategoryService {
   @Transactional
   public CategoryResponseDto update(Long id, CategoryRequestDto dto) {
     Category category = categoryRepository.findById(id).orElseThrow(()
-        -> new IllegalArgumentException("Category not found"));
+        -> new NotFoundException("Category not found"));
 
     category.setTitle(dto.title());
     Category saved = categoryRepository.save(category);
@@ -43,7 +44,7 @@ public class CategoryService {
 
   public CategoryResponseDto getById(Long id) {
     Category category = categoryRepository.findById(id).orElseThrow(()
-        -> new IllegalArgumentException("Category not found"));
+        -> new NotFoundException("Category not found"));
     return CategoryMapper.toDto(category);
   }
 

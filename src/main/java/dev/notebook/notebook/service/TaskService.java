@@ -3,6 +3,7 @@ package dev.notebook.notebook.service;
 import dev.notebook.notebook.dto.TaskRequestDto;
 import dev.notebook.notebook.dto.TaskResponseDto;
 import dev.notebook.notebook.entity.Task;
+import dev.notebook.notebook.exception.NotFoundException;
 import dev.notebook.notebook.mapper.TaskMapper;
 import dev.notebook.notebook.repository.TaskRepository;
 import java.time.LocalDate;
@@ -36,7 +37,7 @@ public class TaskService {
   @Transactional
   public TaskResponseDto update(Long id, TaskRequestDto dto) {
     Task task = repository.findById(id)
-        .orElseThrow(() -> new IllegalArgumentException("Task not found"));
+        .orElseThrow(() -> new NotFoundException("Task not found"));
 
     task.setTitle(dto.title());
     task.setDescription(dto.description());
@@ -62,7 +63,7 @@ public class TaskService {
 
   public TaskResponseDto getById(Long id) {
     Task task = repository.findById(id)
-        .orElseThrow(() -> new IllegalArgumentException("Task not found"));
+        .orElseThrow(() -> new NotFoundException("Task not found"));
     return TaskMapper.toDto(task);
   }
 

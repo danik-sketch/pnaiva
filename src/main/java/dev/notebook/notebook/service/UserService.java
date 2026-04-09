@@ -3,6 +3,7 @@ package dev.notebook.notebook.service;
 import dev.notebook.notebook.dto.UserRequestDto;
 import dev.notebook.notebook.dto.UserResponseDto;
 import dev.notebook.notebook.entity.User;
+import dev.notebook.notebook.exception.NotFoundException;
 import dev.notebook.notebook.mapper.UserMapper;
 import dev.notebook.notebook.repository.UserRepository;
 import java.util.ArrayList;
@@ -31,7 +32,7 @@ public class UserService {
   @Transactional
   public UserResponseDto update(Long id, UserRequestDto dto) {
     User user = userRepository.findById(id)
-        .orElseThrow(() -> new IllegalArgumentException("User not found"));
+        .orElseThrow(() -> new NotFoundException("User not found"));
 
     user.setUsername(dto.username());
     user.setEmail(dto.email());
@@ -48,7 +49,7 @@ public class UserService {
 
   public UserResponseDto getById(Long id) {
     User user = userRepository.findById(id)
-        .orElseThrow(() -> new IllegalArgumentException("User not found"));
+        .orElseThrow(() -> new NotFoundException("User not found"));
     return UserMapper.toDto(user);
   }
 

@@ -6,9 +6,9 @@ import dev.notebook.notebook.dto.TaskRequestDto;
 import dev.notebook.notebook.entity.Project;
 import dev.notebook.notebook.entity.Task;
 import dev.notebook.notebook.entity.User;
+import dev.notebook.notebook.exception.NotFoundException;
 import dev.notebook.notebook.mapper.ProjectMapper;
 import dev.notebook.notebook.repository.ProjectRepository;
-import dev.notebook.notebook.repository.TaskRepository;
 import dev.notebook.notebook.repository.UserRepository;
 import dev.notebook.notebook.service.cache.ProductSearchKey;
 import java.time.LocalDateTime;
@@ -16,9 +16,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -27,8 +25,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @Service
-@Getter
-@Setter
 @RequiredArgsConstructor
 public class ProjectService {
 
@@ -36,13 +32,12 @@ public class ProjectService {
 
   private final ProjectRepository projectRepository;
   private final UserRepository userRepository;
-  private final TaskRepository taskRepository;
   private final Map<ProductSearchKey, Page<ProjectResponseDto>> searchCache = new HashMap<>();
 
   @Transactional
   public ProjectResponseDto create(ProjectRequestDto dto) {
     User user = userRepository.findById(dto.userId()).orElseThrow(()
-        -> new IllegalArgumentException(USER_NOT_FOUND));
+        -> new NotFoundException(USER_NOT_FOUND));
 
     Project project = new Project();
     project.setName(dto.name());
@@ -69,14 +64,14 @@ public class ProjectService {
   @Transactional
   public ProjectResponseDto update(Long id, ProjectRequestDto dto) {
     Project project = projectRepository.findById(id).orElseThrow(()
-        -> new IllegalArgumentException("Project not found"));
+        -> new NotFoundException("Project not found"));
 
     project.setName(dto.name());
     project.setDescription(dto.description());
 
     if (!project.getUser().getId().equals(dto.userId())) {
       User user = userRepository.findById(dto.userId()).orElseThrow(()
-          -> new IllegalArgumentException(USER_NOT_FOUND));
+          -> new NotFoundException(USER_NOT_FOUND));
       project.setUser(user);
     }
 
@@ -93,7 +88,7 @@ public class ProjectService {
 
   public ProjectResponseDto getById(Long id) {
     Project project = projectRepository.findById(id).orElseThrow(()
-        -> new IllegalArgumentException("Project not found"));
+        -> new NotFoundException("Project not found"));
     return ProjectMapper.toDto(project);
   }
 

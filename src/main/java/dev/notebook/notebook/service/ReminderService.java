@@ -4,6 +4,7 @@ import dev.notebook.notebook.dto.ReminderRequestDto;
 import dev.notebook.notebook.dto.ReminderResponseDto;
 import dev.notebook.notebook.entity.Reminder;
 import dev.notebook.notebook.entity.Task;
+import dev.notebook.notebook.exception.NotFoundException;
 import dev.notebook.notebook.mapper.ReminderMapper;
 import dev.notebook.notebook.repository.ReminderRepository;
 import dev.notebook.notebook.repository.TaskRepository;
@@ -24,7 +25,7 @@ public class ReminderService {
   @Transactional
   public ReminderResponseDto create(ReminderRequestDto dto) {
     Task task = taskRepository.findById(dto.taskId()).orElseThrow(()
-        -> new IllegalArgumentException("Task not found"));
+        -> new NotFoundException("Task not found"));
 
     Reminder reminder = new Reminder();
     reminder.setTime(dto.reminderTime());
@@ -38,10 +39,10 @@ public class ReminderService {
   @Transactional
   public ReminderResponseDto update(Long id, ReminderRequestDto dto) {
     Reminder reminder = reminderRepository.findById(id).orElseThrow(()
-        -> new IllegalArgumentException("Reminder not found"));
+        -> new NotFoundException("Reminder not found"));
 
     Task task = taskRepository.findById(dto.taskId()).orElseThrow(()
-        -> new IllegalArgumentException("Task not found"));
+        -> new NotFoundException("Task not found"));
 
     reminder.setTime(dto.reminderTime());
     reminder.setMessage(dto.message());
@@ -58,7 +59,7 @@ public class ReminderService {
 
   public ReminderResponseDto getById(Long id) {
     Reminder reminder = reminderRepository.findById(id).orElseThrow(()
-        -> new IllegalArgumentException("Reminder not found"));
+        -> new NotFoundException("Reminder not found"));
     return ReminderMapper.toDto(reminder);
   }
 

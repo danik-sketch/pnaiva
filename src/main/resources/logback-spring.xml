@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <springProperty scope="context" name="ROOT_LOG_LEVEL"
+                    source="logging.level.root" defaultValue="INFO"/>
+    <springProperty scope="context" name="APP_LOG_LEVEL"
+                    source="logging.level.dev.notebook.notebook" defaultValue="DEBUG"/>
+    <springProperty scope="context" name="WEB_LOG_LEVEL"
+                    source="logging.level.org.springframework.web" defaultValue="INFO"/>
+    <springProperty scope="context" name="JDBC_INIT_LOG_LEVEL"
+                    source="logging.level.org.springframework.jdbc.datasource.init"
+                    defaultValue="INFO"/>
+    <springProperty scope="context" name="HIBERNATE_LOG_LEVEL"
+                    source="logging.level.org.hibernate" defaultValue="WARN"/>
+    <property name="LOG_DIR" value="logs"/>
+    <property name="LOG_FILE" value="${LOG_DIR}/application.log"/>
+    <property name="LOG_PATTERN"
+              value="%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"/>
+
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>${LOG_PATTERN}</pattern>
+        </encoder>
+    </appender>
+
+    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_FILE}</file>
+        <encoder>
+            <pattern>${LOG_PATTERN}</pattern>
+        </encoder>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_DIR}/application-%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
+            <maxFileSize>10MB</maxFileSize>
+            <maxHistory>30</maxHistory>
+            <totalSizeCap>1GB</totalSizeCap>
+        </rollingPolicy>
+    </appender>
+
+    <logger name="dev.notebook.notebook" level="${APP_LOG_LEVEL}"/>
+    <logger name="org.springframework.web" level="${WEB_LOG_LEVEL}"/>
+    <logger name="org.springframework.jdbc.datasource.init" level="${JDBC_INIT_LOG_LEVEL}"/>
+    <logger name="org.hibernate" level="${HIBERNATE_LOG_LEVEL}"/>
+
+    <root level="${ROOT_LOG_LEVEL}">
+        <appender-ref ref="CONSOLE"/>
+        <appender-ref ref="FILE"/>
+    </root>
+</configuration>
