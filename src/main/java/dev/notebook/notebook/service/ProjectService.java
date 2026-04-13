@@ -4,9 +4,11 @@ import dev.notebook.notebook.dto.ProjectRequestDto;
 import dev.notebook.notebook.dto.ProjectResponseDto;
 import dev.notebook.notebook.dto.TaskRequestDto;
 import dev.notebook.notebook.entity.Project;
+import dev.notebook.notebook.entity.Reminder;
 import dev.notebook.notebook.entity.Task;
 import dev.notebook.notebook.entity.User;
 import dev.notebook.notebook.exception.NotFoundException;
+import dev.notebook.notebook.exception.OperationFailedException;
 import dev.notebook.notebook.mapper.ProjectMapper;
 import dev.notebook.notebook.repository.ProjectRepository;
 import dev.notebook.notebook.repository.UserRepository;
@@ -18,6 +20,7 @@ import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -39,26 +42,41 @@ public class ProjectService {
     User user = userRepository.findById(dto.userId()).orElseThrow(()
         -> new NotFoundException(USER_NOT_FOUND));
 
-    Project project = new Project();
-    project.setName(dto.name());
-    project.setDescription(dto.description());
-    project.setUser(user);
+    try {
+      Project project = new Project();
+      project.setName(dto.name());
+      project.setDescription(dto.description());
+      project.setUser(user);
 
-    if (dto.tasks() != null && !dto.tasks().isEmpty()) {
-      for (TaskRequestDto taskDto : dto.tasks()) {
-        Task task = new Task();
-        task.setTitle(taskDto.title());
-        task.setDescription(taskDto.description());
-        task.setDueDate(taskDto.dueDate());
-        task.setCompleted(taskDto.completed());
-        task.setProject(project);
-        project.getTasks().add(task);
+      if (dto.tasks() != null && !dto.tasks().isEmpty()) {
+        for (TaskRequestDto taskDto : dto.tasks()) {
+          Task task = new Task();
+          task.setTitle(taskDto.title());
+          task.setDescription(taskDto.description());
+          task.setDueDate(taskDto.dueDate());
+          task.setCompleted(taskDto.completed());
+          task.setProject(project);
+
+          if (taskDto.reminders() != null && !taskDto.reminders().isEmpty()) {
+            for (var reminderDto : taskDto.reminders()) {
+              Reminder reminder = new Reminder();
+              reminder.setTime(reminderDto.reminderTime());
+              reminder.setMessage(reminderDto.message());
+              reminder.setTask(task);
+              task.getReminders().add(reminder);
+            }
+          }
+
+          project.getTasks().add(task);
+        }
       }
-    }
 
-    Project saved = projectRepository.save(project);
-    invalidateSearchCache();
-    return ProjectMapper.toDto(saved);
+      Project saved = projectRepository.save(project);
+      invalidateSearchCache();
+      return ProjectMapper.toDto(saved);
+    } catch (RuntimeException exception) {
+      throw new OperationFailedException("Failed to create project", exception);
+    }
   }
 
   @Transactional
@@ -66,24 +84,34 @@ public class ProjectService {
     Project project = projectRepository.findById(id).orElseThrow(()
         -> new NotFoundException("Project not found"));
 
-    project.setName(dto.name());
-    project.setDescription(dto.description());
+    try {
+      project.setName(dto.name());
+      project.setDescription(dto.description());
 
-    if (!project.getUser().getId().equals(dto.userId())) {
-      User user = userRepository.findById(dto.userId()).orElseThrow(()
-          -> new NotFoundException(USER_NOT_FOUND));
-      project.setUser(user);
+      if (!project.getUser().getId().equals(dto.userId())) {
+        User user = userRepository.findById(dto.userId()).orElseThrow(()
+            -> new NotFoundException(USER_NOT_FOUND));
+        project.setUser(user);
+      }
+
+      Project saved = projectRepository.save(project);
+      invalidateSearchCache();
+      return ProjectMapper.toDto(saved);
+    } catch (RuntimeException exception) {
+      throw new OperationFailedException("Failed to update project", exception);
     }
-
-    Project saved = projectRepository.save(project);
-    invalidateSearchCache();
-    return ProjectMapper.toDto(saved);
   }
 
   @Transactional
   public void delete(Long id) {
-    projectRepository.deleteById(id);
-    invalidateSearchCache();
+    try {
+      projectRepository.deleteById(id);
+      invalidateSearchCache();
+    } catch (EmptyResultDataAccessException exception) {
+      throw new NotFoundException("Project not found");
+    } catch (RuntimeException exception) {
+      throw new OperationFailedException("Failed to delete project", exception);
+    }
   }
 
   public ProjectResponseDto getById(Long id) {

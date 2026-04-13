@@ -2,13 +2,17 @@ package dev.notebook.notebook.service;
 
 import dev.notebook.notebook.dto.TaskRequestDto;
 import dev.notebook.notebook.dto.TaskResponseDto;
+import dev.notebook.notebook.entity.Project;
 import dev.notebook.notebook.entity.Task;
 import dev.notebook.notebook.exception.NotFoundException;
+import dev.notebook.notebook.exception.OperationFailedException;
 import dev.notebook.notebook.mapper.TaskMapper;
+import dev.notebook.notebook.repository.ProjectRepository;
 import dev.notebook.notebook.repository.TaskRepository;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,21 +21,35 @@ import org.springframework.transaction.annotation.Transactional;
 public class TaskService {
 
   private final TaskRepository repository;
+  private final ProjectRepository projectRepository;
 
-  public TaskService(TaskRepository repository) {
+  public TaskService(TaskRepository repository, ProjectRepository projectRepository) {
     this.repository = repository;
+    this.projectRepository = projectRepository;
   }
 
   @Transactional
   public TaskResponseDto create(TaskRequestDto dto) {
-    Task task = new Task();
-    task.setTitle(dto.title());
-    task.setDescription(dto.description());
-    task.setDueDate(dto.dueDate());
-    task.setCompleted(dto.completed());
+    if (dto.projectId() == null) {
+      throw new IllegalArgumentException("Project id is required");
+    }
 
-    Task savedTask = repository.save(task);
-    return TaskMapper.toDto(savedTask);
+    Project project = projectRepository.findById(dto.projectId())
+        .orElseThrow(() -> new NotFoundException("Project not found"));
+
+    try {
+      Task task = new Task();
+      task.setTitle(dto.title());
+      task.setDescription(dto.description());
+      task.setDueDate(dto.dueDate());
+      task.setCompleted(dto.completed());
+      task.setProject(project);
+
+      Task savedTask = repository.save(task);
+      return TaskMapper.toDto(savedTask);
+    } catch (RuntimeException exception) {
+      throw new OperationFailedException("Failed to create task", exception);
+    }
   }
 
   @Transactional
@@ -39,17 +57,34 @@ public class TaskService {
     Task task = repository.findById(id)
         .orElseThrow(() -> new NotFoundException("Task not found"));
 
-    task.setTitle(dto.title());
-    task.setDescription(dto.description());
-    task.setDueDate(dto.dueDate());
-    task.setCompleted(dto.completed());
+    try {
+      if (dto.projectId() != null && (task.getProject() == null
+          || !task.getProject().getId().equals(dto.projectId()))) {
+        Project project = projectRepository.findById(dto.projectId())
+            .orElseThrow(() -> new NotFoundException("Project not found"));
+        task.setProject(project);
+      }
 
-    return TaskMapper.toDto(repository.save(task));
+      task.setTitle(dto.title());
+      task.setDescription(dto.description());
+      task.setDueDate(dto.dueDate());
+      task.setCompleted(dto.completed());
+
+      return TaskMapper.toDto(repository.save(task));
+    } catch (RuntimeException exception) {
+      throw new OperationFailedException("Failed to update task", exception);
+    }
   }
 
   @Transactional
   public void delete(Long id) {
-    repository.deleteById(id);
+    try {
+      repository.deleteById(id);
+    } catch (EmptyResultDataAccessException exception) {
+      throw new NotFoundException("Task not found");
+    } catch (RuntimeException exception) {
+      throw new OperationFailedException("Failed to delete task", exception);
+    }
   }
 
   public List<TaskResponseDto> getAll() {

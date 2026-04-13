@@ -2,13 +2,24 @@ package dev.notebook.notebook.controller;
 
 import dev.notebook.notebook.dto.TaskRequestDto;
 import dev.notebook.notebook.dto.TaskResponseDto;
+import dev.notebook.notebook.exception.ErrorResponse;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import dev.notebook.notebook.service.TaskService;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Positive;
 import java.time.LocalDate;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -23,16 +34,29 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/tasks")
 @RequiredArgsConstructor
+@Validated
+@Tag(name = "Tasks", description = "Operations for managing tasks")
 public class TaskController {
 
   private final TaskService service;
 
   @GetMapping
+  @Operation(summary = "Get tasks", description = "Returns all tasks or filters them by one query parameter")
+  @ApiResponses({
+      @ApiResponse(responseCode = "200", description = "Tasks retrieved successfully",
+          content = @Content(array = @ArraySchema(schema = @Schema(implementation = TaskResponseDto.class)))),
+      @ApiResponse(responseCode = "400", description = "Invalid filter format",
+          content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+  })
   public List<TaskResponseDto> getTasks(
+      @Parameter(description = "Filter by task title fragment")
       @RequestParam(required = false) String title,
+      @Parameter(description = "Filter by exact description")
       @RequestParam(required = false) String description,
+      @Parameter(description = "Filter by due date in ISO format")
       @RequestParam(required = false) @DateTimeFormat(
           iso = DateTimeFormat.ISO.DATE) LocalDate dueDate,
+      @Parameter(description = "Filter by completion status")
       @RequestParam(required = false) Boolean completed
   ) {
 
@@ -53,24 +77,64 @@ public class TaskController {
   }
 
   @GetMapping("/{id}")
-  public TaskResponseDto getById(@PathVariable Long id) {
+  @Operation(summary = "Get task by id", description = "Returns a single task by identifier")
+  @ApiResponses({
+      @ApiResponse(responseCode = "200", description = "Task retrieved successfully",
+          content = @Content(schema = @Schema(implementation = TaskResponseDto.class))),
+      @ApiResponse(responseCode = "400", description = "Invalid identifier",
+          content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+      @ApiResponse(responseCode = "404", description = "Task not found",
+          content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+  })
+  public TaskResponseDto getById(
+      @Parameter(description = "Task identifier")
+      @PathVariable @Positive(message = "Id must be positive") Long id
+  ) {
     return service.getById(id);
   }
 
   @PostMapping
   @ResponseStatus(HttpStatus.CREATED)
+  @Operation(summary = "Create task", description = "Creates a new task")
+  @ApiResponses({
+      @ApiResponse(responseCode = "201", description = "Task created successfully",
+          content = @Content(schema = @Schema(implementation = TaskResponseDto.class))),
+      @ApiResponse(responseCode = "400", description = "Validation failed",
+          content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+  })
   public TaskResponseDto create(@Valid @RequestBody TaskRequestDto requestDto) {
     return service.create(requestDto);
   }
 
   @PutMapping("/{id}")
-  public TaskResponseDto update(@PathVariable Long id, @Valid @RequestBody TaskRequestDto dto) {
+  @Operation(summary = "Update task", description = "Updates an existing task")
+  @ApiResponses({
+      @ApiResponse(responseCode = "200", description = "Task updated successfully",
+          content = @Content(schema = @Schema(implementation = TaskResponseDto.class))),
+      @ApiResponse(responseCode = "400", description = "Validation failed",
+          content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+      @ApiResponse(responseCode = "404", description = "Task not found",
+          content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+  })
+  public TaskResponseDto update(
+      @Parameter(description = "Task identifier")
+      @PathVariable @Positive(message = "Id must be positive") Long id,
+      @Valid @RequestBody TaskRequestDto dto
+  ) {
     return service.update(id, dto);
   }
 
   @DeleteMapping("/{id}")
   @ResponseStatus(HttpStatus.NO_CONTENT)
-  public void delete(@PathVariable Long id) {
+  @Operation(summary = "Delete task", description = "Deletes a task by identifier")
+  @ApiResponses({
+      @ApiResponse(responseCode = "204", description = "Task deleted successfully"),
+      @ApiResponse(responseCode = "400", description = "Invalid identifier",
+          content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+      @ApiResponse(responseCode = "404", description = "Task not found",
+          content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+  })
+  public void delete(@PathVariable @Positive(message = "Id must be positive") Long id) {
     service.delete(id);
   }
 }

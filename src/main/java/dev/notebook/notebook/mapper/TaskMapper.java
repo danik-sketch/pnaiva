@@ -1,5 +1,6 @@
 package dev.notebook.notebook.mapper;
 
+import dev.notebook.notebook.dto.ReminderResponseDto;
 import dev.notebook.notebook.dto.TaskResponseDto;
 import dev.notebook.notebook.entity.Category;
 import dev.notebook.notebook.entity.Reminder;
@@ -30,10 +31,21 @@ public class TaskMapper {
 
     if (task.getReminders() != null) {
       dto.setReminders(task.getReminders().stream()
-          .map(Reminder::getMessage)
+          .map(TaskMapper::toReminderDto)
           .toList());
     }
 
+    return dto;
+  }
+
+  private static ReminderResponseDto toReminderDto(Reminder reminder) {
+    ReminderResponseDto dto = new ReminderResponseDto();
+    dto.setId(reminder.getId());
+    dto.setReminderTime(reminder.getTime());
+    dto.setMessage(reminder.getMessage());
+    if (reminder.getTask() != null) {
+      dto.setTaskId(reminder.getTask().getId());
+    }
     return dto;
   }
 }
