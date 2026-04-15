@@ -1,8 +1,8 @@
 package dev.notebook.notebook.controller;
 
+import dev.notebook.notebook.dto.ErrorResponseDto;
 import dev.notebook.notebook.dto.UserRequestDto;
 import dev.notebook.notebook.dto.UserResponseDto;
-import dev.notebook.notebook.exception.ErrorResponse;
 import dev.notebook.notebook.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -56,9 +56,9 @@ public class UserController {
       @ApiResponse(responseCode = "200", description = "User retrieved successfully",
           content = @Content(schema = @Schema(implementation = UserResponseDto.class))),
       @ApiResponse(responseCode = "400", description = "Invalid identifier",
-          content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+          content = @Content(schema = @Schema(implementation = ErrorResponseDto.class))),
       @ApiResponse(responseCode = "404", description = "User not found",
-          content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+          content = @Content(schema = @Schema(implementation = ErrorResponseDto.class)))
   })
   public UserResponseDto getById(
       @Parameter(description = "User identifier")
@@ -74,9 +74,9 @@ public class UserController {
       @ApiResponse(responseCode = "201", description = "User created successfully",
           content = @Content(schema = @Schema(implementation = UserResponseDto.class))),
       @ApiResponse(responseCode = "400", description = "Validation failed",
-          content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+          content = @Content(schema = @Schema(implementation = ErrorResponseDto.class))),
       @ApiResponse(responseCode = "409", description = "Email already exists",
-          content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+          content = @Content(schema = @Schema(implementation = ErrorResponseDto.class)))
   })
   public UserResponseDto create(@Valid @RequestBody UserRequestDto dto) {
     return userService.create(dto);
@@ -88,11 +88,11 @@ public class UserController {
       @ApiResponse(responseCode = "200", description = "User updated successfully",
           content = @Content(schema = @Schema(implementation = UserResponseDto.class))),
       @ApiResponse(responseCode = "400", description = "Validation failed",
-          content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+          content = @Content(schema = @Schema(implementation = ErrorResponseDto.class))),
       @ApiResponse(responseCode = "404", description = "User not found",
-          content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+          content = @Content(schema = @Schema(implementation = ErrorResponseDto.class))),
       @ApiResponse(responseCode = "409", description = "Email already exists",
-          content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+          content = @Content(schema = @Schema(implementation = ErrorResponseDto.class)))
   })
   public UserResponseDto update(
       @Parameter(description = "User identifier")
@@ -108,9 +108,9 @@ public class UserController {
   @ApiResponses({
       @ApiResponse(responseCode = "204", description = "User deleted successfully"),
       @ApiResponse(responseCode = "400", description = "Invalid identifier",
-          content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+          content = @Content(schema = @Schema(implementation = ErrorResponseDto.class))),
       @ApiResponse(responseCode = "404", description = "User not found",
-          content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+          content = @Content(schema = @Schema(implementation = ErrorResponseDto.class)))
   })
   public void delete(@PathVariable @Positive(message = "Id must be positive") Long id) {
     userService.delete(id);

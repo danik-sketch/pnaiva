@@ -2,7 +2,7 @@ package dev.notebook.notebook.controller;
 
 import dev.notebook.notebook.dto.CategoryRequestDto;
 import dev.notebook.notebook.dto.CategoryResponseDto;
-import dev.notebook.notebook.exception.ErrorResponse;
+import dev.notebook.notebook.dto.ErrorResponseDto;
 import dev.notebook.notebook.service.CategoryService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -59,9 +59,9 @@ public class CategoryController {
       @ApiResponse(responseCode = "200", description = "Category retrieved successfully",
           content = @Content(schema = @Schema(implementation = CategoryResponseDto.class))),
       @ApiResponse(responseCode = "400", description = "Invalid identifier",
-          content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+          content = @Content(schema = @Schema(implementation = ErrorResponseDto.class))),
       @ApiResponse(responseCode = "404", description = "Category not found",
-          content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+          content = @Content(schema = @Schema(implementation = ErrorResponseDto.class)))
   })
   public CategoryResponseDto getById(
       @Parameter(description = "Category identifier")
@@ -77,7 +77,7 @@ public class CategoryController {
       @ApiResponse(responseCode = "201", description = "Category created successfully",
           content = @Content(schema = @Schema(implementation = CategoryResponseDto.class))),
       @ApiResponse(responseCode = "400", description = "Validation failed",
-          content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+          content = @Content(schema = @Schema(implementation = ErrorResponseDto.class)))
   })
   public CategoryResponseDto create(@Valid @RequestBody CategoryRequestDto dto) {
     return categoryService.create(dto);
@@ -89,9 +89,9 @@ public class CategoryController {
       @ApiResponse(responseCode = "200", description = "Category updated successfully",
           content = @Content(schema = @Schema(implementation = CategoryResponseDto.class))),
       @ApiResponse(responseCode = "400", description = "Validation failed",
-          content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+          content = @Content(schema = @Schema(implementation = ErrorResponseDto.class))),
       @ApiResponse(responseCode = "404", description = "Category not found",
-          content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+          content = @Content(schema = @Schema(implementation = ErrorResponseDto.class)))
   })
   public CategoryResponseDto update(
       @Parameter(description = "Category identifier")
@@ -107,9 +107,9 @@ public class CategoryController {
   @ApiResponses({
       @ApiResponse(responseCode = "204", description = "Category deleted successfully"),
       @ApiResponse(responseCode = "400", description = "Invalid identifier",
-          content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+          content = @Content(schema = @Schema(implementation = ErrorResponseDto.class))),
       @ApiResponse(responseCode = "404", description = "Category not found",
-          content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+          content = @Content(schema = @Schema(implementation = ErrorResponseDto.class)))
   })
   public void delete(@PathVariable @Positive(message = "Id must be positive") Long id) {
     categoryService.delete(id);

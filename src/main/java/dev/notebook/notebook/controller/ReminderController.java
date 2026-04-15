@@ -1,8 +1,8 @@
 package dev.notebook.notebook.controller;
 
+import dev.notebook.notebook.dto.ErrorResponseDto;
 import dev.notebook.notebook.dto.ReminderRequestDto;
 import dev.notebook.notebook.dto.ReminderResponseDto;
-import dev.notebook.notebook.exception.ErrorResponse;
 import dev.notebook.notebook.service.ReminderService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -56,12 +56,15 @@ public class ReminderController {
       description = "Returns a single reminder by identifier"
   )
   @ApiResponses({
-      @ApiResponse(responseCode = "200", description = "Reminder retrieved successfully",
+      @ApiResponse(responseCode = "200",
+          description = "Reminder retrieved successfully",
           content = @Content(schema = @Schema(implementation = ReminderResponseDto.class))),
-      @ApiResponse(responseCode = "400", description = "Invalid identifier",
-          content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-      @ApiResponse(responseCode = "404", description = "Reminder not found",
-          content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+      @ApiResponse(responseCode = "400",
+          description = "Invalid identifier",
+          content = @Content(schema = @Schema(implementation = ErrorResponseDto.class))),
+      @ApiResponse(responseCode = "404",
+          description = "Reminder not found",
+          content = @Content(schema = @Schema(implementation = ErrorResponseDto.class)))
   })
   public ReminderResponseDto getById(
       @Parameter(description = "Reminder identifier")
@@ -74,10 +77,12 @@ public class ReminderController {
   @ResponseStatus(HttpStatus.CREATED)
   @Operation(summary = "Create reminder", description = "Creates a new reminder")
   @ApiResponses({
-      @ApiResponse(responseCode = "201", description = "Reminder created successfully",
+      @ApiResponse(responseCode = "201",
+          description = "Reminder created successfully",
           content = @Content(schema = @Schema(implementation = ReminderResponseDto.class))),
-      @ApiResponse(responseCode = "400", description = "Validation failed",
-          content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+      @ApiResponse(responseCode = "400",
+          description = "Validation failed",
+          content = @Content(schema = @Schema(implementation = ErrorResponseDto.class)))
   })
   public ReminderResponseDto create(@Valid @RequestBody ReminderRequestDto dto) {
     return reminderService.create(dto);
@@ -88,10 +93,12 @@ public class ReminderController {
   @ApiResponses({
       @ApiResponse(responseCode = "200", description = "Reminder updated successfully",
           content = @Content(schema = @Schema(implementation = ReminderResponseDto.class))),
-      @ApiResponse(responseCode = "400", description = "Validation failed",
-          content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-      @ApiResponse(responseCode = "404", description = "Reminder not found",
-          content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+      @ApiResponse(responseCode = "400",
+          description = "Validation failed",
+          content = @Content(schema = @Schema(implementation = ErrorResponseDto.class))),
+      @ApiResponse(responseCode = "404",
+          description = "Reminder not found",
+          content = @Content(schema = @Schema(implementation = ErrorResponseDto.class)))
   })
   public ReminderResponseDto update(
       @Parameter(description = "Reminder identifier")
@@ -105,11 +112,14 @@ public class ReminderController {
   @ResponseStatus(HttpStatus.NO_CONTENT)
   @Operation(summary = "Delete reminder", description = "Deletes a reminder by identifier")
   @ApiResponses({
-      @ApiResponse(responseCode = "204", description = "Reminder deleted successfully"),
-      @ApiResponse(responseCode = "400", description = "Invalid identifier",
-          content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-      @ApiResponse(responseCode = "404", description = "Reminder not found",
-          content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+      @ApiResponse(responseCode = "204",
+          description = "Reminder deleted successfully"),
+      @ApiResponse(responseCode = "400",
+          description = "Invalid identifier",
+          content = @Content(schema = @Schema(implementation = ErrorResponseDto.class))),
+      @ApiResponse(responseCode = "404",
+          description = "Reminder not found",
+          content = @Content(schema = @Schema(implementation = ErrorResponseDto.class)))
   })
   public void delete(@PathVariable @Positive(message = "Id must be positive") Long id) {
     reminderService.delete(id);

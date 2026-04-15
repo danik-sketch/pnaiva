@@ -1,8 +1,8 @@
 package dev.notebook.notebook.controller;
 
+import dev.notebook.notebook.dto.ErrorResponseDto;
 import dev.notebook.notebook.dto.ProjectRequestDto;
 import dev.notebook.notebook.dto.ProjectResponseDto;
-import dev.notebook.notebook.exception.ErrorResponse;
 import dev.notebook.notebook.service.ProjectService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -65,7 +65,7 @@ public class ProjectController {
   @ApiResponses({
       @ApiResponse(responseCode = "200", description = "Search completed successfully"),
       @ApiResponse(responseCode = "400", description = "Invalid filter or pagination format",
-          content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+          content = @Content(schema = @Schema(implementation = ErrorResponseDto.class)))
   })
   public Page<ProjectResponseDto> searchByTaskJpql(
       @Parameter(description = "Filter by project name")
@@ -96,7 +96,7 @@ public class ProjectController {
   @ApiResponses({
       @ApiResponse(responseCode = "200", description = "Search completed successfully"),
       @ApiResponse(responseCode = "400", description = "Invalid filter or pagination format",
-          content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+          content = @Content(schema = @Schema(implementation = ErrorResponseDto.class)))
   })
   public Page<ProjectResponseDto> searchByTaskNative(
       @Parameter(description = "Filter by project name")
@@ -127,9 +127,9 @@ public class ProjectController {
       @ApiResponse(responseCode = "200", description = "Project retrieved successfully",
           content = @Content(schema = @Schema(implementation = ProjectResponseDto.class))),
       @ApiResponse(responseCode = "400", description = "Invalid identifier",
-          content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+          content = @Content(schema = @Schema(implementation = ErrorResponseDto.class))),
       @ApiResponse(responseCode = "404", description = "Project not found",
-          content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+          content = @Content(schema = @Schema(implementation = ErrorResponseDto.class)))
   })
   public ProjectResponseDto getById(
       @Parameter(description = "Project identifier")
@@ -145,9 +145,9 @@ public class ProjectController {
       @ApiResponse(responseCode = "201", description = "Project created successfully",
           content = @Content(schema = @Schema(implementation = ProjectResponseDto.class))),
       @ApiResponse(responseCode = "400", description = "Validation failed",
-          content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+          content = @Content(schema = @Schema(implementation = ErrorResponseDto.class))),
       @ApiResponse(responseCode = "404", description = "Owner or related entity not found",
-          content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+          content = @Content(schema = @Schema(implementation = ErrorResponseDto.class)))
   })
   public ProjectResponseDto create(@Valid @RequestBody ProjectRequestDto dto) {
     return projectService.create(dto);
@@ -159,9 +159,9 @@ public class ProjectController {
       @ApiResponse(responseCode = "200", description = "Project updated successfully",
           content = @Content(schema = @Schema(implementation = ProjectResponseDto.class))),
       @ApiResponse(responseCode = "400", description = "Validation failed",
-          content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+          content = @Content(schema = @Schema(implementation = ErrorResponseDto.class))),
       @ApiResponse(responseCode = "404", description = "Project or related entity not found",
-          content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+          content = @Content(schema = @Schema(implementation = ErrorResponseDto.class)))
   })
   public ProjectResponseDto update(
       @Parameter(description = "Project identifier")
@@ -177,9 +177,9 @@ public class ProjectController {
   @ApiResponses({
       @ApiResponse(responseCode = "204", description = "Project deleted successfully"),
       @ApiResponse(responseCode = "400", description = "Invalid identifier",
-          content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+          content = @Content(schema = @Schema(implementation = ErrorResponseDto.class))),
       @ApiResponse(responseCode = "404", description = "Project not found",
-          content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+          content = @Content(schema = @Schema(implementation = ErrorResponseDto.class)))
   })
   public void delete(@PathVariable @Positive(message = "Id must be positive") Long id) {
     projectService.delete(id);
