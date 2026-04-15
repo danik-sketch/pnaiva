@@ -107,7 +107,7 @@ public class ProjectService {
     try {
       projectRepository.deleteById(id);
       invalidateSearchCache();
-    } catch (EmptyResultDataAccessException exception) {
+    } catch (EmptyResultDataAccessException ignored) {
       throw new NotFoundException("Project not found");
     } catch (RuntimeException exception) {
       throw new OperationFailedException("Failed to delete project", exception);
