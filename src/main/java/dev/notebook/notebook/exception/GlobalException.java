@@ -36,8 +36,7 @@ public class GlobalException {
       HttpServletRequest request
   ) {
     List<String> errors = ex.getBindingResult().getFieldErrors().stream()
-        .map(f -> f.getField() + ": " + f.getDefaultMessage())
-        .toList();
+        .map(f -> f.getField() + ": " + f.getDefaultMessage()).toList();
 
     return buildResponse(HttpStatus.BAD_REQUEST, "Validation failed", request, errors);
   }
@@ -48,8 +47,7 @@ public class GlobalException {
       HttpServletRequest request
   ) {
     List<String> errors = ex.getConstraintViolations().stream()
-        .map(v -> v.getPropertyPath() + ": " + v.getMessage())
-        .toList();
+        .map(v -> v.getPropertyPath() + ": " + v.getMessage()).toList();
 
     return buildResponse(HttpStatus.BAD_REQUEST, "Validation failed", request, errors);
   }

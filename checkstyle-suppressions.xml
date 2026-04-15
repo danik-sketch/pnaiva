@@ -11,4 +11,6 @@
   <suppress checks="SummaryJavadoc" files=".*" />
 
   <suppress checks="CatchParameterName" files=".*" />
+
+  <suppress checks="PatternVariableName" files=".*" />
 </suppressions>
