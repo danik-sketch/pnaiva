@@ -9,4 +9,6 @@
   <suppress checks="MissingJavadocType" files=".*" />
   <suppress checks="JavadocVariable" files=".*" />
   <suppress checks="SummaryJavadoc" files=".*" />
+
+  <suppress checks="CatchParameterName" files=".*" />
 </suppressions>

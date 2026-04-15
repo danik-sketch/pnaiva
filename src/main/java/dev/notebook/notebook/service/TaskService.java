@@ -80,7 +80,7 @@ public class TaskService {
   public void delete(Long id) {
     try {
       repository.deleteById(id);
-    } catch (EmptyResultDataAccessException e) {
+    } catch (EmptyResultDataAccessException _) {
       throw new NotFoundException("Task not found");
     } catch (RuntimeException exception) {
       throw new OperationFailedException("Failed to delete task", exception);
