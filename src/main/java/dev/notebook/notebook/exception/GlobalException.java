@@ -21,9 +21,9 @@ public class GlobalException {
       HttpServletRequest request
   ) {
     HttpStatus status = switch (ex) {
-      case NotFoundException e -> HttpStatus.NOT_FOUND;
-      case EmailAlreadyExistsException e -> HttpStatus.CONFLICT;
-      case OperationFailedException e -> HttpStatus.INTERNAL_SERVER_ERROR;
+      case NotFoundException _ -> HttpStatus.NOT_FOUND;
+      case EmailAlreadyExistsException _ -> HttpStatus.CONFLICT;
+      case OperationFailedException _ -> HttpStatus.INTERNAL_SERVER_ERROR;
       default -> HttpStatus.BAD_REQUEST;
     };
 
