@@ -3,6 +3,7 @@ package dev.notebook.notebook.controller;
 import dev.notebook.notebook.dto.UserRequestDto;
 import dev.notebook.notebook.dto.UserResponseDto;
 import dev.notebook.notebook.exception.ErrorResponse;
+import dev.notebook.notebook.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
@@ -11,7 +12,6 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import dev.notebook.notebook.service.UserService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
 import java.util.List;
@@ -38,9 +38,14 @@ public class UserController {
   private final UserService userService;
 
   @GetMapping
-  @Operation(summary = "Get all users", description = "Returns the full list of users")
+  @Operation(
+      summary = "Get all users",
+      description = "Returns the full list of users"
+  )
   @ApiResponse(responseCode = "200", description = "Users retrieved successfully",
-      content = @Content(array = @ArraySchema(schema = @Schema(implementation = UserResponseDto.class))))
+      content = @Content(
+          array = @ArraySchema(schema = @Schema(implementation = UserResponseDto.class))
+      ))
   public List<UserResponseDto> getAll() {
     return userService.getAll();
   }

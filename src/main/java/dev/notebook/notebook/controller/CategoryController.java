@@ -3,6 +3,7 @@ package dev.notebook.notebook.controller;
 import dev.notebook.notebook.dto.CategoryRequestDto;
 import dev.notebook.notebook.dto.CategoryResponseDto;
 import dev.notebook.notebook.exception.ErrorResponse;
+import dev.notebook.notebook.service.CategoryService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
@@ -11,7 +12,6 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import dev.notebook.notebook.service.CategoryService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
 import java.util.List;
@@ -38,15 +38,23 @@ public class CategoryController {
   private final CategoryService categoryService;
 
   @GetMapping
-  @Operation(summary = "Get all categories", description = "Returns the full list of categories")
+  @Operation(
+      summary = "Get all categories",
+      description = "Returns the full list of categories"
+  )
   @ApiResponse(responseCode = "200", description = "Categories retrieved successfully",
-      content = @Content(array = @ArraySchema(schema = @Schema(implementation = CategoryResponseDto.class))))
+      content = @Content(
+          array = @ArraySchema(schema = @Schema(implementation = CategoryResponseDto.class))
+      ))
   public List<CategoryResponseDto> getAll() {
     return categoryService.getAll();
   }
 
   @GetMapping("/{id}")
-  @Operation(summary = "Get category by id", description = "Returns a single category by identifier")
+  @Operation(
+      summary = "Get category by id",
+      description = "Returns a single category by identifier"
+  )
   @ApiResponses({
       @ApiResponse(responseCode = "200", description = "Category retrieved successfully",
           content = @Content(schema = @Schema(implementation = CategoryResponseDto.class))),

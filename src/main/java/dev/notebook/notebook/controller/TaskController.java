@@ -3,6 +3,7 @@ package dev.notebook.notebook.controller;
 import dev.notebook.notebook.dto.TaskRequestDto;
 import dev.notebook.notebook.dto.TaskResponseDto;
 import dev.notebook.notebook.exception.ErrorResponse;
+import dev.notebook.notebook.service.TaskService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
@@ -11,7 +12,6 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import dev.notebook.notebook.service.TaskService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
 import java.time.LocalDate;
@@ -41,10 +41,15 @@ public class TaskController {
   private final TaskService service;
 
   @GetMapping
-  @Operation(summary = "Get tasks", description = "Returns all tasks or filters them by one query parameter")
+  @Operation(
+      summary = "Get tasks",
+      description = "Returns all tasks or filters them by one query parameter"
+  )
   @ApiResponses({
       @ApiResponse(responseCode = "200", description = "Tasks retrieved successfully",
-          content = @Content(array = @ArraySchema(schema = @Schema(implementation = TaskResponseDto.class)))),
+          content = @Content(
+              array = @ArraySchema(schema = @Schema(implementation = TaskResponseDto.class))
+          )),
       @ApiResponse(responseCode = "400", description = "Invalid filter format",
           content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
   })
@@ -77,7 +82,10 @@ public class TaskController {
   }
 
   @GetMapping("/{id}")
-  @Operation(summary = "Get task by id", description = "Returns a single task by identifier")
+  @Operation(
+      summary = "Get task by id",
+      description = "Returns a single task by identifier"
+  )
   @ApiResponses({
       @ApiResponse(responseCode = "200", description = "Task retrieved successfully",
           content = @Content(schema = @Schema(implementation = TaskResponseDto.class))),

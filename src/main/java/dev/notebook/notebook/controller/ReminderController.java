@@ -3,6 +3,7 @@ package dev.notebook.notebook.controller;
 import dev.notebook.notebook.dto.ReminderRequestDto;
 import dev.notebook.notebook.dto.ReminderResponseDto;
 import dev.notebook.notebook.exception.ErrorResponse;
+import dev.notebook.notebook.service.ReminderService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
@@ -11,7 +12,6 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import dev.notebook.notebook.service.ReminderService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
 import java.util.List;
@@ -38,15 +38,23 @@ public class ReminderController {
   private final ReminderService reminderService;
 
   @GetMapping
-  @Operation(summary = "Get all reminders", description = "Returns the full list of reminders")
+  @Operation(
+      summary = "Get all reminders",
+      description = "Returns the full list of reminders"
+  )
   @ApiResponse(responseCode = "200", description = "Reminders retrieved successfully",
-      content = @Content(array = @ArraySchema(schema = @Schema(implementation = ReminderResponseDto.class))))
+      content = @Content(
+          array = @ArraySchema(schema = @Schema(implementation = ReminderResponseDto.class))
+      ))
   public List<ReminderResponseDto> getAll() {
     return reminderService.getAll();
   }
 
   @GetMapping("/{id}")
-  @Operation(summary = "Get reminder by id", description = "Returns a single reminder by identifier")
+  @Operation(
+      summary = "Get reminder by id",
+      description = "Returns a single reminder by identifier"
+  )
   @ApiResponses({
       @ApiResponse(responseCode = "200", description = "Reminder retrieved successfully",
           content = @Content(schema = @Schema(implementation = ReminderResponseDto.class))),

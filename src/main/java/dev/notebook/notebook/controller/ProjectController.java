@@ -3,6 +3,7 @@ package dev.notebook.notebook.controller;
 import dev.notebook.notebook.dto.ProjectRequestDto;
 import dev.notebook.notebook.dto.ProjectResponseDto;
 import dev.notebook.notebook.exception.ErrorResponse;
+import dev.notebook.notebook.service.ProjectService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
@@ -11,13 +12,12 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.springdoc.core.annotations.ParameterObject;
-import dev.notebook.notebook.service.ProjectService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
 import java.time.LocalDateTime;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -44,16 +44,24 @@ public class ProjectController {
   private final ProjectService projectService;
 
   @GetMapping
-  @Operation(summary = "Get all projects", description = "Returns the full list of projects")
+  @Operation(
+      summary = "Get all projects",
+      description = "Returns the full list of projects"
+  )
   @ApiResponse(responseCode = "200", description = "Projects retrieved successfully",
-      content = @Content(array = @ArraySchema(schema = @Schema(implementation = ProjectResponseDto.class))))
+      content = @Content(
+          array = @ArraySchema(schema = @Schema(implementation = ProjectResponseDto.class))
+      ))
   public List<ProjectResponseDto> getAll() {
     return projectService.getAll();
   }
 
   @GetMapping("/search-jpql")
-  @Operation(summary = "Search projects via JPQL",
-      description = "Searches projects by project and task attributes using the JPQL implementation")
+  @Operation(
+      summary = "Search projects via JPQL",
+      description = "Searches projects by project and task attributes "
+          + "using the JPQL implementation"
+  )
   @ApiResponses({
       @ApiResponse(responseCode = "200", description = "Search completed successfully"),
       @ApiResponse(responseCode = "400", description = "Invalid filter or pagination format",
@@ -67,20 +75,24 @@ public class ProjectController {
       @Parameter(description = "Filter by task completion status")
       @RequestParam(required = false) Boolean completed,
       @Parameter(description = "Lower bound for task due date")
-      @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-      LocalDateTime dueFrom,
+      @RequestParam(required = false)
+      @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime dueFrom,
       @Parameter(description = "Upper bound for task due date")
-      @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-      LocalDateTime dueTo,
+      @RequestParam(required = false)
+      @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime dueTo,
       @ParameterObject Pageable pageable
   ) {
-    return projectService.searchByTaskJpql(projectName, taskTitle, completed, dueFrom, dueTo,
-        pageable);
+    return projectService.searchByTaskJpql(
+        projectName, taskTitle, completed, dueFrom, dueTo, pageable
+    );
   }
 
   @GetMapping("/search-native")
-  @Operation(summary = "Search projects via native SQL",
-      description = "Searches projects by project and task attributes using the native SQL implementation")
+  @Operation(
+      summary = "Search projects via native SQL",
+      description = "Searches projects by project and task attributes "
+          + "using the native SQL implementation"
+  )
   @ApiResponses({
       @ApiResponse(responseCode = "200", description = "Search completed successfully"),
       @ApiResponse(responseCode = "400", description = "Invalid filter or pagination format",
@@ -94,19 +106,23 @@ public class ProjectController {
       @Parameter(description = "Filter by task completion status")
       @RequestParam(required = false) Boolean completed,
       @Parameter(description = "Lower bound for task due date")
-      @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-      LocalDateTime dueFrom,
+      @RequestParam(required = false)
+      @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime dueFrom,
       @Parameter(description = "Upper bound for task due date")
-      @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-      LocalDateTime dueTo,
+      @RequestParam(required = false)
+      @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime dueTo,
       @ParameterObject Pageable pageable
   ) {
-    return projectService.searchByTaskNative(projectName, taskTitle, completed, dueFrom, dueTo,
-        pageable);
+    return projectService.searchByTaskNative(
+        projectName, taskTitle, completed, dueFrom, dueTo, pageable
+    );
   }
 
   @GetMapping("/{id}")
-  @Operation(summary = "Get project by id", description = "Returns a single project by identifier")
+  @Operation(
+      summary = "Get project by id",
+      description = "Returns a single project by identifier"
+  )
   @ApiResponses({
       @ApiResponse(responseCode = "200", description = "Project retrieved successfully",
           content = @Content(schema = @Schema(implementation = ProjectResponseDto.class))),

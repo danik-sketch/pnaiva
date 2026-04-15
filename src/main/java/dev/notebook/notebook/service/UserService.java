@@ -65,7 +65,7 @@ public class UserService {
   public void delete(Long id) {
     try {
       userRepository.deleteById(id);
-    } catch (EmptyResultDataAccessException _) {
+    } catch (EmptyResultDataAccessException exception) {
       throw new NotFoundException("User not found");
     } catch (RuntimeException exception) {
       throw new OperationFailedException("Failed to delete user", exception);
