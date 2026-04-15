@@ -12,14 +12,15 @@ import org.springframework.stereotype.Component;
 public class ServiceExecutionTimeLoggingAspect {
 
   @Around("execution(public * dev.notebook.notebook.service..*(..))")
-  public Object logExecutionTime(ProceedingJoinPoint joinPoint) throws Throwable {
-    long startedAt = System.nanoTime();
-    try {
-      return joinPoint.proceed();
-    } finally {
-      long elapsedMs = (System.nanoTime() - startedAt) / 1_000_000;
-      log.info("Service method {} executed in {} ms",
-          joinPoint.getSignature().toShortString(), elapsedMs);
-    }
+  public Object logTime(ProceedingJoinPoint joinPoint) throws Throwable {
+    long start = System.currentTimeMillis();
+
+    Object result = joinPoint.proceed();
+
+    log.info("Service method {} executed in {} ms",
+        joinPoint.getSignature().toShortString(),
+        System.currentTimeMillis() - start);
+
+    return result;
   }
 }
