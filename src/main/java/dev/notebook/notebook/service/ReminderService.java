@@ -34,10 +34,7 @@ public class ReminderService {
         -> new NotFoundException("Task not found"));
 
     try {
-      Reminder reminder = new Reminder();
-      reminder.setTime(dto.reminderTime());
-      reminder.setMessage(dto.message());
-      reminder.setTask(task);
+      Reminder reminder = ReminderMapper.toEntity(dto, task);
 
       Reminder saved = reminderRepository.save(reminder);
       return ReminderMapper.toDto(saved);

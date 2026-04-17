@@ -1,5 +1,6 @@
 package dev.notebook.notebook.mapper;
 
+import dev.notebook.notebook.dto.CategoryRequestDto;
 import dev.notebook.notebook.dto.CategoryResponseDto;
 import dev.notebook.notebook.entity.Category;
 import dev.notebook.notebook.entity.Task;
@@ -23,6 +24,12 @@ public class CategoryMapper {
       dto.setTasks(taskTitles);
     }
     return dto;
+  }
+
+  public static Category toEntity(CategoryRequestDto dto) {
+    Category category = new Category();
+    category.setTitle(dto.title());
+    return category;
   }
 }
 

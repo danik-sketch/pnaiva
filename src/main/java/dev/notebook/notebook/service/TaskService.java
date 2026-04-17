@@ -38,12 +38,7 @@ public class TaskService {
         .orElseThrow(() -> new NotFoundException("Project not found"));
 
     try {
-      Task task = new Task();
-      task.setTitle(dto.title());
-      task.setDescription(dto.description());
-      task.setDueDate(dto.dueDate());
-      task.setCompleted(dto.completed());
-      task.setProject(project);
+      Task task = TaskMapper.toEntity(dto, project);
 
       Task savedTask = repository.save(task);
       return TaskMapper.toDto(savedTask);

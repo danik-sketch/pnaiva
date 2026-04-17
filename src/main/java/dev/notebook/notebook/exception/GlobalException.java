@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 @RestControllerAdvice
 public class GlobalException {
 
-  private final Logger log = (Logger) LoggerFactory.getLogger(GlobalException.class);
+  private final Logger log = LoggerFactory.getLogger(GlobalException.class);
 
   @ExceptionHandler({NotFoundException.class, EmailAlreadyExistsException.class,
       OperationFailedException.class, IllegalArgumentException.class})
@@ -28,30 +28,28 @@ public class GlobalException {
       case NotFoundException _ -> HttpStatus.NOT_FOUND;
       case EmailAlreadyExistsException _ -> HttpStatus.CONFLICT;
       case OperationFailedException _ -> HttpStatus.INTERNAL_SERVER_ERROR;
-      default -> HttpStatus.BAD_REQUEST;
+      default -> HttpStatus.BAD_REQUEST; // для IllegalArgumentException и др.
     };
+
     log.warn("{}: {}", ex.getClass().getSimpleName(), ex.getMessage());
     return buildResponse(status, ex.getMessage(), request, List.of(ex.getMessage()));
   }
 
-  @ExceptionHandler(MethodArgumentNotValidException.class)
+  @ExceptionHandler({MethodArgumentNotValidException.class, ConstraintViolationException.class})
   public ResponseEntity<ErrorResponseDto> handleValidation(
-      MethodArgumentNotValidException ex,
+      Exception ex,
       HttpServletRequest request
   ) {
-    List<String> errors = ex.getBindingResult().getFieldErrors().stream()
-        .map(f -> f.getField() + ": " + f.getDefaultMessage()).toList();
-    log.warn("{}: {}", ex.getClass().getSimpleName(), ex.getMessage());
-    return buildResponse(HttpStatus.BAD_REQUEST, "Validation failed", request, errors);
-  }
+    List<String> errors;
 
-  @ExceptionHandler(ConstraintViolationException.class)
-  public ResponseEntity<ErrorResponseDto> handleConstraint(
-      ConstraintViolationException ex,
-      HttpServletRequest request
-  ) {
-    List<String> errors = ex.getConstraintViolations().stream()
-        .map(v -> v.getPropertyPath() + ": " + v.getMessage()).toList();
+    if (ex instanceof MethodArgumentNotValidException methodArgEx) {
+      errors = methodArgEx.getBindingResult().getFieldErrors().stream()
+          .map(f -> f.getField() + ": " + f.getDefaultMessage()).toList();
+    } else { // ConstraintViolationException
+      errors = ((ConstraintViolationException) ex).getConstraintViolations().stream()
+          .map(v -> v.getPropertyPath() + ": " + v.getMessage()).toList();
+    }
+
     log.warn("{}: {}", ex.getClass().getSimpleName(), ex.getMessage());
     return buildResponse(HttpStatus.BAD_REQUEST, "Validation failed", request, errors);
   }
@@ -67,9 +65,12 @@ public class GlobalException {
   }
 
   private ResponseEntity<ErrorResponseDto> buildResponse(
-      HttpStatus status, String msg, HttpServletRequest req, List<String> details) {
+      HttpStatus status, String message,
+      HttpServletRequest request,
+      List<String> details
+  ) {
     return ResponseEntity.status(status).body(
-        new ErrorResponseDto(status.value(), status.getReasonPhrase(), msg, req.getRequestURI(),
-            details, LocalDateTime.now()));
+        new ErrorResponseDto(status.value(), status.getReasonPhrase(), message,
+            request.getRequestURI(), details, LocalDateTime.now()));
   }
 }

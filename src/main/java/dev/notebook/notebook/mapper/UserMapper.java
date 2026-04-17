@@ -1,5 +1,6 @@
 package dev.notebook.notebook.mapper;
 
+import dev.notebook.notebook.dto.UserRequestDto;
 import dev.notebook.notebook.dto.UserResponseDto;
 import dev.notebook.notebook.entity.Project;
 import dev.notebook.notebook.entity.User;
@@ -24,6 +25,14 @@ public class UserMapper {
       dto.setProjects(projectNames);
     }
     return dto;
+  }
+
+  public static User toEntity(UserRequestDto dto) {
+    User user = new User();
+    user.setUsername(dto.username());
+    user.setEmail(dto.email());
+    user.setPassword(dto.password());
+    return user;
   }
 }
 

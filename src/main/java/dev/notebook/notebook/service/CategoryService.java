@@ -24,8 +24,7 @@ public class CategoryService {
   @Transactional
   public CategoryResponseDto create(CategoryRequestDto dto) {
     try {
-      Category category = new Category();
-      category.setTitle(dto.title());
+      Category category = CategoryMapper.toEntity(dto);
       Category saved = categoryRepository.save(category);
       return CategoryMapper.toDto(saved);
     } catch (RuntimeException exception) {

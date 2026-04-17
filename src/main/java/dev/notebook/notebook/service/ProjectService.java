@@ -2,6 +2,7 @@ package dev.notebook.notebook.service;
 
 import dev.notebook.notebook.dto.ProjectRequestDto;
 import dev.notebook.notebook.dto.ProjectResponseDto;
+import dev.notebook.notebook.dto.ReminderRequestDto;
 import dev.notebook.notebook.dto.TaskRequestDto;
 import dev.notebook.notebook.entity.Project;
 import dev.notebook.notebook.entity.Reminder;
@@ -43,33 +44,7 @@ public class ProjectService {
         -> new NotFoundException(USER_NOT_FOUND));
 
     try {
-      Project project = new Project();
-      project.setName(dto.name());
-      project.setDescription(dto.description());
-      project.setUser(user);
-
-      if (dto.tasks() != null && !dto.tasks().isEmpty()) {
-        for (TaskRequestDto taskDto : dto.tasks()) {
-          Task task = new Task();
-          task.setTitle(taskDto.title());
-          task.setDescription(taskDto.description());
-          task.setDueDate(taskDto.dueDate());
-          task.setCompleted(taskDto.completed());
-          task.setProject(project);
-
-          if (taskDto.reminders() != null && !taskDto.reminders().isEmpty()) {
-            for (var reminderDto : taskDto.reminders()) {
-              Reminder reminder = new Reminder();
-              reminder.setTime(reminderDto.reminderTime());
-              reminder.setMessage(reminderDto.message());
-              reminder.setTask(task);
-              task.getReminders().add(reminder);
-            }
-          }
-
-          project.getTasks().add(task);
-        }
-      }
+      Project project = ProjectMapper.toEntity(dto, user);
 
       Project saved = projectRepository.save(project);
       invalidateSearchCache();
@@ -132,7 +107,8 @@ public class ProjectService {
   @Transactional(readOnly = true)
   public Page<ProjectResponseDto> searchByTaskJpql(
       String projectName, String taskTitle, Boolean completed,
-      LocalDateTime dueFrom, LocalDateTime dueTo, Pageable pageable) {
+      LocalDateTime dueFrom, LocalDateTime dueTo, Pageable pageable
+  ) {
     ProductSearchKey key = new ProductSearchKey(
         projectName, taskTitle, completed, dueFrom, dueTo,
         pageable.getPageNumber(), pageable.getPageSize());
@@ -155,7 +131,8 @@ public class ProjectService {
   @Transactional(readOnly = true)
   public Page<ProjectResponseDto> searchByTaskNative(
       String projectName, String taskTitle, Boolean completed,
-      LocalDateTime dueFrom, LocalDateTime dueTo, Pageable pageable) {
+      LocalDateTime dueFrom, LocalDateTime dueTo, Pageable pageable
+  ) {
     ProductSearchKey key = new ProductSearchKey(
         projectName, taskTitle, completed, dueFrom, dueTo,
         pageable.getPageNumber(), pageable.getPageSize());
@@ -173,5 +150,11 @@ public class ProjectService {
   private void invalidateSearchCache() {
     log.info("Data changed. Cache cleared.");
     searchCache.clear();
+  }
+
+  public List<ProjectResponseDto> createBulk(List<ProjectRequestDto> dtoList) {
+    return dtoList.stream()
+        .map(this::create)
+        .toList();
   }
 }

@@ -29,10 +29,7 @@ public class UserService {
     }
 
     try {
-      User user = new User();
-      user.setUsername(dto.username());
-      user.setEmail(dto.email());
-      user.setPassword(dto.password());
+      User user = UserMapper.toEntity(dto);
       User saved = userRepository.save(user);
       return UserMapper.toDto(saved);
     } catch (RuntimeException exception) {
