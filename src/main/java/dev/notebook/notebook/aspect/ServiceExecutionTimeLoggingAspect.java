@@ -14,13 +14,9 @@ public class ServiceExecutionTimeLoggingAspect {
   @Around("execution(public * dev.notebook.notebook.service..*(..))")
   public Object logTime(ProceedingJoinPoint joinPoint) throws Throwable {
     long start = System.currentTimeMillis();
-
+    String method = joinPoint.getSignature().toShortString();
     Object result = joinPoint.proceed();
-
-    log.info("Service method {} executed in {} ms",
-        joinPoint.getSignature().toShortString(),
-        System.currentTimeMillis() - start);
-
+    log.info("Service method {} executed in {} ms", method, System.currentTimeMillis() - start);
     return result;
   }
 }

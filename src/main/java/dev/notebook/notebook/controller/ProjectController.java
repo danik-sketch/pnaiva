@@ -138,6 +138,24 @@ public class ProjectController {
     return projectService.getById(id);
   }
 
+  @PostMapping("/bulk")
+  @ResponseStatus(HttpStatus.CREATED)
+  @Operation(summary = "Create projects in bulk", description = "Creates multiple new projects " +
+      "in a single request")
+  @ApiResponses({
+      @ApiResponse(responseCode = "201", description = "Projects created successfully",
+          content = @Content(array = @ArraySchema(schema = @Schema(implementation =
+              ProjectResponseDto.class)))),
+      @ApiResponse(responseCode = "400", description = "Validation failed for one or more " +
+          "projects",
+          content = @Content(schema = @Schema(implementation = ErrorResponseDto.class))),
+      @ApiResponse(responseCode = "404", description = "Owner not found",
+          content = @Content(schema = @Schema(implementation = ErrorResponseDto.class)))
+  })
+  public List<ProjectResponseDto> createBulk(@Valid @RequestBody List<ProjectRequestDto> dtos) {
+    return projectService.createBulk(dtos);
+  }
+
   @PostMapping
   @ResponseStatus(HttpStatus.CREATED)
   @Operation(summary = "Create project", description = "Creates a new project")

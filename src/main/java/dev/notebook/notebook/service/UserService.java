@@ -11,10 +11,12 @@ import dev.notebook.notebook.repository.UserRepository;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -31,6 +33,7 @@ public class UserService {
     try {
       User user = UserMapper.toEntity(dto);
       User saved = userRepository.save(user);
+      log.info("UserService.create completed");
       return UserMapper.toDto(saved);
     } catch (RuntimeException exception) {
       throw new OperationFailedException("Failed to create user", exception);
@@ -52,6 +55,7 @@ public class UserService {
       user.setPassword(dto.password());
 
       User saved = userRepository.save(user);
+      log.info("UserService.update completed");
       return UserMapper.toDto(saved);
     } catch (RuntimeException exception) {
       throw new OperationFailedException("Failed to update user", exception);
@@ -62,6 +66,7 @@ public class UserService {
   public void delete(Long id) {
     try {
       userRepository.deleteById(id);
+      log.info("UserService.delete completed");
     } catch (EmptyResultDataAccessException _) {
       throw new NotFoundException("User not found");
     } catch (RuntimeException exception) {
@@ -72,6 +77,7 @@ public class UserService {
   public UserResponseDto getById(Long id) {
     User user = userRepository.findById(id)
         .orElseThrow(() -> new NotFoundException("User not found"));
+    log.info("UserService.getById completed");
     return UserMapper.toDto(user);
   }
 
@@ -81,6 +87,7 @@ public class UserService {
     for (User user : users) {
       result.add(UserMapper.toDto(user));
     }
+    log.info("UserService.getAll completed");
     return result;
   }
 }

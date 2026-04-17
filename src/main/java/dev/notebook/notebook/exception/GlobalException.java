@@ -28,7 +28,7 @@ public class GlobalException {
       case NotFoundException _ -> HttpStatus.NOT_FOUND;
       case EmailAlreadyExistsException _ -> HttpStatus.CONFLICT;
       case OperationFailedException _ -> HttpStatus.INTERNAL_SERVER_ERROR;
-      default -> HttpStatus.BAD_REQUEST; // для IllegalArgumentException и др.
+      default -> HttpStatus.BAD_REQUEST;
     };
 
     log.warn("{}: {}", ex.getClass().getSimpleName(), ex.getMessage());
@@ -45,7 +45,7 @@ public class GlobalException {
     if (ex instanceof MethodArgumentNotValidException methodArgEx) {
       errors = methodArgEx.getBindingResult().getFieldErrors().stream()
           .map(f -> f.getField() + ": " + f.getDefaultMessage()).toList();
-    } else { // ConstraintViolationException
+    } else {
       errors = ((ConstraintViolationException) ex).getConstraintViolations().stream()
           .map(v -> v.getPropertyPath() + ": " + v.getMessage()).toList();
     }
@@ -59,7 +59,7 @@ public class GlobalException {
       Exception ex,
       HttpServletRequest request
   ) {
-    log.error("Unexpected error", ex);
+    log.error("Unexpected error: {}", ex.getMessage());
     return buildResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Unexpected error", request,
         List.of("Internal server error"));
   }

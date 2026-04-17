@@ -12,10 +12,12 @@ import dev.notebook.notebook.repository.TaskRepository;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+@Slf4j
 @Service
 @Transactional(readOnly = true)
 public class TaskService {
@@ -41,6 +43,7 @@ public class TaskService {
       Task task = TaskMapper.toEntity(dto, project);
 
       Task savedTask = repository.save(task);
+      log.info("TaskService.create completed");
       return TaskMapper.toDto(savedTask);
     } catch (RuntimeException exception) {
       throw new OperationFailedException("Failed to create task", exception);
@@ -65,7 +68,9 @@ public class TaskService {
       task.setDueDate(dto.dueDate());
       task.setCompleted(dto.completed());
 
-      return TaskMapper.toDto(repository.save(task));
+      Task saved = repository.save(task);
+      log.info("TaskService.update completed");
+      return TaskMapper.toDto(saved);
     } catch (RuntimeException exception) {
       throw new OperationFailedException("Failed to update task", exception);
     }
@@ -75,6 +80,7 @@ public class TaskService {
   public void delete(Long id) {
     try {
       repository.deleteById(id);
+      log.info("TaskService.delete completed");
     } catch (EmptyResultDataAccessException _) {
       throw new NotFoundException("Task not found");
     } catch (RuntimeException exception) {
@@ -88,12 +94,16 @@ public class TaskService {
     for (Task task : tasks) {
       result.add(TaskMapper.toDto(task));
     }
+    log.info("TaskService.getAll completed");
     return result;
   }
 
   public TaskResponseDto getById(Long id) {
     Task task = repository.findById(id)
-        .orElseThrow(() -> new NotFoundException("Task not found"));
+        .orElseThrow(() -> {
+          return new NotFoundException("Task not found");
+        });
+    log.info("TaskService.getById completed");
     return TaskMapper.toDto(task);
   }
 
@@ -103,6 +113,7 @@ public class TaskService {
     for (Task task : tasks) {
       result.add(TaskMapper.toDto(task));
     }
+    log.info("TaskService.getByTitleContaining completed");
     return result;
   }
 
@@ -112,6 +123,7 @@ public class TaskService {
     for (Task task : tasks) {
       result.add(TaskMapper.toDto(task));
     }
+    log.info("TaskService.getByDescription completed");
     return result;
   }
 
@@ -123,6 +135,7 @@ public class TaskService {
     for (Task task : tasks) {
       result.add(TaskMapper.toDto(task));
     }
+    log.info("TaskService.getByCompleted completed");
     return result;
   }
 
@@ -134,6 +147,7 @@ public class TaskService {
     for (Task task : tasks) {
       result.add(TaskMapper.toDto(task));
     }
+    log.info("TaskService.getByDueDate completed");
     return result;
   }
 }

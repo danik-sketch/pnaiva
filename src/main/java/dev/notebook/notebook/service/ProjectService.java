@@ -2,11 +2,7 @@ package dev.notebook.notebook.service;
 
 import dev.notebook.notebook.dto.ProjectRequestDto;
 import dev.notebook.notebook.dto.ProjectResponseDto;
-import dev.notebook.notebook.dto.ReminderRequestDto;
-import dev.notebook.notebook.dto.TaskRequestDto;
 import dev.notebook.notebook.entity.Project;
-import dev.notebook.notebook.entity.Reminder;
-import dev.notebook.notebook.entity.Task;
 import dev.notebook.notebook.entity.User;
 import dev.notebook.notebook.exception.NotFoundException;
 import dev.notebook.notebook.exception.OperationFailedException;
@@ -40,14 +36,15 @@ public class ProjectService {
 
   @Transactional
   public ProjectResponseDto create(ProjectRequestDto dto) {
-    User user = userRepository.findById(dto.userId()).orElseThrow(()
-        -> new NotFoundException(USER_NOT_FOUND));
+    User user = userRepository.findById(dto.userId())
+        .orElseThrow(() -> new NotFoundException(USER_NOT_FOUND));
 
     try {
       Project project = ProjectMapper.toEntity(dto, user);
 
       Project saved = projectRepository.save(project);
       invalidateSearchCache();
+      log.info("ProjectService.create completed");
       return ProjectMapper.toDto(saved);
     } catch (RuntimeException exception) {
       throw new OperationFailedException("Failed to create project", exception);
@@ -56,21 +53,22 @@ public class ProjectService {
 
   @Transactional
   public ProjectResponseDto update(Long id, ProjectRequestDto dto) {
-    Project project = projectRepository.findById(id).orElseThrow(()
-        -> new NotFoundException("Project not found"));
+    Project project = projectRepository.findById(id)
+        .orElseThrow(() -> new NotFoundException("Project not found"));
 
     try {
       project.setName(dto.name());
       project.setDescription(dto.description());
 
       if (!project.getUser().getId().equals(dto.userId())) {
-        User user = userRepository.findById(dto.userId()).orElseThrow(()
-            -> new NotFoundException(USER_NOT_FOUND));
+        User user = userRepository.findById(dto.userId())
+            .orElseThrow(() -> new NotFoundException(USER_NOT_FOUND));
         project.setUser(user);
       }
 
       Project saved = projectRepository.save(project);
       invalidateSearchCache();
+      log.info("ProjectService.update completed");
       return ProjectMapper.toDto(saved);
     } catch (RuntimeException exception) {
       throw new OperationFailedException("Failed to update project", exception);
@@ -82,6 +80,7 @@ public class ProjectService {
     try {
       projectRepository.deleteById(id);
       invalidateSearchCache();
+      log.info("ProjectService.delete completed");
     } catch (EmptyResultDataAccessException _) {
       throw new NotFoundException("Project not found");
     } catch (RuntimeException exception) {
@@ -90,8 +89,9 @@ public class ProjectService {
   }
 
   public ProjectResponseDto getById(Long id) {
-    Project project = projectRepository.findById(id).orElseThrow(()
-        -> new NotFoundException("Project not found"));
+    Project project = projectRepository.findById(id)
+        .orElseThrow(() -> new NotFoundException("Project not found"));
+    log.info("ProjectService.getById completed");
     return ProjectMapper.toDto(project);
   }
 
@@ -101,6 +101,7 @@ public class ProjectService {
     for (Project project : projects) {
       result.add(ProjectMapper.toDto(project));
     }
+    log.info("ProjectService.getAll completed");
     return result;
   }
 
@@ -144,11 +145,22 @@ public class ProjectService {
     Page<ProjectResponseDto> result = projectRepository.searchByTaskNative(
         projectName, taskTitle, completed, dueFrom, dueTo, pageable).map(ProjectMapper::toDto);
     searchCache.put(key, result);
+
+    log.info("\n\nResult cached with key: {}", key);
+    log.info("Cache size after save: {}\n\n", searchCache.size());
+
     return result;
   }
 
   private void invalidateSearchCache() {
     log.info("Data changed. Cache cleared.");
     searchCache.clear();
+  }
+
+  @Transactional
+  public List<ProjectResponseDto> createBulk(List<ProjectRequestDto> dtoList) {
+    List<ProjectResponseDto> response = dtoList.stream().map(this::create).toList();
+    log.info("ProjectService.createBulk completed");
+    return response;
   }
 }

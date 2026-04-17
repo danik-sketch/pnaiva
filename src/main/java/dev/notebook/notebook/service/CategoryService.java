@@ -10,10 +10,12 @@ import dev.notebook.notebook.repository.CategoryRepository;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -26,6 +28,7 @@ public class CategoryService {
     try {
       Category category = CategoryMapper.toEntity(dto);
       Category saved = categoryRepository.save(category);
+      log.info("CategoryService.create completed");
       return CategoryMapper.toDto(saved);
     } catch (RuntimeException exception) {
       throw new OperationFailedException("Failed to create category", exception);
@@ -34,12 +37,13 @@ public class CategoryService {
 
   @Transactional
   public CategoryResponseDto update(Long id, CategoryRequestDto dto) {
-    Category category = categoryRepository.findById(id).orElseThrow(()
-        -> new NotFoundException("Category not found"));
+    Category category = categoryRepository.findById(id)
+        .orElseThrow(() -> new NotFoundException("Category not found"));
 
     try {
       category.setTitle(dto.title());
       Category saved = categoryRepository.save(category);
+      log.info("CategoryService.update completed");
       return CategoryMapper.toDto(saved);
     } catch (RuntimeException exception) {
       throw new OperationFailedException("Failed to update category", exception);
@@ -50,6 +54,7 @@ public class CategoryService {
   public void delete(Long id) {
     try {
       categoryRepository.deleteById(id);
+      log.info("CategoryService.delete completed");
     } catch (EmptyResultDataAccessException _) {
       throw new NotFoundException("Category not found");
     } catch (RuntimeException exception) {
@@ -58,8 +63,9 @@ public class CategoryService {
   }
 
   public CategoryResponseDto getById(Long id) {
-    Category category = categoryRepository.findById(id).orElseThrow(()
-        -> new NotFoundException("Category not found"));
+    Category category = categoryRepository.findById(id)
+        .orElseThrow(() -> new NotFoundException("Category not found"));
+    log.info("CategoryService.getById completed");
     return CategoryMapper.toDto(category);
   }
 
@@ -69,6 +75,7 @@ public class CategoryService {
     for (Category category : categories) {
       result.add(CategoryMapper.toDto(category));
     }
+    log.info("CategoryService.getAll completed");
     return result;
   }
 

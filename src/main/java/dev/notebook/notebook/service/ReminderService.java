@@ -12,10 +12,12 @@ import dev.notebook.notebook.repository.TaskRepository;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -30,13 +32,14 @@ public class ReminderService {
       throw new IllegalArgumentException("Task id is required");
     }
 
-    Task task = taskRepository.findById(dto.taskId()).orElseThrow(()
-        -> new NotFoundException("Task not found"));
+    Task task = taskRepository.findById(dto.taskId())
+        .orElseThrow(() -> new NotFoundException("Task not found"));
 
     try {
       Reminder reminder = ReminderMapper.toEntity(dto, task);
 
       Reminder saved = reminderRepository.save(reminder);
+      log.info("ReminderService.create completed");
       return ReminderMapper.toDto(saved);
     } catch (RuntimeException exception) {
       throw new OperationFailedException("Failed to create reminder", exception);
@@ -49,11 +52,11 @@ public class ReminderService {
       throw new IllegalArgumentException("Task id is required");
     }
 
-    Reminder reminder = reminderRepository.findById(id).orElseThrow(()
-        -> new NotFoundException("Reminder not found"));
+    Reminder reminder = reminderRepository.findById(id)
+        .orElseThrow(() -> new NotFoundException("Reminder not found"));
 
-    Task task = taskRepository.findById(dto.taskId()).orElseThrow(()
-        -> new NotFoundException("Task not found"));
+    Task task = taskRepository.findById(dto.taskId())
+        .orElseThrow(() -> new NotFoundException("Task not found"));
 
     try {
       reminder.setTime(dto.reminderTime());
@@ -61,6 +64,7 @@ public class ReminderService {
       reminder.setTask(task);
 
       Reminder saved = reminderRepository.save(reminder);
+      log.info("ReminderService.update completed");
       return ReminderMapper.toDto(saved);
     } catch (RuntimeException exception) {
       throw new OperationFailedException("Failed to update reminder", exception);
@@ -71,6 +75,7 @@ public class ReminderService {
   public void delete(Long id) {
     try {
       reminderRepository.deleteById(id);
+      log.info("ReminderService.delete completed");
     } catch (EmptyResultDataAccessException _) {
       throw new NotFoundException("Reminder not found");
     } catch (RuntimeException exception) {
@@ -79,8 +84,9 @@ public class ReminderService {
   }
 
   public ReminderResponseDto getById(Long id) {
-    Reminder reminder = reminderRepository.findById(id).orElseThrow(()
-        -> new NotFoundException("Reminder not found"));
+    Reminder reminder = reminderRepository.findById(id)
+        .orElseThrow(() -> new NotFoundException("Reminder not found"));
+    log.info("ReminderService.getById completed");
     return ReminderMapper.toDto(reminder);
   }
 
@@ -90,6 +96,7 @@ public class ReminderService {
     for (Reminder reminder : reminders) {
       result.add(ReminderMapper.toDto(reminder));
     }
+    log.info("ReminderService.getAll completed");
     return result;
   }
 }
