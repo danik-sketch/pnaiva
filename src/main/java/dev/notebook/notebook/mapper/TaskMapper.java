@@ -1,6 +1,5 @@
 package dev.notebook.notebook.mapper;
 
-import dev.notebook.notebook.dto.ReminderResponseDto;
 import dev.notebook.notebook.dto.TaskRequestDto;
 import dev.notebook.notebook.dto.TaskResponseDto;
 import dev.notebook.notebook.entity.Category;
@@ -22,30 +21,23 @@ public class TaskMapper {
     dto.setDescription(task.getDescription());
     dto.setDueDate(task.getDueDate());
     dto.setCompleted(task.getCompleted());
-
-    Optional.ofNullable(task.getProject())
-        .ifPresent(p -> dto.setProjectName(p.getName()));
-
-    dto.setCategories(Optional.ofNullable(task.getCategories())
-        .map(cats -> cats.stream()
-            .map(Category::getTitle)
-            .toList())
-        .orElse(Collections.emptyList()));
-
-    dto.setReminders(Optional.ofNullable(task.getReminders())
-        .map(rems -> rems.stream()
-            .map(reminder -> {
-              ReminderResponseDto rDto = new ReminderResponseDto();
-              rDto.setId(reminder.getId());
-              rDto.setReminderTime(reminder.getTime());
-              rDto.setMessage(reminder.getMessage());
-              Optional.ofNullable(reminder.getTask())
-                  .ifPresent(t -> rDto.setTaskId(t.getId()));
-              return rDto;
-            })
-            .toList())
-        .orElse(Collections.emptyList()));
-
+    if (task.getProject() != null) {
+      dto.setProjectName(task.getProject().getName());
+    }
+    if (task.getCategories() != null) {
+      dto.setCategories(task.getCategories().stream()
+          .map(Category::getTitle)
+          .toList());
+    } else {
+      dto.setCategories(Collections.emptyList());
+    }
+    if (task.getReminders() != null) {
+      dto.setReminders(task.getReminders().stream()
+          .map(ReminderMapper::toDto)
+          .toList());
+    } else {
+      dto.setReminders(Collections.emptyList());
+    }
     return dto;
   }
 
@@ -57,11 +49,11 @@ public class TaskMapper {
     task.setCompleted(dto.completed());
     task.setProject(project);
 
-    Optional.ofNullable(dto.reminders())
-        .stream()
-        .flatMap(List::stream)
-        .map(remDto -> ReminderMapper.toEntity(remDto, task))
-        .forEach(reminder -> task.getReminders().add(reminder));
+    if (dto.reminders() != null) {
+      dto.reminders().stream()
+          .map(remDto -> ReminderMapper.toEntity(remDto, task))
+          .forEach(reminder -> task.getReminders().add(reminder));
+    }
 
     return task;
   }

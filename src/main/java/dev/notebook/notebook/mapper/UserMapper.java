@@ -4,8 +4,7 @@ import dev.notebook.notebook.dto.UserRequestDto;
 import dev.notebook.notebook.dto.UserResponseDto;
 import dev.notebook.notebook.entity.Project;
 import dev.notebook.notebook.entity.User;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Collections;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 
@@ -18,11 +17,11 @@ public class UserMapper {
     dto.setUsername(user.getUsername());
     dto.setEmail(user.getEmail());
     if (user.getProjects() != null) {
-      List<String> projectNames = new ArrayList<>();
-      for (Project project : user.getProjects()) {
-        projectNames.add(project.getName());
-      }
-      dto.setProjects(projectNames);
+      dto.setProjects(user.getProjects().stream()
+          .map(Project::getName)
+          .toList());
+    } else {
+      dto.setProjects(Collections.emptyList());
     }
     return dto;
   }

@@ -4,9 +4,6 @@ import dev.notebook.notebook.dto.ProjectRequestDto;
 import dev.notebook.notebook.dto.ProjectResponseDto;
 import dev.notebook.notebook.entity.Project;
 import dev.notebook.notebook.entity.User;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 
@@ -35,11 +32,11 @@ public class ProjectMapper {
     project.setDescription(dto.description());
     project.setUser(user);
 
-    Optional.ofNullable(dto.tasks())
-        .stream()
-        .flatMap(List::stream)
-        .map(taskDto -> TaskMapper.toEntity(taskDto, project))
-        .forEach(task -> project.getTasks().add(task));
+    if (dto.tasks() != null) {
+      dto.tasks().stream()
+          .map(taskDto -> TaskMapper.toEntity(taskDto, project))
+          .forEach(task -> project.getTasks().add(task));
+    }
 
     return project;
   }
