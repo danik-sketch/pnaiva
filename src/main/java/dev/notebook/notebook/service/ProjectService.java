@@ -151,10 +151,4 @@ public class ProjectService {
     log.info("Data changed. Cache cleared.");
     searchCache.clear();
   }
-
-  public List<ProjectResponseDto> createBulk(List<ProjectRequestDto> dtoList) {
-    return dtoList.stream()
-        .map(this::create)
-        .toList();
-  }
 }
