@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE suppressions PUBLIC
-  "-//Checkstyle//DTD SuppressionFilter  1.2//EN"
-  "file:/home/bazelin/projects/sem4/pnaiva/notebook/suppressions_1_2.dtd">
+  "-//Checkstyle//DTD SuppressionFilter 1.2//EN"
+  "../src/main/resources/suppressions_1_2.dtd">
 <suppressions>
   <suppress checks="JavadocMethod" files=".*" />
   <suppress checks="JavadocType" files=".*" />
