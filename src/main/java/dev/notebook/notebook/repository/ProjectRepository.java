@@ -50,48 +50,4 @@ public interface ProjectRepository extends JpaRepository<Project, Long> {
       @Param("dueTo") LocalDateTime dueTo,
       Pageable pageable
   );
-
-  @EntityGraph(attributePaths = {"user", "tasks", "tasks.categories", "tasks.reminders"})
-  @Query(value = """
-          SELECT p.*
-          FROM projects p
-          WHERE p.name LIKE CONCAT('%', COALESCE(:projectName, ''), '%')
-            AND EXISTS (
-              SELECT 1
-              FROM tasks t
-              WHERE t.project_id = p.id
-                AND t.title LIKE CONCAT('%', COALESCE(:taskTitle, ''), '%')
-                AND (:completed IS NULL
-                  OR (:completed = true AND t.completed IS NOT NULL)
-                  OR (:completed = false AND t.completed IS NULL))
-                AND (:dueFrom IS NULL OR t.due_date >= :dueFrom)
-                AND (:dueTo IS NULL OR t.due_date <= :dueTo)
-            )
-          ORDER BY p.id
-          """,
-      countQuery = """
-          SELECT COUNT(p.id)
-          FROM projects p
-          WHERE p.name LIKE CONCAT('%', COALESCE(:projectName, ''), '%')
-            AND EXISTS (
-              SELECT 1
-              FROM tasks t
-              WHERE t.project_id = p.id
-                AND t.title LIKE CONCAT('%', COALESCE(:taskTitle, ''), '%')
-                AND (:completed IS NULL
-                  OR (:completed = true AND t.completed IS NOT NULL)
-                  OR (:completed = false AND t.completed IS NULL))
-                AND (:dueFrom IS NULL OR t.due_date >= :dueFrom)
-                AND (:dueTo IS NULL OR t.due_date <= :dueTo)
-            )
-          """,
-      nativeQuery = true)
-  Page<Project> searchByTaskNative(
-      @Param("projectName") String projectName,
-      @Param("taskTitle") String taskTitle,
-      @Param("completed") Boolean completed,
-      @Param("dueFrom") LocalDateTime dueFrom,
-      @Param("dueTo") LocalDateTime dueTo,
-      Pageable pageable
-  );
 }

@@ -123,31 +123,8 @@ public class ProjectService {
         projectName, taskTitle, completed, dueFrom, dueTo, pageable).map(ProjectMapper::toDto);
     searchCache.put(key, result);
 
-    log.info("\n\nResult cached with key: {}", key);
-    log.info("Cache size after save: {}\n\n", searchCache.size());
-
-    return result;
-  }
-
-  @Transactional(readOnly = true)
-  public Page<ProjectResponseDto> searchByTaskNative(
-      String projectName, String taskTitle, Boolean completed,
-      LocalDateTime dueFrom, LocalDateTime dueTo, Pageable pageable
-  ) {
-    ProductSearchKey key = new ProductSearchKey(
-        projectName, taskTitle, completed, dueFrom, dueTo,
-        pageable.getPageNumber(), pageable.getPageSize());
-    Page<ProjectResponseDto> cached = searchCache.get(key);
-    if (cached != null) {
-      return cached;
-    }
-
-    Page<ProjectResponseDto> result = projectRepository.searchByTaskNative(
-        projectName, taskTitle, completed, dueFrom, dueTo, pageable).map(ProjectMapper::toDto);
-    searchCache.put(key, result);
-
-    log.info("\n\nResult cached with key: {}", key);
-    log.info("Cache size after save: {}\n\n", searchCache.size());
+    log.info("\nResult cached with key: {}", key);
+    log.info("Cache size after save: {}\n", searchCache.size());
 
     return result;
   }

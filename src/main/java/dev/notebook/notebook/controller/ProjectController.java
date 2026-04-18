@@ -56,7 +56,7 @@ public class ProjectController {
     return projectService.getAll();
   }
 
-  @GetMapping("/search-jpql")
+  @GetMapping("/search")
   @Operation(
       summary = "Search projects via JPQL",
       description = "Searches projects by project and task attributes "
@@ -87,37 +87,6 @@ public class ProjectController {
     );
   }
 
-  @GetMapping("/search-native")
-  @Operation(
-      summary = "Search projects via native SQL",
-      description = "Searches projects by project and task attributes "
-          + "using the native SQL implementation"
-  )
-  @ApiResponses({
-      @ApiResponse(responseCode = "200", description = "Search completed successfully"),
-      @ApiResponse(responseCode = "400", description = "Invalid filter or pagination format",
-          content = @Content(schema = @Schema(implementation = ErrorResponseDto.class)))
-  })
-  public Page<ProjectResponseDto> searchByTaskNative(
-      @Parameter(description = "Filter by project name")
-      @RequestParam(required = false) String projectName,
-      @Parameter(description = "Filter by task title")
-      @RequestParam(required = false) String taskTitle,
-      @Parameter(description = "Filter by task completion status")
-      @RequestParam(required = false) Boolean completed,
-      @Parameter(description = "Lower bound for task due date")
-      @RequestParam(required = false)
-      @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime dueFrom,
-      @Parameter(description = "Upper bound for task due date")
-      @RequestParam(required = false)
-      @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime dueTo,
-      @ParameterObject Pageable pageable
-  ) {
-    return projectService.searchByTaskNative(
-        projectName, taskTitle, completed, dueFrom, dueTo, pageable
-    );
-  }
-
   @GetMapping("/{id}")
   @Operation(
       summary = "Get project by id",
@@ -140,14 +109,14 @@ public class ProjectController {
 
   @PostMapping("/bulk")
   @ResponseStatus(HttpStatus.CREATED)
-  @Operation(summary = "Create projects in bulk", description = "Creates multiple new projects " +
-      "in a single request")
+  @Operation(summary = "Create projects in bulk",
+      description = "Creates multiple new projects in a single request")
   @ApiResponses({
-      @ApiResponse(responseCode = "201", description = "Projects created successfully",
+      @ApiResponse(responseCode = "201",
+          description = "Projects created successfully",
           content = @Content(array = @ArraySchema(schema = @Schema(implementation =
-              ProjectResponseDto.class)))),
-      @ApiResponse(responseCode = "400", description = "Validation failed for one or more " +
-          "projects",
+              ProjectResponseDto.class)))), @ApiResponse(responseCode = "400", description =
+      "Validation failed for one or more projects",
           content = @Content(schema = @Schema(implementation = ErrorResponseDto.class))),
       @ApiResponse(responseCode = "404", description = "Owner not found",
           content = @Content(schema = @Schema(implementation = ErrorResponseDto.class)))
