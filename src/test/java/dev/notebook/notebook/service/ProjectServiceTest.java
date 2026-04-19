@@ -148,9 +148,9 @@ class ProjectServiceTest {
   @Test
   void updateShouldThrowWhenProjectNotFound() {
     when(projectRepository.findById(20L)).thenReturn(Optional.empty());
+    ProjectRequestDto requestDto = new ProjectRequestDto("P", "D", 1L, List.of());
 
-    assertThatThrownBy(() -> projectService.update(20L,
-        new ProjectRequestDto("P", "D", 1L, List.of())))
+    assertThatThrownBy(() -> projectService.update(20L, requestDto))
         .isInstanceOf(NotFoundException.class)
         .hasMessage("Project not found");
   }
@@ -190,12 +190,12 @@ class ProjectServiceTest {
   @Test
   void updateShouldThrowWhenNewUserNotFound() {
     Project existing = project(9L, "Old", "Old desc", user(1L, "john"));
+    ProjectRequestDto requestDto = new ProjectRequestDto("Updated", "Updated desc", 2L, List.of());
 
     when(projectRepository.findById(9L)).thenReturn(Optional.of(existing));
     when(userRepository.findById(2L)).thenReturn(Optional.empty());
 
-    assertThatThrownBy(() -> projectService.update(
-        9L, new ProjectRequestDto("Updated", "Updated desc", 2L, List.of())))
+    assertThatThrownBy(() -> projectService.update(9L, requestDto))
         .isInstanceOf(OperationFailedException.class)
         .hasMessage("Failed to update project");
   }
@@ -204,11 +204,11 @@ class ProjectServiceTest {
   void updateShouldWrapRepositoryFailure() {
     User user = user(1L, "john");
     Project existing = project(9L, "Old", "Old desc", user);
+    ProjectRequestDto requestDto = new ProjectRequestDto("Updated", "Updated desc", 1L, List.of());
     when(projectRepository.findById(9L)).thenReturn(Optional.of(existing));
     when(projectRepository.save(existing)).thenThrow(new DataAccessResourceFailureException("db down"));
 
-    assertThatThrownBy(() -> projectService.update(
-        9L, new ProjectRequestDto("Updated", "Updated desc", 1L, List.of())))
+    assertThatThrownBy(() -> projectService.update(9L, requestDto))
         .isInstanceOf(OperationFailedException.class)
         .hasMessage("Failed to update project");
   }

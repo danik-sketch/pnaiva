@@ -43,12 +43,14 @@ class ReminderServiceTest {
 
   @Test
   void createShouldValidateTaskAndWrapFailure() {
-    assertThatThrownBy(() -> reminderService.create(new ReminderRequestDto(FIXED_TIME, "Ping", null)))
+    ReminderRequestDto missingTaskRequest = new ReminderRequestDto(FIXED_TIME, "Ping", null);
+    assertThatThrownBy(() -> reminderService.create(missingTaskRequest))
         .isInstanceOf(IllegalArgumentException.class)
         .hasMessage("Task id is required");
 
     when(taskRepository.findById(99L)).thenReturn(Optional.empty());
-    assertThatThrownBy(() -> reminderService.create(new ReminderRequestDto(FIXED_TIME, "Ping", 99L)))
+    ReminderRequestDto taskNotFoundRequest = new ReminderRequestDto(FIXED_TIME, "Ping", 99L);
+    assertThatThrownBy(() -> reminderService.create(taskNotFoundRequest))
         .isInstanceOf(NotFoundException.class)
         .hasMessage("Task not found");
 
@@ -60,26 +62,30 @@ class ReminderServiceTest {
 
     when(reminderRepository.save(any(Reminder.class)))
         .thenThrow(new DataAccessResourceFailureException("db down"));
-    assertThatThrownBy(() -> reminderService.create(new ReminderRequestDto(FIXED_TIME, "Ping", 5L)))
+    ReminderRequestDto dbFailureCreateRequest = new ReminderRequestDto(FIXED_TIME, "Ping", 5L);
+    assertThatThrownBy(() -> reminderService.create(dbFailureCreateRequest))
         .isInstanceOf(OperationFailedException.class)
         .hasMessage("Failed to create reminder");
   }
 
   @Test
   void updateShouldValidateLookupAndWrapFailure() {
-    assertThatThrownBy(() -> reminderService.update(1L, new ReminderRequestDto(FIXED_TIME, "Ping", null)))
+    ReminderRequestDto missingTaskUpdateRequest = new ReminderRequestDto(FIXED_TIME, "Ping", null);
+    assertThatThrownBy(() -> reminderService.update(1L, missingTaskUpdateRequest))
         .isInstanceOf(IllegalArgumentException.class)
         .hasMessage("Task id is required");
 
     when(reminderRepository.findById(1L)).thenReturn(Optional.empty());
-    assertThatThrownBy(() -> reminderService.update(1L, new ReminderRequestDto(FIXED_TIME, "Ping", 5L)))
+    ReminderRequestDto reminderNotFoundRequest = new ReminderRequestDto(FIXED_TIME, "Ping", 5L);
+    assertThatThrownBy(() -> reminderService.update(1L, reminderNotFoundRequest))
         .isInstanceOf(NotFoundException.class)
         .hasMessage("Reminder not found");
 
     Reminder existing = reminder(1L, FIXED_TIME, "Ping", task(5L));
     when(reminderRepository.findById(1L)).thenReturn(Optional.of(existing));
     when(taskRepository.findById(8L)).thenReturn(Optional.empty());
-    assertThatThrownBy(() -> reminderService.update(1L, new ReminderRequestDto(FIXED_TIME, "Updated", 8L)))
+    ReminderRequestDto taskNotFoundUpdateRequest = new ReminderRequestDto(FIXED_TIME, "Updated", 8L);
+    assertThatThrownBy(() -> reminderService.update(1L, taskNotFoundUpdateRequest))
         .isInstanceOf(NotFoundException.class)
         .hasMessage("Task not found");
 
@@ -91,8 +97,8 @@ class ReminderServiceTest {
     assertThat(ok.getReminderTime()).isEqualTo(OTHER_TIME);
 
     when(reminderRepository.save(existing)).thenThrow(new DataAccessResourceFailureException("db down"));
-    assertThatThrownBy(() -> reminderService.update(1L,
-        new ReminderRequestDto(OTHER_TIME, "Updated", 5L)))
+    ReminderRequestDto dbFailureUpdateRequest = new ReminderRequestDto(OTHER_TIME, "Updated", 5L);
+    assertThatThrownBy(() -> reminderService.update(1L, dbFailureUpdateRequest))
         .isInstanceOf(OperationFailedException.class)
         .hasMessage("Failed to update reminder");
   }

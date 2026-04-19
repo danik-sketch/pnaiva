@@ -47,8 +47,9 @@ class CategoryServiceTest {
   void createShouldWrapRepositoryFailure() {
     when(categoryRepository.save(any(Category.class)))
         .thenThrow(new DataAccessResourceFailureException("db down"));
+    CategoryRequestDto requestDto = new CategoryRequestDto("Work");
 
-    assertThatThrownBy(() -> categoryService.create(new CategoryRequestDto("Work")))
+    assertThatThrownBy(() -> categoryService.create(requestDto))
         .isInstanceOf(OperationFailedException.class)
         .hasMessage("Failed to create category");
   }
@@ -56,8 +57,9 @@ class CategoryServiceTest {
   @Test
   void updateShouldThrowWhenNotFound() {
     when(categoryRepository.findById(7L)).thenReturn(Optional.empty());
+    CategoryRequestDto requestDto = new CategoryRequestDto("Updated");
 
-    assertThatThrownBy(() -> categoryService.update(7L, new CategoryRequestDto("Updated")))
+    assertThatThrownBy(() -> categoryService.update(7L, requestDto))
         .isInstanceOf(NotFoundException.class)
         .hasMessage("Category not found");
   }
@@ -78,8 +80,9 @@ class CategoryServiceTest {
     Category existing = category(7L, "Old");
     when(categoryRepository.findById(7L)).thenReturn(Optional.of(existing));
     when(categoryRepository.save(existing)).thenThrow(new DataAccessResourceFailureException("db down"));
+    CategoryRequestDto requestDto = new CategoryRequestDto("Updated");
 
-    assertThatThrownBy(() -> categoryService.update(7L, new CategoryRequestDto("Updated")))
+    assertThatThrownBy(() -> categoryService.update(7L, requestDto))
         .isInstanceOf(OperationFailedException.class)
         .hasMessage("Failed to update category");
   }

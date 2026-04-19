@@ -58,22 +58,21 @@ class UserServiceTest {
   void updateShouldCoverAllEmailBranches() {
     User existing = user(42L, "john", "old@mail.com", "password123");
     when(userRepository.findById(42L)).thenReturn(Optional.of(existing));
+    UserRequestDto takenEmailRequest = new UserRequestDto("john", "new@mail.com", "password123");
+    UserRequestDto validUpdateRequest = new UserRequestDto("johnny", "new@mail.com", "password123");
 
     when(userRepository.existsByEmail("new@mail.com")).thenReturn(true);
-    assertThatThrownBy(() -> userService.update(42L,
-        new UserRequestDto("john", "new@mail.com", "password123")))
+    assertThatThrownBy(() -> userService.update(42L, takenEmailRequest))
         .isInstanceOf(EmailAlreadyExistsException.class)
         .hasMessage("Email already exists");
 
     when(userRepository.existsByEmail("new@mail.com")).thenReturn(false);
     when(userRepository.save(existing)).thenReturn(existing);
-    UserResponseDto updated = userService.update(42L,
-        new UserRequestDto("johnny", "new@mail.com", "password123"));
+    UserResponseDto updated = userService.update(42L, validUpdateRequest);
     assertThat(updated.getEmail()).isEqualTo("new@mail.com");
 
     when(userRepository.save(existing)).thenThrow(new DataAccessResourceFailureException("db down"));
-    assertThatThrownBy(() -> userService.update(42L,
-        new UserRequestDto("johnny", "new@mail.com", "password123")))
+    assertThatThrownBy(() -> userService.update(42L, validUpdateRequest))
         .isInstanceOf(OperationFailedException.class)
         .hasMessage("Failed to update user");
   }
@@ -81,9 +80,9 @@ class UserServiceTest {
   @Test
   void updateShouldThrowWhenUserNotFound() {
     when(userRepository.findById(999L)).thenReturn(Optional.empty());
+    UserRequestDto requestDto = new UserRequestDto("john", "john@mail.com", "password123");
 
-    assertThatThrownBy(() -> userService.update(999L,
-        new UserRequestDto("john", "john@mail.com", "password123")))
+    assertThatThrownBy(() -> userService.update(999L, requestDto))
         .isInstanceOf(NotFoundException.class)
         .hasMessage("User not found");
   }

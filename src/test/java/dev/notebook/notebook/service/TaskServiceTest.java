@@ -102,9 +102,9 @@ class TaskServiceTest {
   @Test
   void updateShouldThrowWhenTaskNotFound() {
     when(taskRepository.findById(100L)).thenReturn(Optional.empty());
+    TaskRequestDto requestDto = new TaskRequestDto("Task", "Desc", FIXED_TIME, null, 1L, List.of());
 
-    assertThatThrownBy(() -> taskService.update(100L,
-        new TaskRequestDto("Task", "Desc", FIXED_TIME, null, 1L, List.of())))
+    assertThatThrownBy(() -> taskService.update(100L, requestDto))
         .isInstanceOf(NotFoundException.class)
         .hasMessage("Task not found");
   }
@@ -192,12 +192,13 @@ class TaskServiceTest {
   void updateShouldWrapRepositoryFailure() {
     Project project = project(1L, "Main project");
     Task existing = task(4L, "Task", "Desc", FIXED_TIME, null, project);
+    TaskRequestDto requestDto = new TaskRequestDto(
+        "Updated", "Updated desc", FIXED_TIME, null, 1L, List.of());
 
     when(taskRepository.findById(4L)).thenReturn(Optional.of(existing));
     when(taskRepository.save(existing)).thenThrow(new DataAccessResourceFailureException("db down"));
 
-    assertThatThrownBy(() -> taskService.update(
-        4L, new TaskRequestDto("Updated", "Updated desc", FIXED_TIME, null, 1L, List.of())))
+    assertThatThrownBy(() -> taskService.update(4L, requestDto))
         .isInstanceOf(OperationFailedException.class)
         .hasMessage("Failed to update task");
   }
