@@ -1,20 +1,5 @@
 package dev.notebook.notebook.service;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static dev.notebook.notebook.service.TestFixtures.FIXED_TIME;
-import static dev.notebook.notebook.service.TestFixtures.OTHER_TIME;
-import static dev.notebook.notebook.service.TestFixtures.project;
-import static dev.notebook.notebook.service.TestFixtures.task;
-import static dev.notebook.notebook.service.TestFixtures.user;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
 import dev.notebook.notebook.dto.ProjectRequestDto;
 import dev.notebook.notebook.dto.ProjectResponseDto;
 import dev.notebook.notebook.dto.ReminderRequestDto;
@@ -32,17 +17,30 @@ import java.util.Optional;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import static dev.notebook.notebook.service.TestFixtures.FIXED_TIME;
+import static dev.notebook.notebook.service.TestFixtures.OTHER_TIME;
+import static dev.notebook.notebook.service.TestFixtures.project;
+import static dev.notebook.notebook.service.TestFixtures.task;
+import static dev.notebook.notebook.service.TestFixtures.user;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class ProjectServiceTest {
@@ -283,21 +281,20 @@ class ProjectServiceTest {
     LocalDateTime dueFrom = LocalDateTime.of(2026, 4, 1, 0, 0);
     LocalDateTime dueTo = LocalDateTime.of(2026, 4, 30, 23, 59);
 
-    Page<Project> page = new PageImpl<>(List.of(project(1L, "P", "D", user(1L, "john"))));
-
-    when(projectRepository.searchByTaskJpql(
-        eq("P"), eq("Task"), eq(Boolean.TRUE), eq(dueFrom), eq(dueTo), eq(pageable)))
+    Project project = project(1L, "P", "D", user(1L, "john"));
+    Page<Project> page = new PageImpl<>(List.of(project));
+    when(projectRepository.searchByTaskJpql("P", "Task", true, dueFrom, dueTo, pageable))
         .thenReturn(page);
-
-    Page<ProjectResponseDto> first = projectService.searchByTaskJpql(
-        "P", "Task", true, dueFrom, dueTo, pageable);
-    Page<ProjectResponseDto> second = projectService.searchByTaskJpql(
-        "P", "Task", true, dueFrom, dueTo, pageable);
+    Page<ProjectResponseDto> first = projectService.searchByTaskJpql("P", "Task", true, dueFrom,
+        dueTo, pageable);
+    Page<ProjectResponseDto> second = projectService.searchByTaskJpql("P", "Task", true, dueFrom,
+        dueTo, pageable);
 
     assertThat(first.getContent()).hasSize(1);
     assertThat(second.getContent()).hasSize(1);
-    verify(projectRepository, times(1)).searchByTaskJpql(
-        "P", "Task", true, dueFrom, dueTo, pageable);
+
+    verify(projectRepository, times(1))
+        .searchByTaskJpql("P", "Task", true, dueFrom, dueTo, pageable);
   }
 
   @Test
@@ -305,8 +302,7 @@ class ProjectServiceTest {
     Pageable pageable = PageRequest.of(0, 10);
     Page<Project> page = new PageImpl<>(List.of(project(1L, "P", "D", user(1L, "john"))));
 
-    when(projectRepository.searchByTaskJpql(
-        eq("P"), eq("Task"), eq(null), eq(null), eq(null), eq(pageable)))
+    when(projectRepository.searchByTaskJpql("P", "Task", null, null, null, pageable))
         .thenReturn(page);
 
     projectService.searchByTaskJpql("P", "Task", null, null, null, pageable);
@@ -314,12 +310,12 @@ class ProjectServiceTest {
 
     when(userRepository.findById(1L)).thenReturn(Optional.of(user(1L, "john")));
     when(projectRepository.save(any(Project.class))).thenReturn(project(2L, "N", "D", user(1L, "john")));
+
     projectService.create(new ProjectRequestDto("N", "D", 1L, List.of()));
 
     projectService.searchByTaskJpql("P", "Task", null, null, null, pageable);
 
-    verify(projectRepository, times(2)).searchByTaskJpql(
-        "P", "Task", null, null, null, pageable);
+    verify(projectRepository, times(2)).searchByTaskJpql("P", "Task", null, null, null, pageable);
   }
 
   private static Stream<TaskRequestDto> taskRequestWithoutReminders() {
