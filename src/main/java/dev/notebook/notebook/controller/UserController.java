@@ -1,16 +1,10 @@
 package dev.notebook.notebook.controller;
 
-import dev.notebook.notebook.dto.ErrorResponseDto;
 import dev.notebook.notebook.dto.UserRequestDto;
 import dev.notebook.notebook.dto.UserResponseDto;
 import dev.notebook.notebook.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.media.ArraySchema;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
@@ -42,24 +36,12 @@ public class UserController {
       summary = "Get all users",
       description = "Returns the full list of users"
   )
-  @ApiResponse(responseCode = "200", description = "Users retrieved successfully",
-      content = @Content(
-          array = @ArraySchema(schema = @Schema(implementation = UserResponseDto.class))
-      ))
   public List<UserResponseDto> getAll() {
     return userService.getAll();
   }
 
   @GetMapping("/{id}")
   @Operation(summary = "Get user by id", description = "Returns a single user by identifier")
-  @ApiResponses({
-      @ApiResponse(responseCode = "200", description = "User retrieved successfully",
-          content = @Content(schema = @Schema(implementation = UserResponseDto.class))),
-      @ApiResponse(responseCode = "400", description = "Invalid identifier",
-          content = @Content(schema = @Schema(implementation = ErrorResponseDto.class))),
-      @ApiResponse(responseCode = "404", description = "User not found",
-          content = @Content(schema = @Schema(implementation = ErrorResponseDto.class)))
-  })
   public UserResponseDto getById(
       @Parameter(description = "User identifier")
       @PathVariable @Positive(message = "Id must be positive") Long id
@@ -70,30 +52,12 @@ public class UserController {
   @PostMapping
   @ResponseStatus(HttpStatus.CREATED)
   @Operation(summary = "Create user", description = "Creates a new user")
-  @ApiResponses({
-      @ApiResponse(responseCode = "201", description = "User created successfully",
-          content = @Content(schema = @Schema(implementation = UserResponseDto.class))),
-      @ApiResponse(responseCode = "400", description = "Validation failed",
-          content = @Content(schema = @Schema(implementation = ErrorResponseDto.class))),
-      @ApiResponse(responseCode = "409", description = "Email already exists",
-          content = @Content(schema = @Schema(implementation = ErrorResponseDto.class)))
-  })
   public UserResponseDto create(@Valid @RequestBody UserRequestDto dto) {
     return userService.create(dto);
   }
 
   @PutMapping("/{id}")
   @Operation(summary = "Update user", description = "Updates an existing user")
-  @ApiResponses({
-      @ApiResponse(responseCode = "200", description = "User updated successfully",
-          content = @Content(schema = @Schema(implementation = UserResponseDto.class))),
-      @ApiResponse(responseCode = "400", description = "Validation failed",
-          content = @Content(schema = @Schema(implementation = ErrorResponseDto.class))),
-      @ApiResponse(responseCode = "404", description = "User not found",
-          content = @Content(schema = @Schema(implementation = ErrorResponseDto.class))),
-      @ApiResponse(responseCode = "409", description = "Email already exists",
-          content = @Content(schema = @Schema(implementation = ErrorResponseDto.class)))
-  })
   public UserResponseDto update(
       @Parameter(description = "User identifier")
       @PathVariable @Positive(message = "Id must be positive") Long id,
@@ -105,13 +69,6 @@ public class UserController {
   @DeleteMapping("/{id}")
   @ResponseStatus(HttpStatus.NO_CONTENT)
   @Operation(summary = "Delete user", description = "Deletes a user by identifier")
-  @ApiResponses({
-      @ApiResponse(responseCode = "204", description = "User deleted successfully"),
-      @ApiResponse(responseCode = "400", description = "Invalid identifier",
-          content = @Content(schema = @Schema(implementation = ErrorResponseDto.class))),
-      @ApiResponse(responseCode = "404", description = "User not found",
-          content = @Content(schema = @Schema(implementation = ErrorResponseDto.class)))
-  })
   public void delete(@PathVariable @Positive(message = "Id must be positive") Long id) {
     userService.delete(id);
   }

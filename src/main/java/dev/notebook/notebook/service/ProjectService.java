@@ -28,8 +28,6 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class ProjectService {
 
-  private static final String USER_NOT_FOUND = "User not found";
-
   private final ProjectRepository projectRepository;
   private final UserRepository userRepository;
   private final Map<ProductSearchKey, Page<ProjectResponseDto>> searchCache = new HashMap<>();
@@ -37,7 +35,7 @@ public class ProjectService {
   @Transactional
   public ProjectResponseDto create(ProjectRequestDto dto) {
     User user = userRepository.findById(dto.userId())
-        .orElseThrow(() -> new NotFoundException(USER_NOT_FOUND));
+        .orElseThrow(() -> new NotFoundException("User not found"));
 
     try {
       Project project = ProjectMapper.toEntity(dto, user);
@@ -62,7 +60,7 @@ public class ProjectService {
 
       if (!project.getUser().getId().equals(dto.userId())) {
         User user = userRepository.findById(dto.userId())
-            .orElseThrow(() -> new NotFoundException(USER_NOT_FOUND));
+            .orElseThrow(() -> new NotFoundException("User not found"));
         project.setUser(user);
       }
 
@@ -107,11 +105,10 @@ public class ProjectService {
 
   @Transactional(readOnly = true)
   public Page<ProjectResponseDto> searchByTaskJpql(
-      String projectName, String taskTitle, Boolean completed,
-      LocalDateTime dueFrom, LocalDateTime dueTo, Pageable pageable
+      String projectName, String taskTitle, Boolean completed, LocalDateTime dueFrom,
+      LocalDateTime dueTo, Pageable pageable
   ) {
-    ProductSearchKey key = new ProductSearchKey(
-        projectName, taskTitle, completed, dueFrom, dueTo,
+    ProductSearchKey key = new ProductSearchKey(projectName, taskTitle, completed, dueFrom, dueTo,
         pageable.getPageNumber(), pageable.getPageSize());
 
     Page<ProjectResponseDto> cached = searchCache.get(key);
@@ -119,8 +116,8 @@ public class ProjectService {
       return cached;
     }
 
-    Page<ProjectResponseDto> result = projectRepository.searchByTaskJpql(
-        projectName, taskTitle, completed, dueFrom, dueTo, pageable).map(ProjectMapper::toDto);
+    Page<ProjectResponseDto> result = projectRepository.searchByTaskJpql(projectName, taskTitle,
+        completed, dueFrom, dueTo, pageable).map(ProjectMapper::toDto);
     searchCache.put(key, result);
 
     log.info("\nResult cached with key: {}", key);

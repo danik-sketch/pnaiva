@@ -1,16 +1,10 @@
 package dev.notebook.notebook.controller;
 
-import dev.notebook.notebook.dto.ErrorResponseDto;
 import dev.notebook.notebook.dto.TaskRequestDto;
 import dev.notebook.notebook.dto.TaskResponseDto;
 import dev.notebook.notebook.service.TaskService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.media.ArraySchema;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
@@ -45,14 +39,6 @@ public class TaskController {
       summary = "Get tasks",
       description = "Returns all tasks or filters them by one query parameter"
   )
-  @ApiResponses({
-      @ApiResponse(responseCode = "200", description = "Tasks retrieved successfully",
-          content = @Content(
-              array = @ArraySchema(schema = @Schema(implementation = TaskResponseDto.class))
-          )),
-      @ApiResponse(responseCode = "400", description = "Invalid filter format",
-          content = @Content(schema = @Schema(implementation = ErrorResponseDto.class)))
-  })
   public List<TaskResponseDto> getTasks(
       @Parameter(description = "Filter by task title fragment")
       @RequestParam(required = false) String title,
@@ -86,14 +72,6 @@ public class TaskController {
       summary = "Get task by id",
       description = "Returns a single task by identifier"
   )
-  @ApiResponses({
-      @ApiResponse(responseCode = "200", description = "Task retrieved successfully",
-          content = @Content(schema = @Schema(implementation = TaskResponseDto.class))),
-      @ApiResponse(responseCode = "400", description = "Invalid identifier",
-          content = @Content(schema = @Schema(implementation = ErrorResponseDto.class))),
-      @ApiResponse(responseCode = "404", description = "Task not found",
-          content = @Content(schema = @Schema(implementation = ErrorResponseDto.class)))
-  })
   public TaskResponseDto getById(
       @Parameter(description = "Task identifier")
       @PathVariable @Positive(message = "Id must be positive") Long id
@@ -104,26 +82,12 @@ public class TaskController {
   @PostMapping
   @ResponseStatus(HttpStatus.CREATED)
   @Operation(summary = "Create task", description = "Creates a new task")
-  @ApiResponses({
-      @ApiResponse(responseCode = "201", description = "Task created successfully",
-          content = @Content(schema = @Schema(implementation = TaskResponseDto.class))),
-      @ApiResponse(responseCode = "400", description = "Validation failed",
-          content = @Content(schema = @Schema(implementation = ErrorResponseDto.class)))
-  })
   public TaskResponseDto create(@Valid @RequestBody TaskRequestDto requestDto) {
     return service.create(requestDto);
   }
 
   @PutMapping("/{id}")
   @Operation(summary = "Update task", description = "Updates an existing task")
-  @ApiResponses({
-      @ApiResponse(responseCode = "200", description = "Task updated successfully",
-          content = @Content(schema = @Schema(implementation = TaskResponseDto.class))),
-      @ApiResponse(responseCode = "400", description = "Validation failed",
-          content = @Content(schema = @Schema(implementation = ErrorResponseDto.class))),
-      @ApiResponse(responseCode = "404", description = "Task not found",
-          content = @Content(schema = @Schema(implementation = ErrorResponseDto.class)))
-  })
   public TaskResponseDto update(
       @Parameter(description = "Task identifier")
       @PathVariable @Positive(message = "Id must be positive") Long id,
@@ -135,13 +99,6 @@ public class TaskController {
   @DeleteMapping("/{id}")
   @ResponseStatus(HttpStatus.NO_CONTENT)
   @Operation(summary = "Delete task", description = "Deletes a task by identifier")
-  @ApiResponses({
-      @ApiResponse(responseCode = "204", description = "Task deleted successfully"),
-      @ApiResponse(responseCode = "400", description = "Invalid identifier",
-          content = @Content(schema = @Schema(implementation = ErrorResponseDto.class))),
-      @ApiResponse(responseCode = "404", description = "Task not found",
-          content = @Content(schema = @Schema(implementation = ErrorResponseDto.class)))
-  })
   public void delete(@PathVariable @Positive(message = "Id must be positive") Long id) {
     service.delete(id);
   }
