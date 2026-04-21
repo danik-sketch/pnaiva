@@ -132,8 +132,8 @@ public class ProjectService {
   }
 
   @Transactional
-  public List<ProjectResponseDto> createBulk(List<ProjectRequestDto> dtoList) {
-    List<ProjectResponseDto> response = dtoList.stream().map(this::create).toList();
+  public List<ProjectResponseDto> createBulk(List<ProjectRequestDto> dtos) {
+    List<ProjectResponseDto> response = dtos.stream().map(this::create).toList();
     log.info("ProjectService.createBulk completed");
     return response;
   }
