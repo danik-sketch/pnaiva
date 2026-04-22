@@ -6,8 +6,6 @@ import dev.notebook.notebook.entity.Category;
 import dev.notebook.notebook.entity.Project;
 import dev.notebook.notebook.entity.Task;
 import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 

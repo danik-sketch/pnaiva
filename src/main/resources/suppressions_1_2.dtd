@@ -5,14 +5,14 @@
     "suppressions_1_2.dtd">
 -->
 
-<!ELEMENT suppressions (suppress*)>
+        <!ELEMENT suppressions (suppress*)>
 
-<!ELEMENT suppress EMPTY>
-<!ATTLIST suppress
-    checks CDATA #IMPLIED
-    files CDATA #IMPLIED
-    id CDATA #IMPLIED
-    message CDATA #IMPLIED
-    lines CDATA #IMPLIED
-    columns CDATA #IMPLIED
->
+        <!ELEMENT suppress EMPTY>
+        <!ATTLIST suppress
+                checks CDATA #IMPLIED
+                files CDATA #IMPLIED
+                id CDATA #IMPLIED
+                message CDATA #IMPLIED
+                lines CDATA #IMPLIED
+                columns CDATA #IMPLIED
+                >

@@ -1,13 +1,5 @@
 package dev.notebook.notebook.service;
 
-import static dev.notebook.notebook.service.TestFixtures.category;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
 import dev.notebook.notebook.dto.CategoryRequestDto;
 import dev.notebook.notebook.dto.CategoryResponseDto;
 import dev.notebook.notebook.entity.Category;
@@ -23,6 +15,13 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.dao.EmptyResultDataAccessException;
+import static dev.notebook.notebook.service.TestFixtures.category;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class CategoryServiceTest {
@@ -79,7 +78,8 @@ class CategoryServiceTest {
   void updateShouldWrapRepositoryFailure() {
     Category existing = category(7L, "Old");
     when(categoryRepository.findById(7L)).thenReturn(Optional.of(existing));
-    when(categoryRepository.save(existing)).thenThrow(new DataAccessResourceFailureException("db down"));
+    when(categoryRepository.save(existing)).thenThrow(
+        new DataAccessResourceFailureException("db down"));
     CategoryRequestDto requestDto = new CategoryRequestDto("Updated");
 
     assertThatThrownBy(() -> categoryService.update(7L, requestDto))
@@ -94,7 +94,8 @@ class CategoryServiceTest {
         .isInstanceOf(NotFoundException.class)
         .hasMessage("Category not found");
 
-    doThrow(new DataAccessResourceFailureException("db down")).when(categoryRepository).deleteById(11L);
+    doThrow(new DataAccessResourceFailureException("db down")).when(categoryRepository)
+        .deleteById(11L);
     assertThatThrownBy(() -> categoryService.delete(11L))
         .isInstanceOf(OperationFailedException.class)
         .hasMessage("Failed to delete category");
@@ -119,7 +120,8 @@ class CategoryServiceTest {
 
   @Test
   void getAllShouldMapList() {
-    when(categoryRepository.findAll()).thenReturn(List.of(category(1L, "Work"), category(2L, "Home")));
+    when(categoryRepository.findAll()).thenReturn(
+        List.of(category(1L, "Work"), category(2L, "Home")));
 
     List<CategoryResponseDto> result = categoryService.getAll();
 

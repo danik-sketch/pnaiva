@@ -47,8 +47,10 @@ final class TestFixtures {
     return project;
   }
 
-  static Task task(Long id, String title, String description,
-      LocalDateTime dueDate, LocalDateTime completed, Project project) {
+  static Task task(
+      Long id, String title, String description,
+      LocalDateTime dueDate, LocalDateTime completed, Project project
+  ) {
     Task task = new Task();
     task.setId(id);
     task.setTitle(title);

@@ -1,17 +1,5 @@
 package dev.notebook.notebook.service;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static dev.notebook.notebook.service.TestFixtures.FIXED_TIME;
-import static dev.notebook.notebook.service.TestFixtures.OTHER_TIME;
-import static dev.notebook.notebook.service.TestFixtures.project;
-import static dev.notebook.notebook.service.TestFixtures.task;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
 import dev.notebook.notebook.dto.TaskRequestDto;
 import dev.notebook.notebook.dto.TaskResponseDto;
 import dev.notebook.notebook.entity.Project;
@@ -32,6 +20,17 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.dao.EmptyResultDataAccessException;
+import static dev.notebook.notebook.service.TestFixtures.FIXED_TIME;
+import static dev.notebook.notebook.service.TestFixtures.OTHER_TIME;
+import static dev.notebook.notebook.service.TestFixtures.project;
+import static dev.notebook.notebook.service.TestFixtures.task;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class TaskServiceTest {
@@ -102,7 +101,8 @@ class TaskServiceTest {
   @Test
   void updateShouldThrowWhenTaskNotFound() {
     when(taskRepository.findById(100L)).thenReturn(Optional.empty());
-    TaskRequestDto requestDto = new TaskRequestDto("Task", "Desc", FIXED_TIME, null, 1L, List.of());
+    TaskRequestDto requestDto = new TaskRequestDto("Task", "Desc", FIXED_TIME, null, 1L,
+        List.of());
 
     assertThatThrownBy(() -> taskService.update(100L, requestDto))
         .isInstanceOf(NotFoundException.class)
@@ -196,7 +196,8 @@ class TaskServiceTest {
         "Updated", "Updated desc", FIXED_TIME, null, 1L, List.of());
 
     when(taskRepository.findById(4L)).thenReturn(Optional.of(existing));
-    when(taskRepository.save(existing)).thenThrow(new DataAccessResourceFailureException("db down"));
+    when(taskRepository.save(existing)).thenThrow(
+        new DataAccessResourceFailureException("db down"));
 
     assertThatThrownBy(() -> taskService.update(4L, requestDto))
         .isInstanceOf(OperationFailedException.class)
@@ -309,7 +310,8 @@ class TaskServiceTest {
     verify(taskRepository).findByDueDateBetween(startCaptor.capture(), endCaptor.capture());
 
     assertThat(startCaptor.getValue()).isEqualTo(LocalDateTime.of(2026, 4, 16, 0, 0));
-    assertThat(endCaptor.getValue()).isEqualTo(LocalDateTime.of(2026, 4, 16, 23, 59, 59, 999999999));
+    assertThat(endCaptor.getValue()).isEqualTo(
+        LocalDateTime.of(2026, 4, 16, 23, 59, 59, 999999999));
   }
 
   @Test

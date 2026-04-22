@@ -1,14 +1,5 @@
 package dev.notebook.notebook.service;
 
-import static dev.notebook.notebook.service.TestFixtures.user;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
 import dev.notebook.notebook.dto.UserRequestDto;
 import dev.notebook.notebook.dto.UserResponseDto;
 import dev.notebook.notebook.entity.User;
@@ -25,6 +16,13 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.dao.EmptyResultDataAccessException;
+import static dev.notebook.notebook.service.TestFixtures.user;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class UserServiceTest {
@@ -44,11 +42,13 @@ class UserServiceTest {
         .hasMessage("Email already exists");
 
     when(userRepository.existsByEmail(request.email())).thenReturn(false);
-    when(userRepository.save(any(User.class))).thenReturn(user(1L, "john", "john@mail.com", "password123"));
+    when(userRepository.save(any(User.class))).thenReturn(
+        user(1L, "john", "john@mail.com", "password123"));
     UserResponseDto ok = userService.create(request);
     assertThat(ok.getId()).isEqualTo(1L);
 
-    when(userRepository.save(any(User.class))).thenThrow(new DataAccessResourceFailureException("db down"));
+    when(userRepository.save(any(User.class))).thenThrow(
+        new DataAccessResourceFailureException("db down"));
     assertThatThrownBy(() -> userService.create(request))
         .isInstanceOf(OperationFailedException.class)
         .hasMessage("Failed to create user");
@@ -59,7 +59,8 @@ class UserServiceTest {
     User existing = user(42L, "john", "old@mail.com", "password123");
     when(userRepository.findById(42L)).thenReturn(Optional.of(existing));
     UserRequestDto takenEmailRequest = new UserRequestDto("john", "new@mail.com", "password123");
-    UserRequestDto validUpdateRequest = new UserRequestDto("johnny", "new@mail.com", "password123");
+    UserRequestDto validUpdateRequest = new UserRequestDto("johnny", "new@mail.com",
+        "password123");
 
     when(userRepository.existsByEmail("new@mail.com")).thenReturn(true);
     assertThatThrownBy(() -> userService.update(42L, takenEmailRequest))
@@ -71,7 +72,8 @@ class UserServiceTest {
     UserResponseDto updated = userService.update(42L, validUpdateRequest);
     assertThat(updated.getEmail()).isEqualTo("new@mail.com");
 
-    when(userRepository.save(existing)).thenThrow(new DataAccessResourceFailureException("db down"));
+    when(userRepository.save(existing)).thenThrow(
+        new DataAccessResourceFailureException("db down"));
     assertThatThrownBy(() -> userService.update(42L, validUpdateRequest))
         .isInstanceOf(OperationFailedException.class)
         .hasMessage("Failed to update user");
@@ -94,7 +96,8 @@ class UserServiceTest {
         .isInstanceOf(NotFoundException.class)
         .hasMessage("User not found");
 
-    doThrow(new DataAccessResourceFailureException("db down")).when(userRepository).deleteById(100L);
+    doThrow(new DataAccessResourceFailureException("db down")).when(userRepository)
+        .deleteById(100L);
     assertThatThrownBy(() -> userService.delete(100L))
         .isInstanceOf(OperationFailedException.class)
         .hasMessage("Failed to delete user");
@@ -108,7 +111,8 @@ class UserServiceTest {
 
   @Test
   void getByIdShouldMapFoundAndNotFound() {
-    when(userRepository.findById(1L)).thenReturn(Optional.of(user(1L, "john", "john@mail.com", "password123")));
+    when(userRepository.findById(1L)).thenReturn(
+        Optional.of(user(1L, "john", "john@mail.com", "password123")));
     assertThat(userService.getById(1L).getUsername()).isEqualTo("john");
 
     when(userRepository.findById(2L)).thenReturn(Optional.empty());

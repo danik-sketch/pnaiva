@@ -54,6 +54,12 @@ class ProjectServiceTest {
   @InjectMocks
   private ProjectService projectService;
 
+  private static Stream<TaskRequestDto> taskRequestWithoutReminders() {
+    return Stream.of(
+        new TaskRequestDto("Task 1", "Task desc", FIXED_TIME, null, null, null),
+        new TaskRequestDto("Task 2", "Task desc", OTHER_TIME, null, null, List.of()));
+  }
+
   @Test
   void createShouldThrowWhenUserNotFound() {
     ProjectRequestDto requestDto = new ProjectRequestDto("P", "D", 77L, List.of());
@@ -204,7 +210,8 @@ class ProjectServiceTest {
     Project existing = project(9L, "Old", "Old desc", user);
     ProjectRequestDto requestDto = new ProjectRequestDto("Updated", "Updated desc", 1L, List.of());
     when(projectRepository.findById(9L)).thenReturn(Optional.of(existing));
-    when(projectRepository.save(existing)).thenThrow(new DataAccessResourceFailureException("db down"));
+    when(projectRepository.save(existing)).thenThrow(
+        new DataAccessResourceFailureException("db down"));
 
     assertThatThrownBy(() -> projectService.update(9L, requestDto))
         .isInstanceOf(OperationFailedException.class)
@@ -222,7 +229,8 @@ class ProjectServiceTest {
 
   @Test
   void deleteShouldWrapRepositoryFailure() {
-    doThrow(new DataAccessResourceFailureException("db down")).when(projectRepository).deleteById(3L);
+    doThrow(new DataAccessResourceFailureException("db down")).when(projectRepository)
+        .deleteById(3L);
 
     assertThatThrownBy(() -> projectService.delete(3L))
         .isInstanceOf(OperationFailedException.class)
@@ -237,7 +245,8 @@ class ProjectServiceTest {
 
   @Test
   void getByIdShouldReturnProject() {
-    when(projectRepository.findById(1L)).thenReturn(Optional.of(project(1L, "P", "D", user(1L, "john"))));
+    when(projectRepository.findById(1L)).thenReturn(
+        Optional.of(project(1L, "P", "D", user(1L, "john"))));
 
     ProjectResponseDto result = projectService.getById(1L);
 
@@ -309,7 +318,8 @@ class ProjectServiceTest {
     projectService.searchByTaskJpql("P", "Task", null, null, null, pageable);
 
     when(userRepository.findById(1L)).thenReturn(Optional.of(user(1L, "john")));
-    when(projectRepository.save(any(Project.class))).thenReturn(project(2L, "N", "D", user(1L, "john")));
+    when(projectRepository.save(any(Project.class))).thenReturn(
+        project(2L, "N", "D", user(1L, "john")));
 
     projectService.create(new ProjectRequestDto("N", "D", 1L, List.of()));
 
@@ -318,11 +328,6 @@ class ProjectServiceTest {
     verify(projectRepository, times(2)).searchByTaskJpql("P", "Task", null, null, null, pageable);
   }
 
-  private static Stream<TaskRequestDto> taskRequestWithoutReminders() {
-    return Stream.of(
-        new TaskRequestDto("Task 1", "Task desc", FIXED_TIME, null, null, null),
-        new TaskRequestDto("Task 2", "Task desc", OTHER_TIME, null, null, List.of()));
-  }
   @Test
   void createBulkShouldSaveMultipleProjects() {
     ProjectRequestDto dto1 = new ProjectRequestDto("Project 1", "Desc 1", 1L, List.of());
