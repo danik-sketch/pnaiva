@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.EmptyResultDataAccessException;
@@ -34,12 +35,11 @@ public class ProjectService {
 
   @Transactional
   public ProjectResponseDto create(ProjectRequestDto dto) {
-    User user = userRepository.findById(dto.userId())
-        .orElseThrow(() -> new NotFoundException("User not found"));
+    Optional<User> userOpt = userRepository.findById(dto.userId());
+    User user = userOpt.orElseThrow(() -> new NotFoundException("User not found"));
 
     try {
       Project project = ProjectMapper.toEntity(dto, user);
-
       Project saved = projectRepository.save(project);
       invalidateSearchCache();
       log.info("ProjectService.create completed");
