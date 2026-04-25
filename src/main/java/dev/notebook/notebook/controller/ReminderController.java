@@ -54,6 +54,7 @@ public class ReminderController {
 
   @PostMapping
   @ResponseStatus(HttpStatus.CREATED)
+  @Operation(summary = "Create reminder", description = "Creates a new reminder")
   public ReminderResponseDto create(@Valid @RequestBody ReminderRequestDto dto) {
     return reminderService.create(dto);
   }

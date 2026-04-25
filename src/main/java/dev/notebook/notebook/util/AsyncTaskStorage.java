@@ -7,11 +7,14 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 @Component
+@RequiredArgsConstructor
 public class AsyncTaskStorage {
 
+  private final AtomicCounter taskCounter;
   private final Map<String, AsyncTask> tasks = new ConcurrentHashMap<>();
 
   public String createTask() {

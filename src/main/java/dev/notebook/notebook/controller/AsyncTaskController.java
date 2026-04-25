@@ -24,7 +24,10 @@ public class AsyncTaskController {
 
   @PostMapping
   @ResponseStatus(HttpStatus.ACCEPTED)
-  @Operation(summary = "Start async task", description = "Starts a background task and returns task id")
+  @Operation(
+      summary = "Start async task",
+      description = "Starts a background task and returns task id"
+  )
   public String startTask() {
     return asyncTaskService.startTask();
   }
