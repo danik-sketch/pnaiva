@@ -15,7 +15,7 @@ public class AsyncTaskExecutor {
   private final AsyncTaskStorage asyncTaskStorage;
 
   @Async("asyncExecutorPool")
-  public CompletableFuture<Void> executeTask(String taskId) {
+  public void executeTask(String taskId) {
     log.info("Async task {} started", taskId);
     try {
       asyncTaskStorage.updateStatus(taskId, AsyncTaskStatus.IN_PROGRESS);
@@ -30,6 +30,6 @@ public class AsyncTaskExecutor {
       asyncTaskStorage.updateStatus(taskId, AsyncTaskStatus.FAILED);
       log.error("Async task {} failed", taskId, exception);
     }
-    return CompletableFuture.completedFuture(null);
+    CompletableFuture.completedFuture(null);
   }
 }
