@@ -1,6 +1,7 @@
 package dev.notebook.notebook.service;
 
 import dev.notebook.notebook.dto.CounterResponseDto;
+import dev.notebook.notebook.exception.OperationFailedException;
 import dev.notebook.notebook.util.AtomicCounter;
 import dev.notebook.notebook.util.NonAtomicCounter;
 import java.util.concurrent.CountDownLatch;
@@ -43,7 +44,7 @@ public class CounterService {
     try (ExecutorService executor = Executors.newFixedThreadPool(threads)) {
       CountDownLatch startLatch = new CountDownLatch(1);
       CountDownLatch doneLatch = new CountDownLatch(threads);
-      AtomicReference<Throwable> error = new AtomicReference<>();
+      AtomicReference<Exception> error = new AtomicReference<>();
 
       for (int i = 0; i < threads; i++) {
         executor.submit(() -> {
@@ -52,10 +53,10 @@ public class CounterService {
             for (int j = 0; j < incrementsPerThread; j++) {
               task.run();
             }
-          } catch (InterruptedException e) {
+          } catch (InterruptedException _) {
             Thread.currentThread().interrupt();
-          } catch (Throwable t) {
-            error.compareAndSet(null, t);
+          } catch (Exception exception) {
+            error.compareAndSet(null, exception);
           } finally {
             doneLatch.countDown();
           }
@@ -65,13 +66,13 @@ public class CounterService {
       if (!doneLatch.await(EXECUTION_TIMEOUT_SECONDS, TimeUnit.SECONDS)) {
         log.error("Race condition test timed out");
       }
-      Throwable contextError = error.get();
+      Exception contextError = error.get();
       if (contextError != null) {
-        throw new RuntimeException("Test execution failed", contextError);
+        throw new OperationFailedException("Test execution failed", contextError);
       }
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
-      throw new RuntimeException("Execution interrupted", e);
+      throw new OperationFailedException("Execution interrupted", e);
     }
   }
 }
