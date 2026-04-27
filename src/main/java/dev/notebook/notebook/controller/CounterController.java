@@ -19,7 +19,7 @@ public class CounterController {
 
   private final CounterService counterService;
 
-  @GetMapping("/race-demo")
+  @GetMapping("/race")
   @Operation(summary = "Run race condition demo")
   public CounterResponseDto runCounter(
       int threads, int incrementsPerThread
