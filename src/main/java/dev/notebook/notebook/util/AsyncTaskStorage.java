@@ -14,7 +14,6 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class AsyncTaskStorage {
 
-  private final AtomicCounter taskCounter;
   private final Map<String, AsyncTask> tasks = new ConcurrentHashMap<>();
 
   public String createTask() {
