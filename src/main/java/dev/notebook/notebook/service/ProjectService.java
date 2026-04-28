@@ -9,7 +9,7 @@ import dev.notebook.notebook.exception.OperationFailedException;
 import dev.notebook.notebook.mapper.ProjectMapper;
 import dev.notebook.notebook.repository.ProjectRepository;
 import dev.notebook.notebook.repository.UserRepository;
-import dev.notebook.notebook.service.cache.ProductSearchKey;
+import dev.notebook.notebook.service.cache.SearchKey;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -31,7 +31,7 @@ public class ProjectService {
 
   private final ProjectRepository projectRepository;
   private final UserRepository userRepository;
-  private final Map<ProductSearchKey, Page<ProjectResponseDto>> searchCache = new HashMap<>();
+  private final Map<SearchKey, Page<ProjectResponseDto>> searchCache = new HashMap<>();
 
   @Transactional
   public ProjectResponseDto create(ProjectRequestDto dto) {
@@ -108,7 +108,7 @@ public class ProjectService {
       String projectName, String taskTitle, Boolean completed, LocalDateTime dueFrom,
       LocalDateTime dueTo, Pageable pageable
   ) {
-    ProductSearchKey key = new ProductSearchKey(projectName, taskTitle, completed, dueFrom, dueTo,
+    SearchKey key = new SearchKey(projectName, taskTitle, completed, dueFrom, dueTo,
         pageable.getPageNumber(), pageable.getPageSize());
 
     Page<ProjectResponseDto> cached = searchCache.get(key);
