@@ -6,6 +6,7 @@ import dev.notebook.notebook.entity.Project;
 import dev.notebook.notebook.entity.Task;
 import dev.notebook.notebook.exception.NotFoundException;
 import dev.notebook.notebook.exception.OperationFailedException;
+import dev.notebook.notebook.repository.CategoryRepository;
 import dev.notebook.notebook.repository.ProjectRepository;
 import dev.notebook.notebook.repository.TaskRepository;
 import java.time.LocalDate;
@@ -40,6 +41,8 @@ class TaskServiceTest {
 
   @Mock
   private ProjectRepository projectRepository;
+  @Mock
+  private CategoryRepository categoryRepository;
 
   @InjectMocks
   private TaskService taskService;
@@ -47,7 +50,7 @@ class TaskServiceTest {
   @Test
   void createShouldRequireProjectId() {
     TaskRequestDto requestDto = new TaskRequestDto(
-        "Task", "Desc", FIXED_TIME, null, null, List.of());
+        "Task", "Desc", FIXED_TIME, null, null, List.of(), List.of());
 
     assertThatThrownBy(() -> taskService.create(requestDto))
         .isInstanceOf(IllegalArgumentException.class)
@@ -57,7 +60,7 @@ class TaskServiceTest {
   @Test
   void createShouldThrowWhenProjectNotFound() {
     TaskRequestDto requestDto = new TaskRequestDto(
-        "Task", "Desc", FIXED_TIME, null, 9L, List.of());
+        "Task", "Desc", FIXED_TIME, null, 9L, List.of(), List.of());
 
     when(projectRepository.findById(9L)).thenReturn(Optional.empty());
 
@@ -72,7 +75,7 @@ class TaskServiceTest {
     Task saved = task(10L, "Task", "Desc", FIXED_TIME, null, project);
 
     TaskRequestDto requestDto = new TaskRequestDto(
-        "Task", "Desc", FIXED_TIME, null, 1L, List.of());
+        "Task", "Desc", FIXED_TIME, null, 1L, List.of(), List.of());
 
     when(projectRepository.findById(1L)).thenReturn(Optional.of(project));
     when(taskRepository.save(any(Task.class))).thenReturn(saved);
@@ -87,7 +90,7 @@ class TaskServiceTest {
   void createShouldWrapRepositoryFailure() {
     Project project = project(1L, "Main project");
     TaskRequestDto requestDto = new TaskRequestDto(
-        "Task", "Desc", FIXED_TIME, null, 1L, List.of());
+        "Task", "Desc", FIXED_TIME, null, 1L, List.of(), List.of());
 
     when(projectRepository.findById(1L)).thenReturn(Optional.of(project));
     when(taskRepository.save(any(Task.class)))
@@ -102,7 +105,7 @@ class TaskServiceTest {
   void updateShouldThrowWhenTaskNotFound() {
     when(taskRepository.findById(100L)).thenReturn(Optional.empty());
     TaskRequestDto requestDto = new TaskRequestDto("Task", "Desc", FIXED_TIME, null, 1L,
-        List.of());
+        List.of(), List.of());
 
     assertThatThrownBy(() -> taskService.update(100L, requestDto))
         .isInstanceOf(NotFoundException.class)
@@ -118,7 +121,7 @@ class TaskServiceTest {
     when(projectRepository.findById(2L)).thenReturn(Optional.empty());
 
     TaskRequestDto requestDto = new TaskRequestDto(
-        "Task", "Desc", FIXED_TIME, null, 2L, List.of());
+        "Task", "Desc", FIXED_TIME, null, 2L, List.of(), List.of());
 
     assertThatThrownBy(() -> taskService.update(4L, requestDto))
         .isInstanceOf(OperationFailedException.class)
@@ -134,7 +137,7 @@ class TaskServiceTest {
     when(taskRepository.save(existing)).thenReturn(existing);
 
     TaskRequestDto requestDto = new TaskRequestDto(
-        "Updated", "Updated desc", FIXED_TIME, null, 1L, List.of());
+        "Updated", "Updated desc", FIXED_TIME, null, 1L, List.of(), List.of());
 
     TaskResponseDto result = taskService.update(4L, requestDto);
 
@@ -153,7 +156,8 @@ class TaskServiceTest {
     when(taskRepository.save(existing)).thenReturn(existing);
 
     TaskResponseDto result = taskService.update(
-        4L, new TaskRequestDto("Updated", "Updated desc", FIXED_TIME, null, 2L, List.of()));
+        4L, new TaskRequestDto("Updated", "Updated desc", FIXED_TIME, null, 2L, List.of(),
+            List.of()));
 
     assertThat(result.getProjectName()).isEqualTo("New project");
   }
@@ -168,7 +172,8 @@ class TaskServiceTest {
     when(taskRepository.save(existing)).thenReturn(existing);
 
     TaskResponseDto result = taskService.update(
-        4L, new TaskRequestDto("Updated", "Updated desc", FIXED_TIME, null, 2L, List.of()));
+        4L, new TaskRequestDto("Updated", "Updated desc", FIXED_TIME, null, 2L, List.of(),
+            List.of()));
 
     assertThat(result.getProjectName()).isEqualTo("New project");
   }
@@ -182,7 +187,8 @@ class TaskServiceTest {
     when(taskRepository.save(existing)).thenReturn(existing);
 
     TaskResponseDto result = taskService.update(
-        4L, new TaskRequestDto("Updated", "Updated desc", FIXED_TIME, null, null, List.of()));
+        4L, new TaskRequestDto("Updated", "Updated desc", FIXED_TIME, null, null, List.of(),
+            List.of()));
 
     assertThat(result.getTitle()).isEqualTo("Updated");
     verify(projectRepository, never()).findById(any());
@@ -193,7 +199,7 @@ class TaskServiceTest {
     Project project = project(1L, "Main project");
     Task existing = task(4L, "Task", "Desc", FIXED_TIME, null, project);
     TaskRequestDto requestDto = new TaskRequestDto(
-        "Updated", "Updated desc", FIXED_TIME, null, 1L, List.of());
+        "Updated", "Updated desc", FIXED_TIME, null, 1L, List.of(), List.of());
 
     when(taskRepository.findById(4L)).thenReturn(Optional.of(existing));
     when(taskRepository.save(existing)).thenThrow(

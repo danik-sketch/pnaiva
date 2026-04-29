@@ -21,6 +21,8 @@ public record TaskRequestDto(
     LocalDateTime completed,
     @Schema(description = "Related project identifier")
     Long projectId,
+    @Schema(description = "Ids of categories assigned to task")
+    List<Long> categoryIds,
     @Schema(description = "Task reminders")
     List<@Valid ReminderRequestDto> reminders
 ) {

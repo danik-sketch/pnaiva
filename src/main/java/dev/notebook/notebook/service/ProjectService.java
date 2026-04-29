@@ -11,7 +11,6 @@ import dev.notebook.notebook.repository.ProjectRepository;
 import dev.notebook.notebook.repository.UserRepository;
 import dev.notebook.notebook.service.cache.SearchKey;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -21,6 +20,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -86,6 +86,7 @@ public class ProjectService {
     }
   }
 
+  @Transactional(readOnly = true)
   public ProjectResponseDto getById(Long id) {
     Project project = projectRepository.findById(id)
         .orElseThrow(() -> new NotFoundException("Project not found"));
@@ -93,14 +94,23 @@ public class ProjectService {
     return ProjectMapper.toDto(project);
   }
 
+  @Transactional(readOnly = true)
   public List<ProjectResponseDto> getAll() {
-    List<Project> projects = projectRepository.findAll();
-    List<ProjectResponseDto> result = new ArrayList<>();
-    for (Project project : projects) {
-      result.add(ProjectMapper.toDto(project));
+    Long currentUserId = getCurrentUserId();
+
+    List<Project> projects;
+    if (currentUserId != null) {
+      projects = projectRepository.findAllByUserId(currentUserId);
+      log.info("ProjectService.getAll - returning projects for userId: {}", currentUserId);
+    } else {
+      projects = projectRepository.findAll();
+      log.info("ProjectService.getAll - returning all projects (no auth)");
     }
-    log.info("ProjectService.getAll completed");
-    return result;
+
+    log.info("ProjectService.getAll completed - {} projects", projects.size());
+    return projects.stream()
+        .map(ProjectMapper::toDto)
+        .toList();
   }
 
   @Transactional(readOnly = true)
@@ -108,7 +118,8 @@ public class ProjectService {
       String projectName, String taskTitle, Boolean completed, LocalDateTime dueFrom,
       LocalDateTime dueTo, Pageable pageable
   ) {
-    SearchKey key = new SearchKey(projectName, taskTitle, completed, dueFrom, dueTo,
+    Long currentUserId = getCurrentUserId();
+    SearchKey key = new SearchKey(currentUserId, projectName, taskTitle, completed, dueFrom, dueTo,
         pageable.getPageNumber(), pageable.getPageSize());
 
     Page<ProjectResponseDto> cached = searchCache.get(key);
@@ -116,19 +127,12 @@ public class ProjectService {
       return cached;
     }
 
-    Page<ProjectResponseDto> result = projectRepository.searchByTaskJpql(projectName, taskTitle,
+    Page<ProjectResponseDto> result = projectRepository.searchByTaskJpql(currentUserId, projectName, taskTitle,
         completed, dueFrom, dueTo, pageable).map(ProjectMapper::toDto);
+
     searchCache.put(key, result);
-
-    log.info("\nResult cached with key: {}", key);
-    log.info("Cache size after save: {}\n", searchCache.size());
-
+    log.info("Result cached with key: {}", key);
     return result;
-  }
-
-  private void invalidateSearchCache() {
-    log.info("Data changed. Cache cleared.");
-    searchCache.clear();
   }
 
   @Transactional
@@ -136,5 +140,23 @@ public class ProjectService {
     List<ProjectResponseDto> response = dtos.stream().map(this::create).toList();
     log.info("ProjectService.createBulk completed");
     return response;
+  }
+
+  private void invalidateSearchCache() {
+    log.info("Data changed. Cache cleared.");
+    searchCache.clear();
+  }
+
+  private Long getCurrentUserId() {
+    try {
+      Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+      if (principal instanceof Long id) {
+        return id;
+      }
+      return Long.valueOf(principal.toString());
+    } catch (Exception e) {
+      log.warn("Could not get currentUserId from SecurityContext: {}", e.getMessage());
+      return null;
+    }
   }
 }

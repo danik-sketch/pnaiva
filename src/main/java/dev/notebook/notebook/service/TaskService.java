@@ -2,11 +2,13 @@ package dev.notebook.notebook.service;
 
 import dev.notebook.notebook.dto.TaskRequestDto;
 import dev.notebook.notebook.dto.TaskResponseDto;
+import dev.notebook.notebook.entity.Category;
 import dev.notebook.notebook.entity.Project;
 import dev.notebook.notebook.entity.Task;
 import dev.notebook.notebook.exception.NotFoundException;
 import dev.notebook.notebook.exception.OperationFailedException;
 import dev.notebook.notebook.mapper.TaskMapper;
+import dev.notebook.notebook.repository.CategoryRepository;
 import dev.notebook.notebook.repository.ProjectRepository;
 import dev.notebook.notebook.repository.TaskRepository;
 import java.time.LocalDate;
@@ -24,10 +26,16 @@ public class TaskService {
 
   private final TaskRepository repository;
   private final ProjectRepository projectRepository;
+  private final CategoryRepository categoryRepository;
 
-  public TaskService(TaskRepository repository, ProjectRepository projectRepository) {
+  public TaskService(
+      TaskRepository repository,
+      ProjectRepository projectRepository,
+      CategoryRepository categoryRepository
+  ) {
     this.repository = repository;
     this.projectRepository = projectRepository;
+    this.categoryRepository = categoryRepository;
   }
 
   @Transactional
@@ -41,6 +49,7 @@ public class TaskService {
 
     try {
       Task task = TaskMapper.toEntity(dto, project);
+      applyCategories(task, dto.categoryIds());
 
       Task savedTask = repository.save(task);
       log.info("TaskService.create completed");
@@ -67,6 +76,7 @@ public class TaskService {
       task.setDescription(dto.description());
       task.setDueDate(dto.dueDate());
       task.setCompleted(dto.completed());
+      applyCategories(task, dto.categoryIds());
 
       Task saved = repository.save(task);
       log.info("TaskService.update completed");
@@ -149,5 +159,17 @@ public class TaskService {
     }
     log.info("TaskService.getByDueDate completed");
     return result;
+  }
+
+  private void applyCategories(Task task, List<Long> categoryIds) {
+    task.getCategories().clear();
+    if (categoryIds == null || categoryIds.isEmpty()) {
+      return;
+    }
+    List<Category> categories = categoryRepository.findAllById(categoryIds);
+    if (categories.size() != categoryIds.size()) {
+      throw new NotFoundException("One or more categories not found");
+    }
+    task.getCategories().addAll(categories);
   }
 }

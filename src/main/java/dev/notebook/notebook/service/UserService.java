@@ -10,6 +10,7 @@ import dev.notebook.notebook.mapper.UserMapper;
 import dev.notebook.notebook.repository.UserRepository;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.EmptyResultDataAccessException;
@@ -89,5 +90,17 @@ public class UserService {
     }
     log.info("UserService.getAll completed");
     return result;
+  }
+
+  public Optional<User> findByUsernameOrEmailAndPassword(String login, String password) {
+    Optional<User> byUsername = userRepository.findByUsername(login);
+    if (byUsername.isPresent() && byUsername.get().getPassword().equals(password)) {
+      return byUsername;
+    }
+    Optional<User> byEmail = userRepository.findByEmail(login);
+    if (byEmail.isPresent() && byEmail.get().getPassword().equals(password)) {
+      return byEmail;
+    }
+    return Optional.empty();
   }
 }

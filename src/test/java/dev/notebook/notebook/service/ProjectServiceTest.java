@@ -56,8 +56,8 @@ class ProjectServiceTest {
 
   private static Stream<TaskRequestDto> taskRequestWithoutReminders() {
     return Stream.of(
-        new TaskRequestDto("Task 1", "Task desc", FIXED_TIME, null, null, null),
-        new TaskRequestDto("Task 2", "Task desc", OTHER_TIME, null, null, List.of()));
+        new TaskRequestDto("Task 1", "Task desc", FIXED_TIME, null, null, List.of(), null),
+        new TaskRequestDto("Task 2", "Task desc", OTHER_TIME, null, null, List.of(), List.of()));
   }
 
   @Test
@@ -74,7 +74,7 @@ class ProjectServiceTest {
   void createShouldSaveProjectWithNestedTasksAndReminders() {
     ProjectRequestDto requestDto = new ProjectRequestDto(
         "P", "D", 1L, List.of(new TaskRequestDto(
-        "Task 1", "Task desc", FIXED_TIME, null, null,
+        "Task 1", "Task desc", FIXED_TIME, null, null, List.of(),
         List.of(new ReminderRequestDto(OTHER_TIME, "Ping", null)))));
 
     User user = user(1L, "john");

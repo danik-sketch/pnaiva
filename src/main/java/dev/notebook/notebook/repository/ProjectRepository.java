@@ -26,23 +26,52 @@ public interface ProjectRepository extends JpaRepository<Project, Long> {
       SELECT DISTINCT p
       FROM Project p
       LEFT JOIN p.user
-      LEFT JOIN p.tasks
-      WHERE p.name LIKE CONCAT('%', COALESCE(:projectName, ''), '%')
-        AND EXISTS (
-          SELECT 1
-          FROM Task t
-          WHERE t.project = p
-            AND t.title LIKE CONCAT('%', COALESCE(:taskTitle, ''), '%')
-            AND (
-              :completed IS NULL
-              OR (:completed = true AND t.completed IS NOT NULL)
-              OR (:completed = false AND t.completed IS NULL)
-            )
-            AND t.dueDate >= COALESCE(:dueFrom, t.dueDate)
-            AND t.dueDate <= COALESCE(:dueTo, t.dueDate)
+      WHERE (:currentUserId IS NULL OR p.user.id = :currentUserId)
+        AND LOWER(p.name) LIKE LOWER(CONCAT('%', COALESCE(:projectName, ''), '%'))
+        AND (
+          :taskTitle IS NULL
+          OR EXISTS (
+            SELECT 1
+            FROM Task t1
+            WHERE t1.project = p
+              AND LOWER(t1.title) LIKE LOWER(CONCAT('%', :taskTitle, '%'))
+          )
+        )
+        AND (
+          :completed IS NULL
+          OR EXISTS (
+            SELECT 1
+            FROM Task t2
+            WHERE t2.project = p
+              AND (
+                (:completed = true AND t2.completed IS NOT NULL)
+                OR (:completed = false AND t2.completed IS NULL)
+              )
+          )
+        )
+        AND (
+          :dueFrom IS NULL
+          OR EXISTS (
+            SELECT 1
+            FROM Task t3
+            WHERE t3.project = p
+              AND t3.dueDate IS NOT NULL
+              AND t3.dueDate >= :dueFrom
+          )
+        )
+        AND (
+          :dueTo IS NULL
+          OR EXISTS (
+            SELECT 1
+            FROM Task t4
+            WHERE t4.project = p
+              AND t4.dueDate IS NOT NULL
+              AND t4.dueDate <= :dueTo
+          )
         )
       """)
   Page<Project> searchByTaskJpql(
+      @Param("currentUserId") Long currentUserId,
       @Param("projectName") String projectName,
       @Param("taskTitle") String taskTitle,
       @Param("completed") Boolean completed,
@@ -50,4 +79,7 @@ public interface ProjectRepository extends JpaRepository<Project, Long> {
       @Param("dueTo") LocalDateTime dueTo,
       Pageable pageable
   );
+
+  @EntityGraph(attributePaths = {"user", "tasks", "tasks.categories", "tasks.reminders"})
+  List<Project> findAllByUserId(Long currentUserId);
 }
