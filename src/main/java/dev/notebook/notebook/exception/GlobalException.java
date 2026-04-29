@@ -12,20 +12,22 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 @RestControllerAdvice
 public class GlobalException {
 
   private final Logger log = LoggerFactory.getLogger(GlobalException.class);
 
-  @ExceptionHandler({NotFoundException.class, EmailAlreadyExistsException.class,
-      OperationFailedException.class, IllegalArgumentException.class})
+  @ExceptionHandler({NotFoundException.class, NoResourceFoundException.class,
+      EmailAlreadyExistsException.class, OperationFailedException.class,
+      IllegalArgumentException.class})
   public ResponseEntity<ErrorResponseDto> handleCustomExceptions(
       Exception ex,
       HttpServletRequest request
   ) {
     HttpStatus status = switch (ex) {
-      case NotFoundException _ -> HttpStatus.NOT_FOUND;
+      case NotFoundException _, NoResourceFoundException _ -> HttpStatus.NOT_FOUND;
       case EmailAlreadyExistsException _ -> HttpStatus.CONFLICT;
       case OperationFailedException _ -> HttpStatus.INTERNAL_SERVER_ERROR;
       default -> HttpStatus.BAD_REQUEST;
