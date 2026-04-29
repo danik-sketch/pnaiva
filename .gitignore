@@ -40,3 +40,5 @@ logs/
 docs/
 jmeter/
 *.codex
+dist/
+node_modules/
