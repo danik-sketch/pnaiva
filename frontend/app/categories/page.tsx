@@ -29,13 +29,13 @@ import {
 import { Plus, Pencil, Trash2, Tags } from "lucide-react";
 import useSWR, { mutate } from "swr";
 import { categoriesApi } from "@/lib/api";
-import type { CategoryResponseDto } from "@/lib/types";
+import type { Category, Task } from "@/lib/types";
 import { Spinner } from "@/components/ui/spinner";
 
 export default function CategoriesPage() {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
-  const [editingCategory, setEditingCategory] = useState<CategoryResponseDto | null>(null);
-  const [deletingCategory, setDeletingCategory] = useState<CategoryResponseDto | null>(null);
+  const [editingCategory, setEditingCategory] = useState<Category | null>(null);
+  const [deletingCategory, setDeletingCategory] = useState<Category | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
   const { data: categories, error, isLoading: isFetching } = useSWR(
@@ -201,9 +201,9 @@ export default function CategoriesPage() {
                 <CardContent>
                   {category.tasks && category.tasks.length > 0 ? (
                     <div className="flex flex-wrap gap-2">
-                      {category.tasks.slice(0, 5).map((taskTitle, index) => (
+                      {category.tasks.slice(0, 5).map((task: Task, index: number) => (
                         <Badge key={index} variant="secondary" className="text-xs">
-                          {taskTitle}
+                          {task.title}
                         </Badge>
                       ))}
                       {category.tasks.length > 5 && (
@@ -220,23 +220,6 @@ export default function CategoriesPage() {
             ))}
           </div>
         )}
-
-        {/* Info Card about ManyToMany */}
-        <Card className="border-dashed">
-          <CardHeader>
-            <CardTitle className="text-sm font-medium">ManyToMany Relationship</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-muted-foreground">
-              Categories have a ManyToMany relationship with Tasks. This means:
-            </p>
-            <ul className="mt-2 list-inside list-disc text-sm text-muted-foreground">
-              <li>A category can be assigned to multiple tasks</li>
-              <li>A task can have multiple categories</li>
-              <li>The relationship is stored in a join table (task_categories)</li>
-            </ul>
-          </CardContent>
-        </Card>
       </div>
 
       {/* Edit Dialog */}

@@ -108,9 +108,7 @@ public class ProjectService {
     }
 
     log.info("ProjectService.getAll completed - {} projects", projects.size());
-    return projects.stream()
-        .map(ProjectMapper::toDto)
-        .toList();
+    return projects.stream().map(ProjectMapper::toDto).toList();
   }
 
   @Transactional(readOnly = true)
@@ -127,8 +125,8 @@ public class ProjectService {
       return cached;
     }
 
-    Page<ProjectResponseDto> result = projectRepository.searchByTaskJpql(currentUserId, projectName, taskTitle,
-        completed, dueFrom, dueTo, pageable).map(ProjectMapper::toDto);
+    Page<ProjectResponseDto> result = projectRepository.searchByTaskJpql(currentUserId,
+        projectName, taskTitle, completed, dueFrom, dueTo, pageable).map(ProjectMapper::toDto);
 
     searchCache.put(key, result);
     log.info("Result cached with key: {}", key);

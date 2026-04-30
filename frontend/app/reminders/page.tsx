@@ -314,17 +314,7 @@ export default function RemindersPage() {
           </Card>
         )}
 
-        {/* Info Card about OneToMany */}
-        <Card className="border-dashed">
-          <CardContent className="pt-6">
-            <p className="text-sm text-muted-foreground">
-              <strong>OneToMany Relationship:</strong> Each task can have multiple reminders,
-              but each reminder belongs to exactly one task. When a task is deleted, all its
-              reminders are also deleted (cascade).
-            </p>
-          </CardContent>
-        </Card>
-      </div>
+       </div>
 
       {/* Edit Dialog */}
       <Dialog open={!!editingReminder} onOpenChange={() => setEditingReminder(null)}>

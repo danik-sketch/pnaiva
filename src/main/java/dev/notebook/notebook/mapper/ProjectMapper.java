@@ -16,7 +16,6 @@ public class ProjectMapper {
     dto.setName(project.getName());
     dto.setDescription(project.getDescription());
     if (project.getUser() != null) {
-      dto.setUserId(project.getUser().getId());
       dto.setUsername(project.getUser().getUsername());
     }
     if (project.getTasks() != null) {

@@ -141,35 +141,6 @@ export default function DashboardPage() {
             </CardContent>
           </Card>
         </div>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Entity Relationships</CardTitle>
-            <CardDescription>Data model overview</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              <div className="rounded-lg border p-4">
-                <h3 className="font-semibold">Project - Task</h3>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  OneToMany: A project can have multiple tasks
-                </p>
-              </div>
-              <div className="rounded-lg border p-4">
-                <h3 className="font-semibold">Task - Category</h3>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  ManyToMany: Tasks can have multiple categories
-                </p>
-              </div>
-              <div className="rounded-lg border p-4">
-                <h3 className="font-semibold">Task - Reminder</h3>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  OneToMany: A task can have multiple reminders
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
       </div>
     </DashboardLayout>
   );

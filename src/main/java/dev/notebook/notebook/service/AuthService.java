@@ -29,10 +29,12 @@ public class AuthService {
 
   @Transactional
   public AuthResponse register(RegisterRequest request) {
-    UserRequestDto userDto = new UserRequestDto(request.username(), request.email(), request.password());
+    UserRequestDto userDto = new UserRequestDto(request.username(), request.email(),
+        request.password());
     var savedUser = userService.create(userDto);
-    
+
     String token = jwtUtils.generateToken(savedUser.getId(), savedUser.getUsername());
-    return new AuthResponse(token, savedUser.getId(), savedUser.getUsername(), savedUser.getEmail());
+    return new AuthResponse(token, savedUser.getId(), savedUser.getUsername(),
+        savedUser.getEmail());
   }
 }

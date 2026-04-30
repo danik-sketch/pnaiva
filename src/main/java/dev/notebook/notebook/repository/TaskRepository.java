@@ -33,4 +33,23 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
   @Override
   @EntityGraph(attributePaths = {"project", "categories", "reminders"})
   Optional<Task> findById(Long id);
+
+  @EntityGraph(attributePaths = {"project", "categories", "reminders"})
+  List<Task> findByProject_UserId(Long userId);
+
+  @EntityGraph(attributePaths = {"project", "categories", "reminders"})
+  List<Task> findByProject_UserIdAndTitleContaining(Long userId, String title);
+
+  @EntityGraph(attributePaths = {"project", "categories", "reminders"})
+  List<Task> findByProject_UserIdAndCompletedIsNotNull(Long userId);
+
+  @EntityGraph(attributePaths = {"project", "categories", "reminders"})
+  List<Task> findByProject_UserIdAndCompletedIsNull(Long userId);
+
+  @EntityGraph(attributePaths = {"project", "categories", "reminders"})
+  List<Task> findByProject_UserIdAndDueDateBetween(
+      Long userId, LocalDateTime start, LocalDateTime end);
+
+  @EntityGraph(attributePaths = {"project", "categories", "reminders"})
+  List<Task> findByProject_UserIdAndDescription(Long userId, String description);
 }

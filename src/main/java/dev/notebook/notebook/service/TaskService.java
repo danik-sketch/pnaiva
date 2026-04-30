@@ -16,6 +16,7 @@ import java.util.ArrayList;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.EmptyResultDataAccessException;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -99,7 +100,15 @@ public class TaskService {
   }
 
   public List<TaskResponseDto> getAll() {
-    List<Task> tasks = repository.findAll();
+    Long currentUserId = getCurrentUserId();
+    List<Task> tasks;
+    if (currentUserId != null) {
+      tasks = repository.findByProject_UserId(currentUserId);
+      log.info("TaskService.getAll - returning tasks for userId: {}", currentUserId);
+    } else {
+      tasks = repository.findAll();
+      log.info("TaskService.getAll - returning all tasks (no auth)");
+    }
     List<TaskResponseDto> result = new ArrayList<>();
     for (Task task : tasks) {
       result.add(TaskMapper.toDto(task));
@@ -118,7 +127,13 @@ public class TaskService {
   }
 
   public List<TaskResponseDto> getByTitleContaining(String title) {
-    List<Task> tasks = repository.findByTitleContaining(title);
+    Long currentUserId = getCurrentUserId();
+    List<Task> tasks;
+    if (currentUserId != null) {
+      tasks = repository.findByProject_UserIdAndTitleContaining(currentUserId, title);
+    } else {
+      tasks = repository.findByTitleContaining(title);
+    }
     List<TaskResponseDto> result = new ArrayList<>();
     for (Task task : tasks) {
       result.add(TaskMapper.toDto(task));
@@ -128,7 +143,13 @@ public class TaskService {
   }
 
   public List<TaskResponseDto> getByDescription(String description) {
-    List<Task> tasks = repository.findByDescription(description);
+    Long currentUserId = getCurrentUserId();
+    List<Task> tasks;
+    if (currentUserId != null) {
+      tasks = repository.findByProject_UserIdAndDescription(currentUserId, description);
+    } else {
+      tasks = repository.findByDescription(description);
+    }
     List<TaskResponseDto> result = new ArrayList<>();
     for (Task task : tasks) {
       result.add(TaskMapper.toDto(task));
@@ -138,9 +159,17 @@ public class TaskService {
   }
 
   public List<TaskResponseDto> getByCompleted(boolean completed) {
-    List<Task> tasks = completed
-        ? repository.findByCompletedIsNotNull()
-        : repository.findByCompletedIsNull();
+    Long currentUserId = getCurrentUserId();
+    List<Task> tasks;
+    if (currentUserId != null) {
+      tasks = completed
+          ? repository.findByProject_UserIdAndCompletedIsNotNull(currentUserId)
+          : repository.findByProject_UserIdAndCompletedIsNull(currentUserId);
+    } else {
+      tasks = completed
+          ? repository.findByCompletedIsNotNull()
+          : repository.findByCompletedIsNull();
+    }
     List<TaskResponseDto> result = new ArrayList<>();
     for (Task task : tasks) {
       result.add(TaskMapper.toDto(task));
@@ -150,9 +179,18 @@ public class TaskService {
   }
 
   public List<TaskResponseDto> getByDueDate(LocalDate dueDate) {
-    List<Task> tasks = repository.findByDueDateBetween(
-        dueDate.atStartOfDay(),
-        dueDate.plusDays(1).atStartOfDay().minusNanos(1));
+    Long currentUserId = getCurrentUserId();
+    List<Task> tasks;
+    if (currentUserId != null) {
+      tasks = repository.findByProject_UserIdAndDueDateBetween(
+          currentUserId,
+          dueDate.atStartOfDay(),
+          dueDate.plusDays(1).atStartOfDay().minusNanos(1));
+    } else {
+      tasks = repository.findByDueDateBetween(
+          dueDate.atStartOfDay(),
+          dueDate.plusDays(1).atStartOfDay().minusNanos(1));
+    }
     List<TaskResponseDto> result = new ArrayList<>();
     for (Task task : tasks) {
       result.add(TaskMapper.toDto(task));
@@ -171,5 +209,18 @@ public class TaskService {
       throw new NotFoundException("One or more categories not found");
     }
     task.getCategories().addAll(categories);
+  }
+
+  private Long getCurrentUserId() {
+    try {
+      Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+      if (principal instanceof Long id) {
+        return id;
+      }
+      return Long.valueOf(principal.toString());
+    } catch (Exception e) {
+      log.warn("Could not get currentUserId from SecurityContext: {}", e.getMessage());
+      return null;
+    }
   }
 }

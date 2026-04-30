@@ -22,8 +22,6 @@ public class ProjectResponseDto {
   private String name;
   @Schema(description = "Project description")
   private String description;
-  @Schema(description = "Owner user identifier")
-  private Long userId;
   @Schema(description = "Owner username")
   private String username;
   @Schema(description = "Tasks included in the project")

@@ -30,13 +30,6 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
   Accordion,
   AccordionContent,
   AccordionItem,
@@ -49,13 +42,12 @@ import {
   Bell,
   CheckSquare,
   Trash2,
-  Pencil,
   FolderKanban,
 } from "lucide-react";
 import Link from "next/link";
 import useSWR, { mutate } from "swr";
 import { projectsApi, tasksApi, remindersApi, categoriesApi } from "@/lib/api";
-import type { TaskResponseDto, ReminderResponseDto } from "@/lib/types";
+import type { Task, Reminder, Category } from "@/lib/types";
 import { Spinner } from "@/components/ui/spinner";
 
 interface PageProps {
@@ -68,9 +60,9 @@ export default function ProjectDetailPage({ params }: PageProps) {
 
   const [isAddTaskOpen, setIsAddTaskOpen] = useState(false);
   const [isAddReminderOpen, setIsAddReminderOpen] = useState(false);
-  const [selectedTaskForReminder, setSelectedTaskForReminder] = useState<TaskResponseDto | null>(null);
-  const [deletingTask, setDeletingTask] = useState<TaskResponseDto | null>(null);
-  const [deletingReminder, setDeletingReminder] = useState<ReminderResponseDto | null>(null);
+  const [selectedTaskForReminder, setSelectedTaskForReminder] = useState<Task | null>(null);
+  const [deletingTask, setDeletingTask] = useState<Task | null>(null);
+  const [deletingReminder, setDeletingReminder] = useState<Reminder | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
   const { data: project, error, isLoading: isFetching } = useSWR(
@@ -133,7 +125,7 @@ export default function ProjectDetailPage({ params }: PageProps) {
     }
   };
 
-  const handleToggleTask = async (task: TaskResponseDto) => {
+  const handleToggleTask = async (task: Task) => {
     setIsLoading(true);
     try {
       await tasksApi.update(task.id, {
@@ -152,7 +144,7 @@ export default function ProjectDetailPage({ params }: PageProps) {
     }
   };
 
-  const handleDeleteTask = async () => {
+  const handleDeleteTask = async (): Promise<void> => {
     if (!deletingTask) return;
 
     setIsLoading(true);
@@ -168,7 +160,7 @@ export default function ProjectDetailPage({ params }: PageProps) {
     }
   };
 
-  const handleDeleteReminder = async () => {
+  const handleDeleteReminder = async (): Promise<void> => {
     if (!deletingReminder) return;
 
     setIsLoading(true);
@@ -224,10 +216,10 @@ export default function ProjectDetailPage({ params }: PageProps) {
     );
   }
 
-  const completedTasks = project.tasks?.filter((t) => t.completed) ?? [];
-  const pendingTasks = project.tasks?.filter((t) => !t.completed) ?? [];
+  const completedTasks = project.tasks?.filter((t: Task) => t.completed) ?? [];
+  const pendingTasks = project.tasks?.filter((t: Task) => !t.completed) ?? [];
   const totalReminders = project.tasks?.reduce(
-    (acc, task) => acc + (task.reminders?.length ?? 0),
+    (acc: number, task: Task) => acc + (task.reminders?.length ?? 0),
     0
   ) ?? 0;
 
@@ -370,7 +362,7 @@ export default function ProjectDetailPage({ params }: PageProps) {
               </div>
             ) : (
               <Accordion type="multiple" className="w-full">
-                {project.tasks.map((task) => (
+                {project.tasks.map((task: Task) => (
                   <AccordionItem key={task.id} value={task.id.toString()}>
                     <AccordionTrigger className="hover:no-underline">
                       <div className="flex items-center gap-3">
@@ -384,9 +376,9 @@ export default function ProjectDetailPage({ params }: PageProps) {
                         </span>
                         {task.categories && task.categories.length > 0 && (
                           <div className="flex gap-1">
-                            {task.categories.map((cat) => (
-                              <Badge key={cat} variant="secondary" className="text-xs">
-                                {cat}
+                            {task.categories.map((cat: Category) => (
+                              <Badge key={cat.id} variant="secondary" className="text-xs">
+                                {cat.title}
                               </Badge>
                             ))}
                           </div>
@@ -412,7 +404,7 @@ export default function ProjectDetailPage({ params }: PageProps) {
                           {task.completed && (
                             <div className="flex items-center gap-1 text-green-500">
                               <CheckSquare className="h-4 w-4" />
-                              Completed: {formatDate(task.completed)}
+                              Completed
                             </div>
                           )}
                         </div>
@@ -440,7 +432,7 @@ export default function ProjectDetailPage({ params }: PageProps) {
 
                           {task.reminders && task.reminders.length > 0 ? (
                             <div className="space-y-2">
-                              {task.reminders.map((reminder) => (
+                              {task.reminders.map((reminder: Reminder) => (
                                 <div
                                   key={reminder.id}
                                   className="flex items-center justify-between rounded-lg border p-3"
@@ -448,9 +440,9 @@ export default function ProjectDetailPage({ params }: PageProps) {
                                   <div className="flex items-center gap-3">
                                     <Bell className="h-4 w-4 text-muted-foreground" />
                                     <div>
-                                      <p className="text-sm">{reminder.message}</p>
+                                      <p className="text-sm">Reminder</p>
                                       <p className="text-xs text-muted-foreground">
-                                        {formatDate(reminder.reminderTime)}
+                                        {formatDate(reminder.remindAt)}
                                       </p>
                                     </div>
                                   </div>
@@ -491,35 +483,6 @@ export default function ProjectDetailPage({ params }: PageProps) {
                 ))}
               </Accordion>
             )}
-          </CardContent>
-        </Card>
-
-        {/* Relationship Info */}
-        <Card className="border-dashed">
-          <CardHeader>
-            <CardTitle className="text-sm font-medium">Entity Relationships in this View</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid gap-4 sm:grid-cols-3">
-              <div className="rounded-lg bg-muted p-3">
-                <h4 className="font-medium">Project - Task</h4>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  OneToMany: This project contains all tasks shown above
-                </p>
-              </div>
-              <div className="rounded-lg bg-muted p-3">
-                <h4 className="font-medium">Task - Reminder</h4>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  OneToMany: Each task can have multiple reminders
-                </p>
-              </div>
-              <div className="rounded-lg bg-muted p-3">
-                <h4 className="font-medium">Task - Category</h4>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  ManyToMany: Tasks display their assigned categories
-                </p>
-              </div>
-            </div>
           </CardContent>
         </Card>
       </div>
