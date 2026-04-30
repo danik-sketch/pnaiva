@@ -11,6 +11,9 @@ import jakarta.validation.constraints.Positive;
 import java.time.LocalDate;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
@@ -39,7 +42,7 @@ public class TaskController {
       summary = "Get tasks",
       description = "Returns all tasks or filters them by one query parameter"
   )
-  public List<TaskResponseDto> getTasks(
+  public Page<TaskResponseDto> getTasks(
       @Parameter(description = "Filter by task title fragment")
       @RequestParam(required = false) String title,
       @Parameter(description = "Filter by exact description")
@@ -48,23 +51,29 @@ public class TaskController {
       @RequestParam(required = false) @DateTimeFormat(
           iso = DateTimeFormat.ISO.DATE) LocalDate dueDate,
       @Parameter(description = "Filter by completion status")
-      @RequestParam(required = false) Boolean completed
+      @RequestParam(required = false) Boolean completed,
+      @RequestParam(defaultValue = "0") int page,
+      @RequestParam(defaultValue = "10") int size
   ) {
 
+    List<TaskResponseDto> tasks;
     if (title != null) {
-      return service.getByTitleContaining(title);
-    }
-    if (dueDate != null) {
-      return service.getByDueDate(dueDate);
-    }
-    if (completed != null) {
-      return service.getByCompleted(completed);
-    }
-    if (description != null) {
-      return service.getByDescription(description);
+      tasks = service.getByTitleContaining(title);
+    } else if (dueDate != null) {
+      tasks = service.getByDueDate(dueDate);
+    } else if (completed != null) {
+      tasks = service.getByCompleted(completed);
+    } else if (description != null) {
+      tasks = service.getByDescription(description);
+    } else {
+      tasks = service.getAll();
     }
 
-    return service.getAll();
+    int start = page * size;
+    int end = Math.min(start + size, tasks.size());
+    List<TaskResponseDto> paged = tasks.subList(start, end);
+
+    return new PageImpl<>(paged, PageRequest.of(page, size), tasks.size());
   }
 
   @GetMapping("/{id}")

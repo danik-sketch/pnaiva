@@ -13,6 +13,8 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
@@ -42,8 +44,15 @@ public class ProjectController {
       summary = "Get all projects",
       description = "Returns the full list of projects"
   )
-  public List<ProjectResponseDto> getAll() {
-    return projectService.getAll();
+  public Page<ProjectResponseDto> getAll(
+      @RequestParam(defaultValue = "0") int page,
+      @RequestParam(defaultValue = "10") int size
+  ) {
+    List<ProjectResponseDto> projects = projectService.getAll();
+    int start = page * size;
+    int end = Math.min(start + size, projects.size());
+    List<ProjectResponseDto> paged = projects.subList(start, end);
+    return new PageImpl<>(paged, PageRequest.of(page, size), projects.size());
   }
 
   @GetMapping("/search")

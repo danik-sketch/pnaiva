@@ -8,7 +8,8 @@ export interface User {
 
 export interface Category {
   id: number;
-  name: string;
+  title: string;
+  tasks?: Task[];
 }
 
 export interface Reminder {
@@ -33,12 +34,13 @@ export interface Project {
   name: string;
   description: string;
   userId: number;
+  username: string;
   tasks: Task[];
 }
 
 // Request DTOs
 export interface LoginRequest {
-  usernameOrEmail: string;
+  login: string;
   password: string;
 }
 
@@ -68,8 +70,10 @@ export interface CategoryRequest {
 
 // Response DTOs
 export interface AuthResponse {
-  accessToken: string;
-  tokenType: string;
+  token: string;
+  userId: number;
+  username: string;
+  email: string;
 }
 
 export interface PageResponse<T> {

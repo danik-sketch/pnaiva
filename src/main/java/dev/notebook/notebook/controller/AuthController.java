@@ -2,6 +2,7 @@ package dev.notebook.notebook.controller;
 
 import dev.notebook.notebook.dto.AuthResponse;
 import dev.notebook.notebook.dto.LoginRequest;
+import dev.notebook.notebook.dto.RegisterRequest;
 import dev.notebook.notebook.service.AuthService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -24,5 +25,11 @@ public class AuthController {
   @Operation(summary = "Login by username or email")
   public AuthResponse login(@Valid @RequestBody LoginRequest request) {
     return authService.login(request);
+  }
+
+  @PostMapping("/register")
+  @Operation(summary = "Register new user")
+  public AuthResponse register(@Valid @RequestBody RegisterRequest request) {
+    return authService.register(request);
   }
 }

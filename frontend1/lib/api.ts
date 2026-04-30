@@ -71,11 +71,14 @@ class ApiClient {
 
   // Auth
   async login(data: LoginRequest): Promise<AuthResponse> {
+    console.log("[v0] Login request to:", `${API_BASE}/auth/login`);
+    console.log("[v0] Login data:", JSON.stringify(data));
     const response = await this.request<AuthResponse>("/auth/login", {
       method: "POST",
       body: JSON.stringify(data),
     });
-    this.setToken(response.accessToken);
+    console.log("[v0] Login response:", response);
+    this.setToken(response.token);
     return response;
   }
 
@@ -84,7 +87,7 @@ class ApiClient {
       method: "POST",
       body: JSON.stringify(data),
     });
-    this.setToken(response.accessToken);
+    this.setToken(response.token);
     return response;
   }
 

@@ -11,7 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { FieldGroup, Field, FieldLabel } from "@/components/ui/field";
 
 export default function LoginPage() {
-  const [usernameOrEmail, setUsernameOrEmail] = useState("");
+  const [loginValue, setLoginValue] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -24,7 +24,7 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      await login({ usernameOrEmail, password });
+      await login({ login: loginValue, password });
       router.push("/dashboard");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Login failed");
@@ -55,8 +55,8 @@ export default function LoginPage() {
                 <Input
                   id="usernameOrEmail"
                   type="text"
-                  value={usernameOrEmail}
-                  onChange={(e) => setUsernameOrEmail(e.target.value)}
+                  value={loginValue}
+                  onChange={(e) => setLoginValue(e.target.value)}
                   placeholder="Enter username or email"
                   required
                 />
