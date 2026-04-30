@@ -8,7 +8,7 @@ export interface User {
 
 export interface Category {
   id: number;
-  title: string;
+  name: string; // Поменяйте с title на name
   tasks?: string[];
 }
 
@@ -65,7 +65,7 @@ export interface ProjectRequest {
 }
 
 export interface CategoryRequest {
-  name: string;
+  title: string;
 }
 
 // Response DTOs

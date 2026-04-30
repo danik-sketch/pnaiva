@@ -276,13 +276,14 @@ export default function ProjectDetailPage({ params }: PageProps) {
                     <Label>Categories</Label>
                     <div className="grid grid-cols-2 gap-2">
                       {categories?.map((category) => (
-                        <label
-                          key={category.id}
-                          className="flex items-center gap-2 rounded-md border p-2 text-sm"
-                        >
-                          <Checkbox name="categoryIds" value={category.id.toString()} />
-                          {category.title}
-                        </label>
+                          <label
+                              key={category.id}
+                              className="flex items-center gap-2 rounded-md border p-2 text-sm"
+                          >
+                            <Checkbox name="categoryIds" value={category.id.toString()} />
+                            {/* ИСПРАВЛЕНИЕ: меняем title на name */}
+                            {category.name}
+                          </label>
                       ))}
                     </div>
                   </div>
@@ -375,13 +376,14 @@ export default function ProjectDetailPage({ params }: PageProps) {
                           {task.title}
                         </span>
                         {task.categories && task.categories.length > 0 && (
-                          <div className="flex gap-1">
-                            {task.categories.map((cat: Category) => (
-                              <Badge key={cat.id} variant="secondary" className="text-xs">
-                                {cat.title}
-                              </Badge>
-                            ))}
-                          </div>
+                            <div className="flex gap-1">
+                              {task.categories.map((cat: any) => (
+                                  <Badge key={cat.id} variant="secondary" className="text-[10px]">
+                                    {/* Выведет весь объект целиком, ты сразу увидишь ключи */}
+                                    {JSON.stringify(cat)}
+                                  </Badge>
+                              ))}
+                            </div>
                         )}
                         {task.reminders && task.reminders.length > 0 && (
                           <Badge variant="outline" className="ml-2">
