@@ -1,77 +1,68 @@
-// API Types based on Spring Boot backend
+// API Response Types based on Java DTOs
 
-export interface User {
+export interface ReminderResponseDto {
   id: number;
-  username: string;
-  email: string;
+  reminderTime: string; // ISO-8601 LocalDateTime
+  message: string;
+  taskId: number;
 }
 
-export interface Category {
-  id: number;
-  name: string;
-}
-
-export interface Reminder {
-  id: number;
-  remindAt: string;
-  sent: boolean;
-}
-
-export interface Task {
+export interface TaskResponseDto {
   id: number;
   title: string;
   description: string;
-  dueDate: string;
-  completed: boolean;
-  projectName: string;
-  categories: Category[];
-  reminders: Reminder[];
+  dueDate: string; // ISO-8601 LocalDateTime
+  completed: string | null; // ISO-8601 LocalDateTime
+  projectName: string | null;
+  categories: string[];
+  reminders: ReminderResponseDto[];
 }
 
-export interface Project {
+export interface ProjectResponseDto {
   id: number;
   name: string;
   description: string;
   userId: number;
-  tasks: Task[];
-}
-
-// Request DTOs
-export interface LoginRequest {
-  usernameOrEmail: string;
-  password: string;
-}
-
-export interface RegisterRequest {
   username: string;
-  email: string;
-  password: string;
+  tasks: TaskResponseDto[];
 }
 
-export interface TaskRequest {
+export interface CategoryResponseDto {
+  id: number;
   title: string;
-  description: string;
-  dueDate: string;
-  completed: boolean;
-  projectId: number;
-  categoryIds: number[];
+  tasks: string[]; // Task titles
 }
 
-export interface ProjectRequest {
+// API Request Types
+
+export interface ReminderRequestDto {
+  reminderTime: string; // ISO-8601 LocalDateTime
+  message: string;
+  taskId?: number;
+}
+
+export interface TaskRequestDto {
+  title: string;
+  description?: string;
+  dueDate: string; // ISO-8601 LocalDateTime
+  completed?: string | null;
+  projectId?: number;
+  categoryIds?: number[];
+  reminders?: ReminderRequestDto[];
+}
+
+export interface ProjectRequestDto {
   name: string;
-  description: string;
+  description?: string;
+  userId: number;
+  tasks?: TaskRequestDto[];
 }
 
-export interface CategoryRequest {
-  name: string;
+export interface CategoryRequestDto {
+  title: string;
 }
 
-// Response DTOs
-export interface AuthResponse {
-  accessToken: string;
-  tokenType: string;
-}
-
+// Paginated Response
 export interface PageResponse<T> {
   content: T[];
   pageable: {
@@ -80,17 +71,14 @@ export interface PageResponse<T> {
   };
   totalElements: number;
   totalPages: number;
-  last: boolean;
   first: boolean;
+  last: boolean;
 }
 
 // Filter types
 export interface TaskFilters {
   title?: string;
+  description?: string;
   dueDate?: string;
   completed?: boolean;
-}
-
-export interface ProjectFilters {
-  name?: string;
 }

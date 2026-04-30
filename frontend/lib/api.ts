@@ -1,200 +1,228 @@
 import type {
-  AuthResponse,
-  LoginRequest,
-  RegisterRequest,
-  Project,
-  ProjectRequest,
-  Task,
-  TaskRequest,
-  Category,
-  CategoryRequest,
+  TaskResponseDto,
+  TaskRequestDto,
+  ProjectResponseDto,
+  ProjectRequestDto,
+  CategoryResponseDto,
+  CategoryRequestDto,
+  ReminderResponseDto,
+  ReminderRequestDto,
   PageResponse,
   TaskFilters,
-  ProjectFilters,
 } from "./types";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api";
+// API Base URL - change this to your backend URL
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
 
-class ApiClient {
-  private token: string | null = null;
-
-  constructor() {
-    if (typeof window !== "undefined") {
-      this.token = localStorage.getItem("token");
-    }
-  }
-
-  setToken(token: string | null) {
-    this.token = token;
-    if (typeof window !== "undefined") {
-      if (token) {
-        localStorage.setItem("token", token);
-      } else {
-        localStorage.removeItem("token");
-      }
-    }
-  }
-
-  getToken() {
-    return this.token;
-  }
-
-  private async request<T>(
-    endpoint: string,
-    options: RequestInit = {}
-  ): Promise<T> {
-    const headers: HeadersInit = {
-      "Content-Type": "application/json",
-      ...options.headers,
-    };
-
-    if (this.token) {
-      (headers as Record<string, string>)["Authorization"] = `Bearer ${this.token}`;
-    }
-
-    const response = await fetch(`${API_BASE}${endpoint}`, {
-      ...options,
-      headers,
-    });
-
-    if (!response.ok) {
-      const error = await response.text();
-      throw new Error(error || `HTTP error! status: ${response.status}`);
-    }
-
-    if (response.status === 204) {
-      return undefined as T;
-    }
-
-    return response.json();
-  }
-
-  // Auth
-  async login(data: LoginRequest): Promise<AuthResponse> {
-    const response = await this.request<AuthResponse>("/auth/login", {
-      method: "POST",
-      body: JSON.stringify(data),
-    });
-    this.setToken(response.accessToken);
-    return response;
-  }
-
-  async register(data: RegisterRequest): Promise<AuthResponse> {
-    const response = await this.request<AuthResponse>("/auth/register", {
-      method: "POST",
-      body: JSON.stringify(data),
-    });
-    this.setToken(response.accessToken);
-    return response;
-  }
-
-  logout() {
-    this.setToken(null);
-  }
-
-  // Projects
-  async getProjects(
-    page = 0,
-    size = 10,
-    filters?: ProjectFilters
-  ): Promise<PageResponse<Project>> {
-    const params = new URLSearchParams({
-      page: String(page),
-      size: String(size),
-    });
-    if (filters?.name) params.append("name", filters.name);
-    return this.request<PageResponse<Project>>(`/projects?${params}`);
-  }
-
-  async getProject(id: number): Promise<Project> {
-    return this.request<Project>(`/projects/${id}`);
-  }
-
-  async createProject(data: ProjectRequest): Promise<Project> {
-    return this.request<Project>("/projects", {
-      method: "POST",
-      body: JSON.stringify(data),
-    });
-  }
-
-  async updateProject(id: number, data: ProjectRequest): Promise<Project> {
-    return this.request<Project>(`/projects/${id}`, {
-      method: "PUT",
-      body: JSON.stringify(data),
-    });
-  }
-
-  async deleteProject(id: number): Promise<void> {
-    return this.request<void>(`/projects/${id}`, {
-      method: "DELETE",
-    });
-  }
-
-  // Tasks
-  async getTasks(
-    page = 0,
-    size = 10,
-    filters?: TaskFilters
-  ): Promise<PageResponse<Task>> {
-    const params = new URLSearchParams({
-      page: String(page),
-      size: String(size),
-    });
-    if (filters?.title) params.append("title", filters.title);
-    if (filters?.dueDate) params.append("dueDate", filters.dueDate);
-    if (filters?.completed !== undefined)
-      params.append("completed", String(filters.completed));
-    return this.request<PageResponse<Task>>(`/tasks?${params}`);
-  }
-
-  async getTask(id: number): Promise<Task> {
-    return this.request<Task>(`/tasks/${id}`);
-  }
-
-  async createTask(data: TaskRequest): Promise<Task> {
-    return this.request<Task>("/tasks", {
-      method: "POST",
-      body: JSON.stringify(data),
-    });
-  }
-
-  async updateTask(id: number, data: TaskRequest): Promise<Task> {
-    return this.request<Task>(`/tasks/${id}`, {
-      method: "PUT",
-      body: JSON.stringify(data),
-    });
-  }
-
-  async deleteTask(id: number): Promise<void> {
-    return this.request<void>(`/tasks/${id}`, {
-      method: "DELETE",
-    });
-  }
-
-  // Categories
-  async getCategories(): Promise<Category[]> {
-    return this.request<Category[]>("/categories");
-  }
-
-  async createCategory(data: CategoryRequest): Promise<Category> {
-    return this.request<Category>("/categories", {
-      method: "POST",
-      body: JSON.stringify(data),
-    });
-  }
-
-  async updateCategory(id: number, data: CategoryRequest): Promise<Category> {
-    return this.request<Category>(`/categories/${id}`, {
-      method: "PUT",
-      body: JSON.stringify(data),
-    });
-  }
-
-  async deleteCategory(id: number): Promise<void> {
-    return this.request<void>(`/categories/${id}`, {
-      method: "DELETE",
-    });
+class ApiError extends Error {
+  constructor(public status: number, message: string) {
+    super(message);
+    this.name = "ApiError";
   }
 }
 
-export const api = new ApiClient();
+function getAuthToken(): string | null {
+  if (typeof window !== "undefined") {
+    return localStorage.getItem("auth_token");
+  }
+  return null;
+}
+
+async function fetchApi<T>(
+  endpoint: string,
+  options: RequestInit = {}
+): Promise<T> {
+  const url = `${API_BASE_URL}${endpoint}`;
+  const token = getAuthToken();
+  
+  const headers: HeadersInit = {
+    "Content-Type": "application/json",
+    ...options.headers,
+  };
+  
+  if (token) {
+    (headers as Record<string, string>)["Authorization"] = `Bearer ${token}`;
+  }
+  
+  const response = await fetch(url, {
+    ...options,
+    headers,
+  });
+
+  if (!response.ok) {
+    throw new ApiError(response.status, `API Error: ${response.statusText}`);
+  }
+
+  // Handle 204 No Content
+  if (response.status === 204) {
+    return undefined as T;
+  }
+
+  return response.json();
+}
+
+// Tasks API
+export const tasksApi = {
+  getAll: (
+    filters?: TaskFilters,
+    page = 0,
+    size = 10
+  ): Promise<PageResponse<TaskResponseDto>> => {
+    const params = new URLSearchParams();
+    params.append("page", page.toString());
+    params.append("size", size.toString());
+    
+    if (filters?.title) params.append("title", filters.title);
+    if (filters?.description) params.append("description", filters.description);
+    if (filters?.dueDate) params.append("dueDate", filters.dueDate);
+    if (filters?.completed !== undefined) params.append("completed", filters.completed.toString());
+    
+    return fetchApi(`/api/tasks?${params.toString()}`);
+  },
+
+  getById: (id: number): Promise<TaskResponseDto> => {
+    return fetchApi(`/api/tasks/${id}`);
+  },
+
+  create: (task: TaskRequestDto): Promise<TaskResponseDto> => {
+    return fetchApi("/api/tasks", {
+      method: "POST",
+      body: JSON.stringify(task),
+    });
+  },
+
+  update: (id: number, task: TaskRequestDto): Promise<TaskResponseDto> => {
+    return fetchApi(`/api/tasks/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(task),
+    });
+  },
+
+  delete: (id: number): Promise<void> => {
+    return fetchApi(`/api/tasks/${id}`, {
+      method: "DELETE",
+    });
+  },
+};
+
+// Projects API
+export const projectsApi = {
+  getAll: (page = 0, size = 10): Promise<PageResponse<ProjectResponseDto>> => {
+    return fetchApi(`/api/projects?page=${page}&size=${size}`);
+  },
+
+  getById: (id: number): Promise<ProjectResponseDto> => {
+    return fetchApi(`/api/projects/${id}`);
+  },
+
+  search: (params: {
+    projectName?: string;
+    taskTitle?: string;
+    completed?: boolean;
+    dueFrom?: string;
+    dueTo?: string;
+    page?: number;
+    size?: number;
+  }): Promise<PageResponse<ProjectResponseDto>> => {
+    const searchParams = new URLSearchParams();
+    if (params.projectName) searchParams.append("projectName", params.projectName);
+    if (params.taskTitle) searchParams.append("taskTitle", params.taskTitle);
+    if (params.completed !== undefined) searchParams.append("completed", params.completed.toString());
+    if (params.dueFrom) searchParams.append("dueFrom", params.dueFrom);
+    if (params.dueTo) searchParams.append("dueTo", params.dueTo);
+    searchParams.append("page", (params.page || 0).toString());
+    searchParams.append("size", (params.size || 10).toString());
+    
+    return fetchApi(`/api/projects/search?${searchParams.toString()}`);
+  },
+
+  create: (project: ProjectRequestDto): Promise<ProjectResponseDto> => {
+    return fetchApi("/api/projects", {
+      method: "POST",
+      body: JSON.stringify(project),
+    });
+  },
+
+  update: (id: number, project: ProjectRequestDto): Promise<ProjectResponseDto> => {
+    return fetchApi(`/api/projects/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(project),
+    });
+  },
+
+  delete: (id: number): Promise<void> => {
+    return fetchApi(`/api/projects/${id}`, {
+      method: "DELETE",
+    });
+  },
+};
+
+// Categories API
+export const categoriesApi = {
+  getAll: (): Promise<CategoryResponseDto[]> => {
+    return fetchApi("/api/categories");
+  },
+
+  getById: (id: number): Promise<CategoryResponseDto> => {
+    return fetchApi(`/api/categories/${id}`);
+  },
+
+  create: (category: CategoryRequestDto): Promise<CategoryResponseDto> => {
+    return fetchApi("/api/categories", {
+      method: "POST",
+      body: JSON.stringify(category),
+    });
+  },
+
+  update: (id: number, category: CategoryRequestDto): Promise<CategoryResponseDto> => {
+    return fetchApi(`/api/categories/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(category),
+    });
+  },
+
+  delete: (id: number): Promise<void> => {
+    return fetchApi(`/api/categories/${id}`, {
+      method: "DELETE",
+    });
+  },
+};
+
+// Reminders API
+export const remindersApi = {
+  getAll: (): Promise<ReminderResponseDto[]> => {
+    return fetchApi("/api/reminders");
+  },
+
+  getById: (id: number): Promise<ReminderResponseDto> => {
+    return fetchApi(`/api/reminders/${id}`);
+  },
+
+  create: (reminder: ReminderRequestDto): Promise<ReminderResponseDto> => {
+    return fetchApi("/api/reminders", {
+      method: "POST",
+      body: JSON.stringify(reminder),
+    });
+  },
+
+  update: (id: number, reminder: ReminderRequestDto): Promise<ReminderResponseDto> => {
+    return fetchApi(`/api/reminders/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(reminder),
+    });
+  },
+
+  delete: (id: number): Promise<void> => {
+    return fetchApi(`/api/reminders/${id}`, {
+      method: "DELETE",
+    });
+  },
+};
+
+// SWR fetchers
+export const fetchers = {
+  tasks: (url: string) => fetchApi<PageResponse<TaskResponseDto>>(url),
+  projects: (url: string) => fetchApi<PageResponse<ProjectResponseDto>>(url),
+  categories: (url: string) => fetchApi<CategoryResponseDto[]>(url),
+  reminders: (url: string) => fetchApi<ReminderResponseDto[]>(url),
+};
