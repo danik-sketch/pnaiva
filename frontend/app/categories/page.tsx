@@ -236,7 +236,7 @@ export default function CategoriesPage() {
                 <Input
                   id="edit-title"
                   name="title"
-                  defaultValue={editingCategory?.title}
+                  defaultValue={editingCategory?.name}
                   required
                 />
               </div>
@@ -260,7 +260,7 @@ export default function CategoriesPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Category</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete &quot;{deletingCategory?.title}&quot;? This will
+              Are you sure you want to delete &quot;{deletingCategory?.name}&quot;? This will
               remove the category from all tasks that use it.
             </AlertDialogDescription>
           </AlertDialogHeader>

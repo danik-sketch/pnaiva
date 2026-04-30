@@ -103,3 +103,11 @@ export interface TaskFilters {
 export interface ProjectFilters {
   name?: string;
 }
+
+// В файле lib/types.ts
+export interface Reminder {
+  id: number;
+  taskId: number;      // Исправляет ошибку :271
+  message: string;     // Исправляет ошибку :275
+  reminderTime: string; // Исправляет ошибку :280 и :284
+}

@@ -666,7 +666,7 @@ export default function TasksPage() {
                   <Label>Categories</Label>
                   <div className="grid grid-cols-2 gap-2">
                     {categories?.map((category) => {
-                      const isChecked = editingTask?.categories?.includes(category.title) || false;
+                      const isChecked = editingTask?.categories?.includes(category.name) || false;
                       return (
                           <label
                               key={category.id}
@@ -677,7 +677,7 @@ export default function TasksPage() {
                                 value={category.id.toString()}
                                 defaultChecked={isChecked}
                             />
-                            {category.title}
+                            {category.name}
                           </label>
                       );
                     })}

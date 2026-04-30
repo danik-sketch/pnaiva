@@ -73,7 +73,6 @@ export const tasksApi = {
     params.append("size", size.toString());
     
     if (filters?.title) params.append("title", filters.title);
-    if (filters?.description) params.append("description", filters.description);
     if (filters?.dueDate) params.append("dueDate", filters.dueDate);
     if (filters?.completed !== undefined) params.append("completed", filters.completed.toString());
     
