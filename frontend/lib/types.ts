@@ -9,7 +9,7 @@ export interface User {
 export interface Category {
   id: number;
   title: string;
-  tasks?: Task[];
+  tasks?: string[];
 }
 
 export interface Reminder {

@@ -412,18 +412,19 @@ export default function ProjectDetailPage({ params }: PageProps) {
                         <Separator />
 
                         {/* Reminders Section */}
+                        {/* Reminders Section */}
                         <div className="space-y-3">
                           <div className="flex items-center justify-between">
                             <h4 className="text-sm font-medium">
                               Reminders (OneToMany from Task)
                             </h4>
                             <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => {
-                                setSelectedTaskForReminder(task);
-                                setIsAddReminderOpen(true);
-                              }}
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  setSelectedTaskForReminder(task);
+                                  setIsAddReminderOpen(true);
+                                }}
                             >
                               <Plus className="mr-2 h-3 w-3" />
                               Add Reminder
@@ -431,38 +432,38 @@ export default function ProjectDetailPage({ params }: PageProps) {
                           </div>
 
                           {task.reminders && task.reminders.length > 0 ? (
-                            <div className="space-y-2">
-                              {task.reminders.map((reminder: Reminder) => (
-                                <div
-                                  key={reminder.id}
-                                  className="flex items-center justify-between rounded-lg border p-3"
-                                >
-                                  <div className="flex items-center gap-3">
-                                    <Bell className="h-4 w-4 text-muted-foreground" />
-                                    <div>
-                                      <p className="text-sm">Reminder</p>
-                                      <p className="text-xs text-muted-foreground">
-                                        {formatDate(reminder.remindAt)}
-                                      </p>
+                              <div className="space-y-2">
+                                {task.reminders.map((reminder: Reminder, index: number) => (
+                                    <div
+                                        key={`${reminder.id}-${index}`}
+                                        className="flex items-center justify-between rounded-lg border p-3"
+                                    >
+                                      <div className="flex items-center gap-3">
+                                        <Bell className="h-4 w-4 text-muted-foreground" />
+                                        <div>
+                                          <p className="text-sm">Reminder</p>
+                                          <p className="text-xs text-muted-foreground">
+                                            {formatDate(reminder.remindAt)}
+                                          </p>
+                                        </div>
+                                      </div>
+                                      <Button
+                                          variant="ghost"
+                                          size="icon"
+                                          className="h-8 w-8 text-destructive"
+                                          onClick={() => setDeletingReminder(reminder)}
+                                      >
+                                        <Trash2 className="h-4 w-4" />
+                                      </Button>
                                     </div>
-                                  </div>
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="h-8 w-8 text-destructive"
-                                    onClick={() => setDeletingReminder(reminder)}
-                                  >
-                                    <Trash2 className="h-4 w-4" />
-                                  </Button>
-                                </div>
-                              ))}
-                            </div>
+                                ))}
+                              </div>
                           ) : (
-                            <p className="text-sm text-muted-foreground">
-                              No reminders set for this task
-                            </p>
+                              <p className="text-sm text-muted-foreground">
+                                No reminders set for this task
+                              </p>
                           )}
-                        </div>
+                        </div> {/* <--- THIS WAS THE MISSING CLOSING TAG */}
 
                         <Separator />
 

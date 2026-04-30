@@ -29,7 +29,7 @@ import {
 import { Plus, Pencil, Trash2, Tags } from "lucide-react";
 import useSWR, { mutate } from "swr";
 import { categoriesApi } from "@/lib/api";
-import type { Category, Task } from "@/lib/types";
+import type { Category } from "@/lib/types";
 import { Spinner } from "@/components/ui/spinner";
 
 export default function CategoriesPage() {
@@ -201,10 +201,10 @@ export default function CategoriesPage() {
                 <CardContent>
                   {category.tasks && category.tasks.length > 0 ? (
                     <div className="flex flex-wrap gap-2">
-                      {category.tasks.slice(0, 5).map((task: Task, index: number) => (
-                        <Badge key={index} variant="secondary" className="text-xs">
-                          {task.title}
-                        </Badge>
+                      {category.tasks.slice(0, 5).map((taskTitle: string, index: number) => (
+                          <Badge key={index} variant="secondary" className="text-xs">
+                            {taskTitle}
+                          </Badge>
                       ))}
                       {category.tasks.length > 5 && (
                         <Badge variant="outline" className="text-xs">
