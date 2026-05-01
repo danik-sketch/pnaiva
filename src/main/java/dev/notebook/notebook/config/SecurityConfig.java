@@ -1,5 +1,6 @@
 package dev.notebook.notebook.config;
 
+import dev.notebook.notebook.exception.SecurityConfigurationException;
 import dev.notebook.notebook.security.JwtAuthenticationFilter;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -22,22 +23,23 @@ public class SecurityConfig {
   private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
   @Bean
-  public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-    http
-        .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-        .csrf(AbstractHttpConfigurer::disable)
-        .httpBasic(AbstractHttpConfigurer::disable)
-        .formLogin(AbstractHttpConfigurer::disable)
-        .sessionManagement(session ->
-            session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-        .authorizeHttpRequests(auth -> auth
-            .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-            .requestMatchers("/api/auth/**", "/api-docs/**", "/v3/api-docs/**", "/swagger-ui/**").permitAll()
-            .anyRequest().authenticated()
-        )
-        .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+  public SecurityFilterChain securityFilterChain(HttpSecurity http) {
+    try {
+      http.cors(cors -> cors.configurationSource(corsConfigurationSource()))
+          .csrf(AbstractHttpConfigurer::disable).httpBasic(AbstractHttpConfigurer::disable)
+          .formLogin(AbstractHttpConfigurer::disable).sessionManagement(
+              session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+          .authorizeHttpRequests(
+              auth -> auth.requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                  .requestMatchers("/api/auth/**", "/api-docs/**", "/v3/api-docs/**",
+                      "/swagger-ui/**", "/swagger-ui.html", "/", "/index.html", "/assets/**",
+                      "/favicon.svg", "/icons.svg").permitAll().anyRequest().authenticated())
+          .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
-    return http.build();
+      return http.build();
+    } catch (Exception e) {
+      throw new SecurityConfigurationException("Failed to configure spring security", e);
+    }
   }
 
   @Bean
