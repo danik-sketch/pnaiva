@@ -86,7 +86,7 @@ public class TaskService {
     try {
       repository.deleteById(id);
       log.info("Task deleted with id: {}", id);
-    } catch (EmptyResultDataAccessException e) {
+    } catch (EmptyResultDataAccessException _) {
       throw new NotFoundException("Task not found");
     } catch (Exception exception) {
       throw new OperationFailedException("Failed to delete task", exception);
@@ -160,7 +160,6 @@ public class TaskService {
   }
 
   private void applyCategories(Task task, List<Long> categoryIds) {
-    // Исправлено: инициализируем коллекцию, если она null, чтобы избежать NPE
     if (task.getCategories() == null) {
       task.setCategories(new HashSet<>());
     }
@@ -185,7 +184,7 @@ public class TaskService {
           if (principal instanceof Long id) return id;
           try {
             return Long.valueOf(principal.toString());
-          } catch (NumberFormatException e) {
+          } catch (NumberFormatException _) {
             log.warn("Failed to parse principal to Long: {}", principal);
             return null;
           }
