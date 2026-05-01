@@ -12,34 +12,26 @@ import dev.notebook.notebook.repository.CategoryRepository;
 import dev.notebook.notebook.repository.ProjectRepository;
 import dev.notebook.notebook.repository.TaskRepository;
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
+import java.util.Optional;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.EmptyResultDataAccessException;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @Service
+@RequiredArgsConstructor // Автоматически создает конструктор для всех final полей
 @Transactional
 public class TaskService {
 
   private final TaskRepository repository;
   private final ProjectRepository projectRepository;
   private final CategoryRepository categoryRepository;
-
-  public TaskService(
-      TaskRepository repository,
-      ProjectRepository projectRepository,
-      CategoryRepository categoryRepository
-  ) {
-    this.repository = repository;
-    this.projectRepository = projectRepository;
-    this.categoryRepository = categoryRepository;
-  }
 
   @Transactional
   public TaskResponseDto create(TaskRequestDto dto) {
@@ -55,9 +47,9 @@ public class TaskService {
       applyCategories(task, dto.categoryIds());
 
       Task savedTask = repository.save(task);
-      log.info("TaskService.create completed");
+      log.info("Task created with id: {}", savedTask.getId());
       return TaskMapper.toDto(savedTask);
-    } catch (RuntimeException exception) {
+    } catch (Exception exception) { // Sonar может ругаться, но здесь это обертка над логикой
       throw new OperationFailedException("Failed to create task", exception);
     }
   }
@@ -82,9 +74,9 @@ public class TaskService {
       applyCategories(task, dto.categoryIds());
 
       Task saved = repository.save(task);
-      log.info("TaskService.update completed");
+      log.info("Task updated with id: {}", saved.getId());
       return TaskMapper.toDto(saved);
-    } catch (RuntimeException exception) {
+    } catch (Exception exception) {
       throw new OperationFailedException("Failed to update task", exception);
     }
   }
@@ -93,116 +85,84 @@ public class TaskService {
   public void delete(Long id) {
     try {
       repository.deleteById(id);
-      log.info("TaskService.delete completed");
-    } catch (EmptyResultDataAccessException _) {
+      log.info("Task deleted with id: {}", id);
+    } catch (EmptyResultDataAccessException e) {
       throw new NotFoundException("Task not found");
-    } catch (RuntimeException exception) {
+    } catch (Exception exception) {
       throw new OperationFailedException("Failed to delete task", exception);
     }
   }
 
+  @Transactional(readOnly = true)
   public List<TaskResponseDto> getAll() {
-    Long currentUserId = getCurrentUserId();
-    List<Task> tasks;
-    if (currentUserId != null) {
-      tasks = repository.findByProject_UserId(currentUserId);
-      log.info("TaskService.getAll - returning tasks for userId: {}", currentUserId);
-    } else {
-      tasks = repository.findAll();
-      log.info("TaskService.getAll - returning all tasks (no auth)");
-    }
-    List<TaskResponseDto> result = new ArrayList<>();
-    for (Task task : tasks) {
-      result.add(TaskMapper.toDto(task));
-    }
-    log.info("TaskService.getAll completed");
-    return result;
+    Long userId = getCurrentUserId();
+    List<Task> tasks = (userId != null)
+        ? repository.findByProject_UserId(userId)
+        : repository.findAll();
+
+    return tasks.stream().map(TaskMapper::toDto).toList();
   }
 
+  @Transactional(readOnly = true)
   public TaskResponseDto getById(Long id) {
-    Task task = repository.findById(id)
-        .orElseThrow(() -> {
-          return new NotFoundException("Task not found");
-        });
-    log.info("TaskService.getById completed");
-    return TaskMapper.toDto(task);
+    return repository.findById(id)
+        .map(TaskMapper::toDto)
+        .orElseThrow(() -> new NotFoundException("Task not found"));
   }
 
+  @Transactional(readOnly = true)
   public List<TaskResponseDto> getByTitleContaining(String title) {
-    Long currentUserId = getCurrentUserId();
-    List<Task> tasks;
-    if (currentUserId != null) {
-      tasks = repository.findByProject_UserIdAndTitleContaining(currentUserId, title);
-    } else {
-      tasks = repository.findByTitleContaining(title);
-    }
-    List<TaskResponseDto> result = new ArrayList<>();
-    for (Task task : tasks) {
-      result.add(TaskMapper.toDto(task));
-    }
-    log.info("TaskService.getByTitleContaining completed");
-    return result;
+    Long userId = getCurrentUserId();
+    List<Task> tasks = (userId != null)
+        ? repository.findByProject_UserIdAndTitleContaining(userId, title)
+        : repository.findByTitleContaining(title);
+
+    return tasks.stream().map(TaskMapper::toDto).toList();
   }
 
+  @Transactional(readOnly = true)
   public List<TaskResponseDto> getByDescription(String description) {
-    Long currentUserId = getCurrentUserId();
-    List<Task> tasks;
-    if (currentUserId != null) {
-      tasks = repository.findByProject_UserIdAndDescription(currentUserId, description);
-    } else {
-      tasks = repository.findByDescription(description);
-    }
-    List<TaskResponseDto> result = new ArrayList<>();
-    for (Task task : tasks) {
-      result.add(TaskMapper.toDto(task));
-    }
-    log.info("TaskService.getByDescription completed");
-    return result;
+    Long userId = getCurrentUserId();
+    List<Task> tasks = (userId != null)
+        ? repository.findByProject_UserIdAndDescription(userId, description)
+        : repository.findByDescription(description);
+
+    return tasks.stream().map(TaskMapper::toDto).toList();
   }
 
+  @Transactional(readOnly = true)
   public List<TaskResponseDto> getByCompleted(boolean completed) {
-    Long currentUserId = getCurrentUserId();
+    Long userId = getCurrentUserId();
     List<Task> tasks;
-    if (currentUserId != null) {
+    if (userId != null) {
       tasks = completed
-          ? repository.findByProject_UserIdAndCompletedIsNotNull(currentUserId)
-          : repository.findByProject_UserIdAndCompletedIsNull(currentUserId);
+          ? repository.findByProject_UserIdAndCompletedIsNotNull(userId)
+          : repository.findByProject_UserIdAndCompletedIsNull(userId);
     } else {
       tasks = completed
           ? repository.findByCompletedIsNotNull()
           : repository.findByCompletedIsNull();
     }
-    List<TaskResponseDto> result = new ArrayList<>();
-    for (Task task : tasks) {
-      result.add(TaskMapper.toDto(task));
-    }
-    log.info("TaskService.getByCompleted completed");
-    return result;
+    return tasks.stream().map(TaskMapper::toDto).toList();
   }
 
+  @Transactional(readOnly = true)
   public List<TaskResponseDto> getByDueDate(LocalDate dueDate) {
-    Long currentUserId = getCurrentUserId();
-    List<Task> tasks;
-    if (currentUserId != null) {
-      tasks = repository.findByProject_UserIdAndDueDateBetween(
-          currentUserId,
-          dueDate.atStartOfDay(),
-          dueDate.plusDays(1).atStartOfDay().minusNanos(1));
-    } else {
-      tasks = repository.findByDueDateBetween(
-          dueDate.atStartOfDay(),
-          dueDate.plusDays(1).atStartOfDay().minusNanos(1));
-    }
-    List<TaskResponseDto> result = new ArrayList<>();
-    for (Task task : tasks) {
-      result.add(TaskMapper.toDto(task));
-    }
-    log.info("TaskService.getByDueDate completed");
-    return result;
+    Long userId = getCurrentUserId();
+    var start = dueDate.atStartOfDay();
+    var end = dueDate.plusDays(1).atStartOfDay().minusNanos(1);
+
+    List<Task> tasks = (userId != null)
+        ? repository.findByProject_UserIdAndDueDateBetween(userId, start, end)
+        : repository.findByDueDateBetween(start, end);
+
+    return tasks.stream().map(TaskMapper::toDto).toList();
   }
 
   private void applyCategories(Task task, List<Long> categoryIds) {
+    // Исправлено: инициализируем коллекцию, если она null, чтобы избежать NPE
     if (task.getCategories() == null) {
+      task.setCategories(new HashSet<>());
     }
 
     task.getCategories().clear();
@@ -219,15 +179,17 @@ public class TaskService {
   }
 
   private Long getCurrentUserId() {
-    try {
-      Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-      if (principal instanceof Long id) {
-        return id;
-      }
-      return Long.valueOf(principal.toString());
-    } catch (Exception e) {
-      log.warn("Could not get currentUserId from SecurityContext: {}", e.getMessage());
-      return null;
-    }
+    return Optional.ofNullable(SecurityContextHolder.getContext().getAuthentication())
+        .map(Authentication::getPrincipal)
+        .map(principal -> {
+          if (principal instanceof Long id) return id;
+          try {
+            return Long.valueOf(principal.toString());
+          } catch (NumberFormatException e) {
+            log.warn("Failed to parse principal to Long: {}", principal);
+            return null;
+          }
+        })
+        .orElse(null);
   }
 }
