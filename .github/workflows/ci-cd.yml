@@ -1,31 +1,55 @@
-name: CI/CD Notebook Project
+name: CI/CD Pipeline
 
 on:
   push:
-    branches: [ "main", "master" ]
-  pull_request:
-    branches: [ "main" ]
+    branches: [ master ]
 
 jobs:
-  build-backend:
+  build-and-test:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_DB: notebook_db
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     steps:
       - uses: actions/checkout@v4
+
       - name: Set up JDK 21
         uses: actions/setup-java@v4
         with:
           java-version: '21'
           distribution: 'temurin'
-          cache: maven
-      - name: Build with Maven
-        run: mvn -f notebook/pom.xml clean package -DskipTests
+          cache: 'maven'
 
-  build-docker-images:
-    needs: build-backend
+      - name: Build and Test Backend
+        run: mvn clean package
+        env:
+          SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/notebook_db
+          SPRING_DATASOURCE_USERNAME: postgres
+          SPRING_DATASOURCE_PASSWORD: postgres
+
+      - name: Build Frontend
+        run: |
+          cd frontend
+          npm install -g pnpm
+          pnpm install
+          pnpm run build
+
+  deploy:
+    needs: build-and-test
     runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/master'
     steps:
-      - uses: actions/checkout@v4
-      - name: Build Backend Image
-        run: docker build -t notebook-backend -f docker/backend/Dockerfile .
-      - name: Build Frontend Image
-        run: docker build -t notebook-frontend -f docker/frontend/Dockerfile .
+      - name: Deploy to Render
+        run: curl -X POST ${{ secrets.RENDER_DEPLOY_HOOK }}
