@@ -11,7 +11,6 @@ import type {
   TaskFilters,
 } from "./types";
 
-// API Base URL - change this to your backend URL
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
 
 class ApiError extends Error {
@@ -53,7 +52,6 @@ async function fetchApi<T>(
     throw new ApiError(response.status, `API Error: ${response.statusText}`);
   }
 
-  // Handle 204 No Content
   if (response.status === 204) {
     return undefined as T;
   }
@@ -61,7 +59,6 @@ async function fetchApi<T>(
   return response.json();
 }
 
-// Tasks API
 export const tasksApi = {
   getAll: (
     filters?: TaskFilters,
@@ -104,7 +101,6 @@ export const tasksApi = {
   },
 };
 
-// Projects API
 export const projectsApi = {
   getAll: (page = 0, size = 10): Promise<PageResponse<ProjectResponseDto>> => {
     return fetchApi(`/api/projects?page=${page}&size=${size}`);
@@ -156,7 +152,6 @@ export const projectsApi = {
   },
 };
 
-// Categories API
 export const categoriesApi = {
   getAll: (): Promise<CategoryResponseDto[]> => {
     return fetchApi("/api/categories");
@@ -187,7 +182,6 @@ export const categoriesApi = {
   },
 };
 
-// Reminders API
 export const remindersApi = {
   getAll: (): Promise<ReminderResponseDto[]> => {
     return fetchApi("/api/reminders");
@@ -218,7 +212,6 @@ export const remindersApi = {
   },
 };
 
-// SWR fetchers
 export const fetchers = {
   tasks: (url: string) => fetchApi<PageResponse<TaskResponseDto>>(url),
   projects: (url: string) => fetchApi<PageResponse<ProjectResponseDto>>(url),

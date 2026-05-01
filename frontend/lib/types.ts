@@ -1,5 +1,3 @@
-// API Types based on Spring Boot backend
-
 export interface User {
   id: number;
   username: string;
@@ -8,7 +6,7 @@ export interface User {
 
 export interface Category {
   id: number;
-  name: string; // Поменяйте с title на name
+  name: string;
   tasks?: string[];
 }
 
@@ -38,7 +36,6 @@ export interface Project {
   tasks: Task[];
 }
 
-// Request DTOs
 export interface LoginRequest {
   login: string;
   password: string;
@@ -68,7 +65,6 @@ export interface CategoryRequest {
   title: string;
 }
 
-// Response DTOs
 export interface AuthResponse {
   token: string;
   userId: number;
@@ -78,7 +74,7 @@ export interface AuthResponse {
 export interface ReminderResponseDto {
   id: number;
   message: string;
-  reminderTime: string; // ISO string
+  reminderTime: string;
   taskId: number;
 }
 export interface PageResponse<T> {
@@ -93,7 +89,6 @@ export interface PageResponse<T> {
   first: boolean;
 }
 
-// Filter types
 export interface TaskFilters {
   title?: string;
   dueDate?: string;
@@ -104,10 +99,9 @@ export interface ProjectFilters {
   name?: string;
 }
 
-// В файле lib/types.ts
 export interface Reminder {
   id: number;
-  taskId: number;      // Исправляет ошибку :271
-  message: string;     // Исправляет ошибку :275
-  reminderTime: string; // Исправляет ошибку :280 и :284
+  taskId: number;
+  message: string;
+  reminderTime: string;
 }

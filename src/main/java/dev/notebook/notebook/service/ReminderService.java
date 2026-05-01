@@ -24,6 +24,9 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional(readOnly = true)
 public class ReminderService {
 
+  private static final String REMINDER_NOT_FOUND = "Reminder not found";
+  private static final String TASK_NOT_FOUND = "Task not found";
+
   private final ReminderRepository reminderRepository;
   private final TaskRepository taskRepository;
 
@@ -34,9 +37,8 @@ public class ReminderService {
     }
 
     Task task = taskRepository.findById(dto.taskId())
-        .orElseThrow(() -> new NotFoundException("Task not found"));
+        .orElseThrow(() -> new NotFoundException(TASK_NOT_FOUND));
 
-    // Check if current user owns the task
     Long currentUserId = getCurrentUserId();
     if (currentUserId != null && !task.getProject().getUser().getId().equals(currentUserId)) {
       throw new OperationFailedException("Access denied: Task does not belong to current user",
@@ -45,7 +47,6 @@ public class ReminderService {
 
     try {
       Reminder reminder = ReminderMapper.toEntity(dto, task);
-
       Reminder saved = reminderRepository.save(reminder);
       log.info("ReminderService.create completed");
       return ReminderMapper.toDto(saved);
@@ -61,9 +62,8 @@ public class ReminderService {
     }
 
     Reminder reminder = reminderRepository.findById(id)
-        .orElseThrow(() -> new NotFoundException("Reminder not found"));
+        .orElseThrow(() -> new NotFoundException(REMINDER_NOT_FOUND));
 
-    // Check if current user owns the reminder's task
     Long currentUserId = getCurrentUserId();
     if (currentUserId != null
         && !reminder.getTask().getProject().getUser().getId().equals(currentUserId)) {
@@ -72,7 +72,7 @@ public class ReminderService {
     }
 
     Task task = taskRepository.findById(dto.taskId())
-        .orElseThrow(() -> new NotFoundException("Task not found"));
+        .orElseThrow(() -> new NotFoundException(TASK_NOT_FOUND));
 
     try {
       reminder.setTime(dto.reminderTime());
@@ -90,9 +90,8 @@ public class ReminderService {
   @Transactional
   public void delete(Long id) {
     Reminder reminder = reminderRepository.findById(id)
-        .orElseThrow(() -> new NotFoundException("Reminder not found"));
+        .orElseThrow(() -> new NotFoundException(REMINDER_NOT_FOUND));
 
-    // Check if current user owns the reminder's task
     Long currentUserId = getCurrentUserId();
     if (currentUserId != null
         && !reminder.getTask().getProject().getUser().getId().equals(currentUserId)) {
@@ -104,7 +103,7 @@ public class ReminderService {
       reminderRepository.deleteById(id);
       log.info("ReminderService.delete completed");
     } catch (EmptyResultDataAccessException _) {
-      throw new NotFoundException("Reminder not found");
+      throw new NotFoundException(REMINDER_NOT_FOUND);
     } catch (RuntimeException exception) {
       throw new OperationFailedException("Failed to delete reminder", exception);
     }
@@ -112,13 +111,12 @@ public class ReminderService {
 
   public ReminderResponseDto getById(Long id) {
     Reminder reminder = reminderRepository.findById(id)
-        .orElseThrow(() -> new NotFoundException("Reminder not found"));
+        .orElseThrow(() -> new NotFoundException(REMINDER_NOT_FOUND));
 
-    // Check if current user owns the reminder's task
     Long currentUserId = getCurrentUserId();
     if (currentUserId != null
         && !reminder.getTask().getProject().getUser().getId().equals(currentUserId)) {
-      throw new NotFoundException("Reminder not found");
+      throw new NotFoundException(REMINDER_NOT_FOUND);
     }
 
     log.info("ReminderService.getById completed");
@@ -135,22 +133,23 @@ public class ReminderService {
       reminders = reminderRepository.findAll();
       log.info("ReminderService.getAll - returning all reminders (no auth)");
     }
-    List<ReminderResponseDto> result = new ArrayList<>();
-    for (Reminder reminder : reminders) {
-      result.add(ReminderMapper.toDto(reminder));
-    }
-    log.info("ReminderService.getAll completed");
-    return result;
+
+    return reminders.stream()
+        .map(ReminderMapper::toDto)
+        .toList();
   }
 
   private Long getCurrentUserId() {
     try {
-      Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+      var auth = SecurityContextHolder.getContext().getAuthentication();
+      if (auth == null) return null;
+
+      Object principal = auth.getPrincipal();
       if (principal instanceof Long id) {
         return id;
       }
       return Long.valueOf(principal.toString());
-    } catch (Exception e) {
+    } catch (NumberFormatException | NullPointerException e) {
       log.warn("Could not get currentUserId from SecurityContext: {}", e.getMessage());
       return null;
     }

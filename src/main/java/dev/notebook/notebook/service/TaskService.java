@@ -202,9 +202,7 @@ public class TaskService {
   }
 
   private void applyCategories(Task task, List<Long> categoryIds) {
-    // Если коллекция null, создаем её, чтобы не было ошибки на .clear()
     if (task.getCategories() == null) {
-      // task.setCategories(new HashSet<>()); // или ArrayList, смотря что в Entity
     }
 
     task.getCategories().clear();

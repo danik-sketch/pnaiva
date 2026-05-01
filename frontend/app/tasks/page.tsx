@@ -162,8 +162,6 @@ export default function TasksPage() {
   const handleToggleComplete = async (task: Task) => {
     setIsLoading(true);
     try {
-      // Получаем categoryIds из task.categories (массив строк названий)
-      // Нам нужно найти ID категорий по их названиям
       const categoryIds: number[] = [];
       if (task.categories && categories) {
         for (const catName of task.categories) {

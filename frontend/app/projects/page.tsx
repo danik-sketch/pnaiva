@@ -30,14 +30,13 @@ import { Plus, Pencil, Trash2, FolderKanban, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import useSWR, { mutate } from "swr";
 import { projectsApi } from "@/lib/api";
-// ИСПРАВЛЕНО: Импортируем правильные имена типов из вашего lib/types
+
 import type { Project, ProjectRequest } from "@/lib/types";
 import { Spinner } from "@/components/ui/spinner";
 
 export default function ProjectsPage() {
   const [page, setPage] = useState(0);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
-  // ИСПРАВЛЕНО: Используем тип Project вместо ProjectResponseDto
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [deletingProject, setDeletingProject] = useState<Project | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -108,7 +107,6 @@ export default function ProjectsPage() {
 
   return (
       <DashboardLayout>
-        {/* Весь остальной JSX остается без изменений */}
         <div className="space-y-6">
           <div className="flex items-center justify-between">
             <div>

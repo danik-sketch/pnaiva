@@ -11,14 +11,12 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
-    setMounted(true) // Компонент успешно загружен на клиенте
+    setMounted(true)
     if (!isLoading && !user) {
       router.push("/login")
     }
   }, [user, isLoading, router])
 
-  // Пока идет загрузка или компонент еще не смонтирован на клиенте,
-  // возвращаем загрузочный экран.
   if (!mounted || isLoading) {
     return (
         <div className="flex h-screen w-full items-center justify-center bg-background">
