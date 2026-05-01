@@ -1,7 +1,6 @@
 FROM node:20-alpine AS build
 WORKDIR /app
 RUN npm install -g pnpm
-# Копируем файлы из папки frontend
 COPY frontend/package.json frontend/pnpm-lock.yaml* ./
 RUN pnpm install --frozen-lockfile
 COPY frontend/ ./
@@ -13,9 +12,7 @@ WORKDIR /app
 RUN npm install -g pnpm
 COPY --from=build /app ./
 
-# Указываем Node.js слушать порт 3000
-ENV PORT=3000
 EXPOSE 3000
 
-# Флаг --host важен, чтобы сервер принимал внешние подключения внутри Docker
-CMD ["pnpm", "start", "--port", "3000", "--host"]
+# Добавляем флаги для запуска на 3000 порту и открытия хоста
+CMD ["pnpm", "run", "dev", "--port", "3000", "-H", "0.0.0.0"]
