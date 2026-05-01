@@ -13,7 +13,9 @@ import dev.notebook.notebook.repository.ProjectRepository;
 import dev.notebook.notebook.repository.TaskRepository;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -22,7 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @Service
-@Transactional(readOnly = true)
+@Transactional
 public class TaskService {
 
   private final TaskRepository repository;
@@ -200,10 +202,17 @@ public class TaskService {
   }
 
   private void applyCategories(Task task, List<Long> categoryIds) {
+    // Если коллекция null, создаем её, чтобы не было ошибки на .clear()
+    if (task.getCategories() == null) {
+      // task.setCategories(new HashSet<>()); // или ArrayList, смотря что в Entity
+    }
+
     task.getCategories().clear();
+
     if (categoryIds == null || categoryIds.isEmpty()) {
       return;
     }
+
     List<Category> categories = categoryRepository.findAllById(categoryIds);
     if (categories.size() != categoryIds.size()) {
       throw new NotFoundException("One or more categories not found");
