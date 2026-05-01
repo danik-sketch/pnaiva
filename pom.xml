@@ -28,7 +28,7 @@
         <url/>
     </scm>
     <properties>
-        <java.version>25</java.version>
+        <java.version>21</java.version>
     </properties>
     <dependencies>
         <dependency>
@@ -103,25 +103,46 @@
                 <version>3.13.0</version>
                 <configuration>
                     <parameters>true</parameters>
+                    <!-- Разрешаем использование превью-фич (включая нижнее подчеркивание _) -->
+                    <compilerArgs>
+                        <arg>--enable-preview</arg>
+                    </compilerArgs>
                     <annotationProcessorPaths>
                         <path>
                             <groupId>org.springframework.boot</groupId>
                             <artifactId>spring-boot-configuration-processor</artifactId>
+                            <version>${project.parent.version}</version>
                         </path>
                         <path>
                             <groupId>org.projectlombok</groupId>
                             <artifactId>lombok</artifactId>
+                            <version>${lombok.version}</version>
                         </path>
                     </annotationProcessorPaths>
                 </configuration>
             </plugin>
-
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <configuration>
+                    <!-- ЗАМЕНИ на свой реальный путь к классу с @SpringBootApplication -->
+                    <mainClass>dev.notebook.notebook.NotebookApplication</mainClass>
+                    <jvmArguments>--enable-preview</jvmArguments>
+                    <excludes>
+                        <exclude>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                        </exclude>
+                    </excludes>
+                </configuration>
+            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>3.2.5</version>
                 <configuration>
                     <argLine>
+                        --enable-preview
                         -XX:+EnableDynamicAgentLoading
                         -Xshare:off
                     </argLine>
@@ -144,8 +165,7 @@
                     <consoleOutput>true</consoleOutput>
                     <failsOnError>true</failsOnError>
                     <violationSeverity>warning</violationSeverity>
-                    <suppressionsLocation>src/main/resources/checkstyle-suppressions.xml
-                    </suppressionsLocation>
+                    <suppressionsLocation>src/main/resources/checkstyle-suppressions.xml</suppressionsLocation>
                 </configuration>
             </plugin>
 
@@ -153,6 +173,8 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <configuration>
+                    <!-- Добавляем флаг превью для запуска через mvn spring-boot:run -->
+                    <jvmArguments>--enable-preview</jvmArguments>
                     <excludes>
                         <exclude>
                             <groupId>org.projectlombok</groupId>
