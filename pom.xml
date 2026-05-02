@@ -28,7 +28,7 @@
         <url/>
     </scm>
     <properties>
-        <java.version>21</java.version>
+        <java.version>25</java.version>
     </properties>
     <dependencies>
         <dependency>
@@ -131,7 +131,6 @@
                 <configuration>
                     <!-- ЗАМЕНИ на свой реальный путь к классу с @SpringBootApplication -->
                     <mainClass>dev.notebook.notebook.NotebookApplication</mainClass>
-                    <jvmArguments>--enable-preview</jvmArguments>
                     <excludes>
                         <exclude>
                             <groupId>org.projectlombok</groupId>
@@ -177,8 +176,6 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <configuration>
-                    <!-- Добавляем флаг превью для запуска через mvn spring-boot:run -->
-                    <jvmArguments>--enable-preview</jvmArguments>
                     <excludes>
                         <exclude>
                             <groupId>org.projectlombok</groupId>
