@@ -52,14 +52,14 @@ public class CategoryService {
 
   @Transactional
   public void delete(Long id) {
-    try {
-      categoryRepository.deleteById(id);
-      log.info("CategoryService.delete completed");
-    } catch (EmptyResultDataAccessException _) {
-      throw new NotFoundException("Category not found");
-    } catch (RuntimeException exception) {
-      throw new OperationFailedException("Failed to delete category", exception);
-    }
+     try {
+       categoryRepository.deleteById(id);
+       log.info("CategoryService.delete completed");
+     } catch (EmptyResultDataAccessException e) {
+       throw new NotFoundException("Category not found");
+     } catch (RuntimeException exception) {
+       throw new OperationFailedException("Failed to delete category", exception);
+     }
   }
 
   public CategoryResponseDto getById(Long id) {

@@ -82,16 +82,16 @@ public class TaskService {
   }
 
   @Transactional
-  public void delete(Long id) {
-    try {
-      repository.deleteById(id);
-      log.info("Task deleted with id: {}", id);
-    } catch (EmptyResultDataAccessException _) {
-      throw new NotFoundException("Task not found");
-    } catch (Exception exception) {
-      throw new OperationFailedException("Failed to delete task", exception);
-    }
-  }
+   public void delete(Long id) {
+     try {
+       repository.deleteById(id);
+       log.info("Task deleted with id: {}", id);
+     } catch (EmptyResultDataAccessException _) {
+       throw new NotFoundException("Task not found");
+     } catch (Exception exception) {
+       throw new OperationFailedException("Failed to delete task", exception);
+     }
+   }
 
   @Transactional(readOnly = true)
   public List<TaskResponseDto> getAll() {

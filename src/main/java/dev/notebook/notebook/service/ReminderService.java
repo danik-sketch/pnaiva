@@ -99,14 +99,14 @@ public class ReminderService {
           null);
     }
 
-    try {
-      reminderRepository.deleteById(id);
-      log.info("ReminderService.delete completed");
-    } catch (EmptyResultDataAccessException _) {
-      throw new NotFoundException(REMINDER_NOT_FOUND);
-    } catch (RuntimeException exception) {
-      throw new OperationFailedException("Failed to delete reminder", exception);
-    }
+     try {
+       reminderRepository.deleteById(id);
+       log.info("ReminderService.delete completed");
+     } catch (EmptyResultDataAccessException _) {
+       throw new NotFoundException(REMINDER_NOT_FOUND);
+     } catch (RuntimeException exception) {
+       throw new OperationFailedException("Failed to delete reminder", exception);
+     }
   }
 
   public ReminderResponseDto getById(Long id) {

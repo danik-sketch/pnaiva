@@ -107,10 +107,6 @@
                 <version>3.13.0</version>
                 <configuration>
                     <parameters>true</parameters>
-                    <!-- Разрешаем использование превью-фич (включая нижнее подчеркивание _) -->
-                    <compilerArgs>
-                        <arg>--enable-preview</arg>
-                    </compilerArgs>
                     <annotationProcessorPaths>
                         <path>
                             <groupId>org.springframework.boot</groupId>
@@ -145,7 +141,6 @@
                 <version>3.2.5</version>
                 <configuration>
                     <argLine>
-                        --enable-preview
                         -XX:+EnableDynamicAgentLoading
                         -Xshare:off
                     </argLine>

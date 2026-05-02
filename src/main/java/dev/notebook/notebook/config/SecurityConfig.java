@@ -26,14 +26,19 @@ public class SecurityConfig {
   public SecurityFilterChain securityFilterChain(HttpSecurity http) {
     try {
       http.cors(cors -> cors.configurationSource(corsConfigurationSource()))
-          .csrf(AbstractHttpConfigurer::disable).httpBasic(AbstractHttpConfigurer::disable)
-          .formLogin(AbstractHttpConfigurer::disable).sessionManagement(
+          .csrf(AbstractHttpConfigurer::disable)
+          .httpBasic(AbstractHttpConfigurer::disable)
+          .formLogin(AbstractHttpConfigurer::disable)
+          .sessionManagement(
               session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
           .authorizeHttpRequests(
-              auth -> auth.requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+              auth -> auth
+                  .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                  // Добавили /actuator/** в список разрешенных
                   .requestMatchers("/api/auth/**", "/api-docs/**", "/v3/api-docs/**",
-                      "/swagger-ui/**", "/swagger-ui.html", "/", "/index.html", "/assets/**",
-                      "/favicon.svg", "/icons.svg").permitAll().anyRequest().authenticated())
+                      "/swagger-ui/**", "/swagger-ui.html", "/actuator/**", "/", "/index.html",
+                      "/assets/**", "/favicon.svg", "/icons.svg").permitAll()
+                  .anyRequest().authenticated())
           .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
       return http.build();
@@ -49,6 +54,7 @@ public class SecurityConfig {
     configuration.setAllowedOrigins(List.of(
         "http://localhost:3000",
         "http://127.0.0.1:3000",
+        "http://0.0.0.0:3000",
         "http://localhost:5173"
     ));
 

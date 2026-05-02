@@ -75,15 +75,15 @@ public class ProjectService {
 
   @Transactional
   public void delete(Long id) {
-    try {
-      projectRepository.deleteById(id);
-      invalidateSearchCache();
-      log.info("ProjectService.delete completed");
-    } catch (EmptyResultDataAccessException _) {
-      throw new NotFoundException("Project not found");
-    } catch (RuntimeException exception) {
-      throw new OperationFailedException("Failed to delete project", exception);
-    }
+     try {
+       projectRepository.deleteById(id);
+       invalidateSearchCache();
+       log.info("ProjectService.delete completed");
+     } catch (EmptyResultDataAccessException _) {
+       throw new NotFoundException("Project not found");
+     } catch (RuntimeException exception) {
+       throw new OperationFailedException("Failed to delete project", exception);
+     }
   }
 
   @Transactional(readOnly = true)
