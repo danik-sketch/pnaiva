@@ -1,9 +1,13 @@
 FROM node:20-alpine AS build
 WORKDIR /app
 RUN npm install -g pnpm
-COPY frontend/package.json frontend/pnpm-lock.yaml* ./
+
+# Убираем "frontend/", так как контекст сборки уже внутри этой папки
+COPY package.json pnpm-lock.yaml* ./
 RUN pnpm install --frozen-lockfile
-COPY frontend/ ./
+
+# Копируем всё содержимое текущего контекста (папки frontend) в /app
+COPY ./ ./
 RUN pnpm run build
 
 # Stage 2: Runner
@@ -13,6 +17,7 @@ RUN npm install -g pnpm
 COPY --from=build /app ./
 
 EXPOSE 3000
-
-# Добавляем флаги для запуска на 3000 порту и открытия хоста
-CMD ["pnpm", "run", "dev", "--port", "3000", "-H", "0.0.0.0"]
+# Вставь это вместо текущего CMD
+ENV PORT=3000
+ENV HOSTNAME=0.0.0.0
+CMD ["pnpm", "run", "dev"]

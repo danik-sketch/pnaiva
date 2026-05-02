@@ -1,25 +1,23 @@
 # Stage 1: Build
-FROM eclipse-temurin:25-jdk-alpine AS build
+FROM eclipse-temurin:21-jdk-alpine AS build
 WORKDIR /app
 
-# Устанавливаем Maven вручную, так как готового образа с JDK 25 еще нет
 RUN apk add --no-cache maven
 
-# Копируем настройки и зависимости
 COPY pom.xml .
 RUN mvn dependency:go-offline -B
 
-# Копируем исходники и собираем
 COPY src ./src
-RUN mvn clean package -DskipTests
+# Добавляем флаг прямо в команду сборки
+RUN mvn clean package -DskipTests -Dmaven.test.skip=true -Dmaven.compiler.parameters=true
 
 # Stage 2: Run
-FROM eclipse-temurin:25-jre-alpine
+FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app
 
 COPY --from=build /app/target/*.jar app.jar
 
 EXPOSE 8080
 
-# JDK 25 требует флаг preview, если вы используете новые фичи
+# ВАЖНО: здесь тоже нужен флаг, иначе JVM не поймет байт-код с превью-фичами
 ENTRYPOINT ["java", "--enable-preview", "-jar", "app.jar"]

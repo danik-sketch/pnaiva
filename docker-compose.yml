@@ -1,27 +1,32 @@
 services:
+  db:
+    image: postgres:16-alpine
+    container_name: notebook-db
+    environment:
+      - POSTGRES_DB=notebook_db
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=pass
+    ports:
+      - "5432:5432"
+
   backend:
-    container_name: notebook-backend
     build:
-      context: .
-      dockerfile: docker/backend/Dockerfile
+      context: .                          # Корень проекта (тут лежит pom.xml и src)
+      dockerfile: docker/backend/Dockerfile # Путь к файлу сборки
+    container_name: notebook-backend
+    depends_on:
+      - db
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/notebook_db
+      - SPRING_DATASOURCE_USERNAME=user
+      - SPRING_DATASOURCE_PASSWORD=pass
     ports:
       - "8080:8080"
-    environment:
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://notebook-db-danik0709061-e4f7.h.aivencloud.com:10978/defaultdb?sslmode=require
-      - SPRING_DATASOURCE_USERNAME=avnadmin
-      - SPRING_DATASOURCE_PASSWORD=AVNS_MgMNspqJK5b4fIXUU1x
-      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
-    restart: unless-stopped
 
   frontend:
-    container_name: notebook-frontend
     build:
-      context: .
-      dockerfile: docker/frontend/Dockerfile
+      context: ./frontend                 # Папка с фронтендом
+      dockerfile: ../docker/frontend/Dockerfile
+    container_name: notebook-frontend
     ports:
       - "3000:3000"
-    environment:
-      - NEXT_PUBLIC_API_URL=https://back-xyz.trycloudflare.com
-    depends_on:
-      - backend
-    restart: unless-stopped
