@@ -46,10 +46,17 @@ jobs:
           pnpm install
           pnpm run build
 
+      - name: Build Docker Image
+        run: docker build -t notebook-backend:latest .
+
   deploy:
     needs: build-and-test
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/master'
     steps:
       - name: Deploy to Render
-        run: curl -X POST ${{ secrets.RENDER_DEPLOY_HOOK }}
+        run: |
+          if [ -z "${{ secrets.RENDER_DEPLOY_HOOK }}" ]; then
+            echo "Render deploy hook is missing!"
+            exit 1
+          fi
+          curl -f -X POST ${{ secrets.RENDER_DEPLOY_HOOK }}

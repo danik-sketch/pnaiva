@@ -7,13 +7,11 @@ services:
     ports:
       - "8080:8080"
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://notebook-db:5432/notebook_db
-      - SPRING_DATASOURCE_USERNAME=postgres
-      - SPRING_DATASOURCE_PASSWORD=postgres
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://notebook-db-danik0709061-e4f7.h.aivencloud.com:10978/defaultdb?sslmode=require
+      - SPRING_DATASOURCE_USERNAME=avnadmin
+      - SPRING_DATASOURCE_PASSWORD=AVNS_MgMNspqJK5b4fIXUU1x
       - SPRING_JPA_HIBERNATE_DDL_AUTO=update
-    depends_on:
-      db:
-        condition: service_healthy
+    restart: unless-stopped
 
   frontend:
     container_name: notebook-frontend
@@ -23,25 +21,7 @@ services:
     ports:
       - "3000:3000"
     environment:
-      # Убрали /api, так как фронт добавляет его сам, судя по логам
-      - NEXT_PUBLIC_API_URL=http://localhost:8080
+      - NEXT_PUBLIC_API_URL=https://back-xyz.trycloudflare.com
     depends_on:
       - backend
-
-  db:
-    container_name: notebook-db
-    image: postgres:15-alpine
-    environment:
-      - POSTGRES_DB=notebook_db
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-
-volumes:
-  postgres_data:
+    restart: unless-stopped
