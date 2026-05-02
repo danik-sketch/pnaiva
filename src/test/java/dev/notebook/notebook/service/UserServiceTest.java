@@ -131,4 +131,44 @@ class UserServiceTest {
 
     assertThat(result).extracting(UserResponseDto::getUsername).containsExactly("john", "alice");
   }
+
+  @Test
+  void findByUsernameOrEmailAndPasswordShouldReturnUserByUsername() {
+    User user = user(1L, "john", "john@mail.com", "password123");
+    when(userRepository.findByUsername("john")).thenReturn(Optional.of(user));
+
+    assertThat(userService.findByUsernameOrEmailAndPassword("john", "password123"))
+        .isPresent()
+        .contains(user);
+  }
+
+  @Test
+  void findByUsernameOrEmailAndPasswordShouldReturnUserByEmail() {
+    User user = user(1L, "john", "john@mail.com", "password123");
+    when(userRepository.findByUsername("john@mail.com")).thenReturn(Optional.empty());
+    when(userRepository.findByEmail("john@mail.com")).thenReturn(Optional.of(user));
+
+    assertThat(userService.findByUsernameOrEmailAndPassword("john@mail.com", "password123"))
+        .isPresent()
+        .contains(user);
+  }
+
+  @Test
+  void findByUsernameOrEmailAndPasswordShouldReturnEmptyWhenNotFound() {
+    when(userRepository.findByUsername("nonexistent")).thenReturn(Optional.empty());
+    when(userRepository.findByEmail("nonexistent")).thenReturn(Optional.empty());
+
+    assertThat(userService.findByUsernameOrEmailAndPassword("nonexistent", "password123"))
+        .isEmpty();
+  }
+
+  @Test
+  void findByUsernameOrEmailAndPasswordShouldReturnEmptyWhenPasswordIncorrect() {
+    User user = user(1L, "john", "john@mail.com", "password123");
+    when(userRepository.findByUsername("john")).thenReturn(Optional.of(user));
+    when(userRepository.findByEmail("john")).thenReturn(Optional.empty());
+
+    assertThat(userService.findByUsernameOrEmailAndPassword("john", "wrongpassword"))
+        .isEmpty();
+  }
 }

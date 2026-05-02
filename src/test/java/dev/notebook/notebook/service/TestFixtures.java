@@ -67,6 +67,18 @@ final class TestFixtures {
     return task;
   }
 
+  static User user(Long id) {
+    User user = new User();
+    user.setId(id);
+    return user;
+  }
+
+  static Project project(Long id) {
+    Project project = new Project();
+    project.setId(id);
+    return project;
+  }
+
   static Reminder reminder(Long id, LocalDateTime time, String message, Task task) {
     Reminder reminder = new Reminder();
     reminder.setId(id);

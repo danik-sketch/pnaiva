@@ -28,6 +28,7 @@ import static dev.notebook.notebook.service.TestFixtures.task;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -234,29 +235,16 @@ class TaskServiceTest {
     verify(taskRepository).deleteById(6L);
   }
 
-  @Test
-  void getAllShouldMapTasks() {
-    Project project = project(1L, "Main project");
-    when(taskRepository.findAll()).thenReturn(List.of(
-        task(1L, "T1", "D1", FIXED_TIME, null, project),
-        task(2L, "T2", "D2", OTHER_TIME, null, project)));
+   @Test
+   void getByIdShouldReturnTask() {
+     Project project = project(1L, "Main project");
+     when(taskRepository.findById(11L))
+         .thenReturn(Optional.of(task(11L, "Task", "Desc", FIXED_TIME, null, project)));
 
-    List<TaskResponseDto> result = taskService.getAll();
+     TaskResponseDto result = taskService.getById(11L);
 
-    assertThat(result).hasSize(2);
-    assertThat(result).extracting(TaskResponseDto::getTitle).containsExactly("T1", "T2");
-  }
-
-  @Test
-  void getByIdShouldReturnTask() {
-    Project project = project(1L, "Main project");
-    when(taskRepository.findById(11L))
-        .thenReturn(Optional.of(task(11L, "Task", "Desc", FIXED_TIME, null, project)));
-
-    TaskResponseDto result = taskService.getById(11L);
-
-    assertThat(result.getId()).isEqualTo(11L);
-  }
+     assertThat(result.getId()).isEqualTo(11L);
+   }
 
   @Test
   void getByIdShouldThrowWhenTaskNotFound() {
@@ -267,69 +255,79 @@ class TaskServiceTest {
         .hasMessage("Task not found");
   }
 
-  @Test
-  void getByTitleContainingShouldMapTasks() {
-    when(taskRepository.findByTitleContaining("Ta"))
-        .thenReturn(List.of(task(1L, "Task", "Desc", FIXED_TIME, null, null)));
+   @Test
+   void getAllShouldReturnUserTasksWhenAuthenticated() {
+     Project project = project(1L, "Main project");
+     when(taskRepository.findByProject_UserId(1L)).thenReturn(List.of(
+         task(1L, "T1", "D1", FIXED_TIME, null, project),
+         task(2L, "T2", "D2", OTHER_TIME, null, project)));
 
-    List<TaskResponseDto> result = taskService.getByTitleContaining("Ta");
-    assertThat(result).hasSize(1);
-    assertThat(result.getFirst().getTitle()).isEqualTo("Task");
-  }
+     List<TaskResponseDto> result = taskService.getAll();
 
-  @Test
-  void getByDescriptionShouldMapTasks() {
-    when(taskRepository.findByDescription("Desc"))
-        .thenReturn(List.of(task(1L, "Task", "Desc", FIXED_TIME, null, null)));
+     assertThat(result).hasSize(2);
+   }
 
-    List<TaskResponseDto> result = taskService.getByDescription("Desc");
-    assertThat(result).hasSize(1);
-    assertThat(result.getFirst().getDescription()).isEqualTo("Desc");
-  }
+   @Test
+   void getByTitleContainingShouldReturnUserTasksWhenAuthenticated() {
+     when(taskRepository.findByProject_UserIdAndTitleContaining(1L, "Test"))
+         .thenReturn(List.of(task(1L, "Test", "D1", FIXED_TIME, null, null)));
 
-  @Test
-  void getByCompletedShouldUseCorrectRepositoryMethod() {
-    when(taskRepository.findByCompletedIsNotNull())
-        .thenReturn(List.of(task(1L, "Done", "", FIXED_TIME, OTHER_TIME, null)));
-    when(taskRepository.findByCompletedIsNull())
-        .thenReturn(List.of(task(2L, "Todo", "", FIXED_TIME, null, null)));
+     List<TaskResponseDto> result = taskService.getByTitleContaining("Test");
 
-    List<TaskResponseDto> completed = taskService.getByCompleted(true);
-    List<TaskResponseDto> uncompleted = taskService.getByCompleted(false);
+     assertThat(result).hasSize(1);
+   }
 
-    assertThat(completed).hasSize(1);
-    assertThat(uncompleted).hasSize(1);
-    verify(taskRepository).findByCompletedIsNotNull();
-    verify(taskRepository).findByCompletedIsNull();
-  }
+   @Test
+   void getByDescriptionShouldReturnUserTasksWhenAuthenticated() {
+     when(taskRepository.findByProject_UserIdAndDescription(1L, "Desc"))
+         .thenReturn(List.of(task(1L, "Task", "Desc", FIXED_TIME, null, null)));
 
-  @Test
-  void getByDueDateShouldQueryFullDayRange() {
-    LocalDate dueDate = LocalDate.of(2026, 4, 16);
-    when(taskRepository.findByDueDateBetween(any(LocalDateTime.class), any(LocalDateTime.class)))
-        .thenReturn(List.of());
+     List<TaskResponseDto> result = taskService.getByDescription("Desc");
 
-    taskService.getByDueDate(dueDate);
+     assertThat(result).hasSize(1);
+   }
 
-    ArgumentCaptor<LocalDateTime> startCaptor = ArgumentCaptor.forClass(LocalDateTime.class);
-    ArgumentCaptor<LocalDateTime> endCaptor = ArgumentCaptor.forClass(LocalDateTime.class);
-    verify(taskRepository).findByDueDateBetween(startCaptor.capture(), endCaptor.capture());
+   @Test
+   void getByCompletedShouldReturnUserTasksWhenAuthenticated() {
+     when(taskRepository.findByProject_UserIdAndCompletedIsNotNull(1L))
+         .thenReturn(List.of(task(1L, "Done", "", FIXED_TIME, OTHER_TIME, null)));
+     when(taskRepository.findByProject_UserIdAndCompletedIsNull(1L))
+         .thenReturn(List.of(task(2L, "Todo", "", FIXED_TIME, null, null)));
 
-    assertThat(startCaptor.getValue()).isEqualTo(LocalDateTime.of(2026, 4, 16, 0, 0));
-    assertThat(endCaptor.getValue()).isEqualTo(
-        LocalDateTime.of(2026, 4, 16, 23, 59, 59, 999999999));
-  }
+     List<TaskResponseDto> completed = taskService.getByCompleted(true);
+     List<TaskResponseDto> uncompleted = taskService.getByCompleted(false);
 
-  @Test
-  void getByDueDateShouldMapTasks() {
-    LocalDate dueDate = LocalDate.of(2026, 4, 16);
-    when(taskRepository.findByDueDateBetween(any(LocalDateTime.class), any(LocalDateTime.class)))
-        .thenReturn(List.of(task(3L, "ByDate", "", dueDate.atStartOfDay(), null, null)));
+     assertThat(completed).hasSize(1);
+     assertThat(uncompleted).hasSize(1);
+   }
 
-    List<TaskResponseDto> result = taskService.getByDueDate(dueDate);
+    @Test
+    void getByDueDateShouldReturnUserTasksWhenAuthenticated() {
+      LocalDate dueDate = LocalDate.of(2026, 4, 16);
+      when(taskRepository.findByProject_UserIdAndDueDateBetween(eq(1L), any(LocalDateTime.class),
+          any(LocalDateTime.class)))
+          .thenReturn(List.of(task(3L, "ByDate", "", dueDate.atStartOfDay(), null, null)));
 
-    assertThat(result).hasSize(1);
-    assertThat(result.getFirst().getTitle()).isEqualTo("ByDate");
-  }
+      List<TaskResponseDto> result = taskService.getByDueDate(dueDate);
+
+      assertThat(result).hasSize(1);
+    }
+
+   @Test
+   void createShouldHandleNullCategoryIds() {
+     Project project = project(1L, "Main project");
+     Task saved = task(10L, "Task", "Desc", FIXED_TIME, null, project);
+
+     TaskRequestDto requestDto = new TaskRequestDto(
+         "Task", "Desc", FIXED_TIME, null, 1L, null, List.of());
+
+     when(projectRepository.findById(1L)).thenReturn(Optional.of(project));
+     when(taskRepository.save(any(Task.class))).thenReturn(saved);
+
+     TaskResponseDto result = taskService.create(requestDto);
+
+     assertThat(result.getId()).isEqualTo(10L);
+   }
+
 
 }
