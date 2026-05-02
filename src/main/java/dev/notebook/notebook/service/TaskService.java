@@ -86,10 +86,10 @@ public class TaskService {
      try {
        repository.deleteById(id);
        log.info("Task deleted with id: {}", id);
-     } catch (EmptyResultDataAccessException _) {
+     } catch (EmptyResultDataAccessException e) {
        throw new NotFoundException("Task not found");
-     } catch (Exception exception) {
-       throw new OperationFailedException("Failed to delete task", exception);
+     } catch (Exception e) {
+       throw new OperationFailedException("Failed to delete task", e);
      }
    }
 
@@ -184,7 +184,7 @@ public class TaskService {
           if (principal instanceof Long id) return id;
           try {
             return Long.valueOf(principal.toString());
-          } catch (NumberFormatException _) {
+          } catch (NumberFormatException e) {
             log.warn("Failed to parse principal to Long: {}", principal);
             return null;
           }

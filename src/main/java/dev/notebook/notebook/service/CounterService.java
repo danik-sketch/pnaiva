@@ -53,7 +53,7 @@ public class CounterService {
              for (int j = 0; j < incrementsPerThread; j++) {
                task.run();
              }
-           } catch (InterruptedException _) {
+           } catch (InterruptedException e) {
              Thread.currentThread().interrupt();
            } catch (Exception exception) {
              error.compareAndSet(null, exception);
