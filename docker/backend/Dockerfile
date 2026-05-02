@@ -1,23 +1,16 @@
-# Stage 1: Build
-FROM eclipse-temurin:21-jdk-alpine AS build
+# Сборка
+FROM maven:3.9.6-eclipse-temurin-21-alpine AS builder
 WORKDIR /app
-
-RUN apk add --no-cache maven
-
 COPY pom.xml .
-RUN mvn dependency:go-offline -B
-
+RUN mvn dependency:go-offline
 COPY src ./src
-# Добавляем флаг прямо в команду сборки
-RUN mvn clean package -DskipTests -Dmaven.test.skip=true -Dmaven.compiler.parameters=true
+# Собираем строго под Java 21 без превью
+RUN mvn clean package -DskipTests
 
-# Stage 2: Run
+# Запуск
 FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app
-
-COPY --from=build /app/target/*.jar app.jar
-
-EXPOSE 8080
-
-# ВАЖНО: здесь тоже нужен флаг, иначе JVM не поймет байт-код с превью-фичами
-ENTRYPOINT ["java", "--enable-preview", "-jar", "app.jar"]
+COPY --from=builder /app/target/*.jar app.jar
+# Если всё же нужно оставить превью-фичи, добавь флаг в ENTRYPOINT:
+# ENTRYPOINT ["java", "--enable-preview", "-jar", "app.jar"]
+ENTRYPOINT ["java", "-jar", "app.jar"]
