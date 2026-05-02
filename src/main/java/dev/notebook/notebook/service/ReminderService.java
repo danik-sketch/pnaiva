@@ -102,7 +102,7 @@ public class ReminderService {
      try {
        reminderRepository.deleteById(id);
        log.info("ReminderService.delete completed");
-     } catch (EmptyResultDataAccessException _) {
+     } catch (EmptyResultDataAccessException e) {
        throw new NotFoundException(REMINDER_NOT_FOUND);
      } catch (RuntimeException exception) {
        throw new OperationFailedException("Failed to delete reminder", exception);

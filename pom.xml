@@ -12,7 +12,7 @@
 
     <groupId>dev.bazelin</groupId>
     <artifactId>notebook</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>0.0.2-SNAPSHOT</version>
     <name>notebook</name>
     <description>notebook</description>
 

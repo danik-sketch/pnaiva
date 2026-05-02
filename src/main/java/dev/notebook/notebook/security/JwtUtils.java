@@ -42,7 +42,7 @@ public class JwtUtils {
     try {
       Jwts.parser().verifyWith(getSigningKey()).build().parseSignedClaims(token);
       return true;
-    } catch (JwtException | IllegalArgumentException _) {
+    } catch (JwtException | IllegalArgumentException e) {
       return false;
     }
   }
