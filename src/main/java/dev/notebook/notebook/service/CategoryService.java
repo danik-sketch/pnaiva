@@ -55,7 +55,7 @@ public class CategoryService {
      try {
        categoryRepository.deleteById(id);
        log.info("CategoryService.delete completed");
-     } catch (EmptyResultDataAccessException e) {
+     } catch (EmptyResultDataAccessException _) {
        throw new NotFoundException("Category not found");
      } catch (RuntimeException exception) {
        throw new OperationFailedException("Failed to delete category", exception);
