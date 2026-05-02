@@ -26,12 +26,16 @@ public class GlobalException {
       Exception ex,
       HttpServletRequest request
   ) {
-    HttpStatus status = switch (ex) {
-      case NotFoundException _, NoResourceFoundException _ -> HttpStatus.NOT_FOUND;
-      case EmailAlreadyExistsException _ -> HttpStatus.CONFLICT;
-      case OperationFailedException _ -> HttpStatus.INTERNAL_SERVER_ERROR;
-      default -> HttpStatus.BAD_REQUEST;
-    };
+    HttpStatus status;
+    if (ex instanceof NotFoundException || ex instanceof NoResourceFoundException) {
+      status = HttpStatus.NOT_FOUND;
+    } else if (ex instanceof EmailAlreadyExistsException) {
+      status = HttpStatus.CONFLICT;
+    } else if (ex instanceof OperationFailedException) {
+      status = HttpStatus.INTERNAL_SERVER_ERROR;
+    } else {
+      status = HttpStatus.BAD_REQUEST;
+    }
 
     log.warn("{}: {}", ex.getClass().getSimpleName(), ex.getMessage());
     return buildResponse(status, ex.getMessage(), request, List.of(ex.getMessage()));
