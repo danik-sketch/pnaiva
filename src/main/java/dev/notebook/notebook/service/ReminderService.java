@@ -9,7 +9,6 @@ import dev.notebook.notebook.exception.OperationFailedException;
 import dev.notebook.notebook.mapper.ReminderMapper;
 import dev.notebook.notebook.repository.ReminderRepository;
 import dev.notebook.notebook.repository.TaskRepository;
-import java.util.ArrayList;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -99,14 +98,14 @@ public class ReminderService {
           null);
     }
 
-     try {
-       reminderRepository.deleteById(id);
-       log.info("ReminderService.delete completed");
-     } catch (EmptyResultDataAccessException e) {
-       throw new NotFoundException(REMINDER_NOT_FOUND);
-     } catch (RuntimeException exception) {
-       throw new OperationFailedException("Failed to delete reminder", exception);
-     }
+    try {
+      reminderRepository.deleteById(id);
+      log.info("ReminderService.delete completed");
+    } catch (EmptyResultDataAccessException e) {
+      throw new NotFoundException(REMINDER_NOT_FOUND);
+    } catch (RuntimeException exception) {
+      throw new OperationFailedException("Failed to delete reminder", exception);
+    }
   }
 
   public ReminderResponseDto getById(Long id) {
@@ -142,7 +141,9 @@ public class ReminderService {
   private Long getCurrentUserId() {
     try {
       var auth = SecurityContextHolder.getContext().getAuthentication();
-      if (auth == null) return null;
+      if (auth == null) {
+        return null;
+      }
 
       Object principal = auth.getPrincipal();
       if (principal instanceof Long id) {

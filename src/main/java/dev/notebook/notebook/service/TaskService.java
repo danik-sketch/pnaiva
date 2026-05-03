@@ -29,6 +29,9 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 public class TaskService {
 
+  private static final String TASK_NOT_FOUND = "Task not found";
+  private static final String PROJECT_NOT_FOUND = "Project not found";
+
   private final TaskRepository repository;
   private final ProjectRepository projectRepository;
   private final CategoryRepository categoryRepository;
@@ -40,7 +43,7 @@ public class TaskService {
     }
 
     Project project = projectRepository.findById(dto.projectId())
-        .orElseThrow(() -> new NotFoundException("Project not found"));
+        .orElseThrow(() -> new NotFoundException(PROJECT_NOT_FOUND));
 
     Long currentUserId = getCurrentUserId();
     if (currentUserId != null && !project.getUser().getId().equals(currentUserId)) {
@@ -57,7 +60,6 @@ public class TaskService {
 
     } catch (NotFoundException e) {
       throw e;
-
     } catch (Exception e) {
       throw new OperationFailedException("Failed to create task", e);
     }
@@ -66,24 +68,22 @@ public class TaskService {
   @Transactional
   public TaskResponseDto update(Long id, TaskRequestDto dto) {
     Task task = repository.findById(id)
-        .orElseThrow(() -> new NotFoundException("Task not found"));
+        .orElseThrow(() -> new NotFoundException(TASK_NOT_FOUND));
 
     Long currentUserId = getCurrentUserId();
-    if (currentUserId != null &&
-        !task.getProject().getUser().getId().equals(currentUserId)) {
+    if (currentUserId != null
+        && !task.getProject().getUser().getId().equals(currentUserId)) {
       throw new OperationFailedException("You can only update your own tasks");
     }
 
     try {
-      if (dto.projectId() != null &&
-          (task.getProject() == null
+      if (dto.projectId() != null && (task.getProject() == null
               || !task.getProject().getId().equals(dto.projectId()))) {
 
         Project project = projectRepository.findById(dto.projectId())
-            .orElseThrow(() -> new NotFoundException("Project not found"));
+            .orElseThrow(() -> new NotFoundException(PROJECT_NOT_FOUND));
 
-        if (currentUserId != null &&
-            !project.getUser().getId().equals(currentUserId)) {
+        if (currentUserId != null && !project.getUser().getId().equals(currentUserId)) {
           throw new OperationFailedException("You can only move tasks to your own projects");
         }
 
@@ -104,31 +104,30 @@ public class TaskService {
 
     } catch (NotFoundException e) {
       throw e;
-
     } catch (Exception e) {
       throw new OperationFailedException("Failed to update task", e);
     }
   }
 
   @Transactional
-   public void delete(Long id) {
+  public void delete(Long id) {
     Task task = repository.findById(id)
-        .orElseThrow(() -> new NotFoundException("Task not found"));
+        .orElseThrow(() -> new NotFoundException(TASK_NOT_FOUND));
 
     Long currentUserId = getCurrentUserId();
     if (currentUserId != null && !task.getProject().getUser().getId().equals(currentUserId)) {
       throw new OperationFailedException("You can only delete your own tasks");
     }
 
-     try {
-       repository.deleteById(id);
-       log.info("Task deleted with id: {}", id);
-     } catch (EmptyResultDataAccessException e) {
-       throw new NotFoundException("Task not found");
-     } catch (Exception e) {
-       throw new OperationFailedException("Failed to delete task", e);
-     }
-   }
+    try {
+      repository.deleteById(id);
+      log.info("Task deleted with id: {}", id);
+    } catch (EmptyResultDataAccessException e) {
+      throw new NotFoundException(TASK_NOT_FOUND);
+    } catch (Exception e) {
+      throw new OperationFailedException("Failed to delete task", e);
+    }
+  }
 
   @Transactional(readOnly = true)
   public List<TaskResponseDto> getAll() {
@@ -143,11 +142,11 @@ public class TaskService {
   @Transactional(readOnly = true)
   public TaskResponseDto getById(Long id) {
     Task task = repository.findById(id)
-        .orElseThrow(() -> new NotFoundException("Task not found"));
+        .orElseThrow(() -> new NotFoundException(TASK_NOT_FOUND));
 
     Long currentUserId = getCurrentUserId();
     if (currentUserId != null && !task.getProject().getUser().getId().equals(currentUserId)) {
-      throw new NotFoundException("Task not found");
+      throw new NotFoundException(TASK_NOT_FOUND);
     }
 
     return TaskMapper.toDto(task);
@@ -224,7 +223,9 @@ public class TaskService {
     return Optional.ofNullable(SecurityContextHolder.getContext().getAuthentication())
         .map(Authentication::getPrincipal)
         .map(principal -> {
-          if (principal instanceof Long id) return id;
+          if (principal instanceof Long id) {
+            return id;
+          }
           try {
             return Long.valueOf(principal.toString());
           } catch (NumberFormatException e) {

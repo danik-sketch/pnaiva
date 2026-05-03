@@ -2,11 +2,14 @@ package dev.notebook.notebook.service;
 
 import dev.notebook.notebook.dto.CounterResponseDto;
 import dev.notebook.notebook.exception.OperationFailedException;
-import org.junit.jupiter.api.Test;
-
 import java.lang.reflect.Method;
-
-import static org.junit.jupiter.api.Assertions.*;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class CounterServiceTest {
 
@@ -61,7 +64,8 @@ class CounterServiceTest {
     method.setAccessible(true);
 
     Exception ex = assertThrows(Exception.class, () ->
-        method.invoke(service, 1, 1, (Runnable) () -> {})
+        method.invoke(service, 1, 1, (Runnable) () -> {
+        })
     );
 
     assertInstanceOf(OperationFailedException.class, ex.getCause());
@@ -75,10 +79,14 @@ class CounterServiceTest {
         .getDeclaredMethod("executeConcurrent", int.class, int.class, Runnable.class);
     method.setAccessible(true);
 
+    CountDownLatch latch = new CountDownLatch(1);
+
     Runnable slowTask = () -> {
       try {
-        Thread.sleep(31_000);
-      } catch (InterruptedException ignored) {}
+        latch.await(31, TimeUnit.SECONDS);
+      } catch (InterruptedException e) {
+        Thread.currentThread().interrupt();
+      }
     };
 
     method.invoke(service, 1, 1, slowTask);

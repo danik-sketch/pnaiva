@@ -8,22 +8,29 @@ import dev.notebook.notebook.exception.NotFoundException;
 import dev.notebook.notebook.exception.OperationFailedException;
 import dev.notebook.notebook.repository.ProjectRepository;
 import dev.notebook.notebook.repository.UserRepository;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.domain.*;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class ProjectServiceTest {
@@ -64,7 +71,7 @@ class ProjectServiceTest {
   @Test
   void create_success() {
     when(userRepository.findById(1L)).thenReturn(Optional.of(user()));
-    when(projectRepository.save(any())).thenAnswer(i -> i.getArgument(0));
+    when(projectRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
 
     ProjectResponseDto result = service.create(dto());
 
@@ -75,17 +82,17 @@ class ProjectServiceTest {
   @Test
   void create_noAuth() {
     SecurityContextHolder.clearContext();
+    ProjectRequestDto dto = dto();
 
-    assertThrows(OperationFailedException.class,
-        () -> service.create(dto()));
+    assertThrows(OperationFailedException.class, () -> service.create(dto));
   }
 
   @Test
   void create_userNotFound() {
     when(userRepository.findById(1L)).thenReturn(Optional.empty());
+    ProjectRequestDto dto = dto();
 
-    assertThrows(NotFoundException.class,
-        () -> service.create(dto()));
+    assertThrows(NotFoundException.class, () -> service.create(dto));
   }
 
   @Test
@@ -105,11 +112,11 @@ class ProjectServiceTest {
   void update_notOwner() {
     Project p = project();
     p.getUser().setId(2L);
+    ProjectRequestDto dto = dto();
 
     when(projectRepository.findById(1L)).thenReturn(Optional.of(p));
 
-    assertThrows(OperationFailedException.class,
-        () -> service.update(1L, dto()));
+    assertThrows(OperationFailedException.class, () -> service.update(1L, dto));
   }
 
   @Test
@@ -128,8 +135,7 @@ class ProjectServiceTest {
 
     when(projectRepository.findById(1L)).thenReturn(Optional.of(p));
 
-    assertThrows(OperationFailedException.class,
-        () -> service.delete(1L));
+    assertThrows(OperationFailedException.class, () -> service.delete(1L));
   }
 
   @Test
@@ -148,8 +154,7 @@ class ProjectServiceTest {
 
     when(projectRepository.findById(1L)).thenReturn(Optional.of(p));
 
-    assertThrows(NotFoundException.class,
-        () -> service.getById(1L));
+    assertThrows(NotFoundException.class, () -> service.getById(1L));
   }
 
   @Test
@@ -177,10 +182,8 @@ class ProjectServiceTest {
   @Test
   void search_cacheWorks() {
     Pageable pageable = PageRequest.of(0, 10);
-
     LocalDateTime from = LocalDateTime.now();
     LocalDateTime to = LocalDateTime.now();
-
     Page<Project> page = new PageImpl<>(List.of(project()));
 
     when(projectRepository.searchByTaskJpql(
@@ -202,10 +205,10 @@ class ProjectServiceTest {
   @Test
   void createBulk_callsCreate() {
     when(userRepository.findById(1L)).thenReturn(Optional.of(user()));
-    when(projectRepository.save(any())).thenAnswer(i -> i.getArgument(0));
+    when(projectRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
 
-    List<ProjectResponseDto> result =
-        service.createBulk(List.of(dto(), dto()));
+    List<ProjectRequestDto> dtos = List.of(dto(), dto());
+    List<ProjectResponseDto> result = service.createBulk(dtos);
 
     assertEquals(2, result.size());
   }

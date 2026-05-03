@@ -47,20 +47,20 @@ public class CounterService {
       AtomicReference<Exception> error = new AtomicReference<>();
 
       for (int i = 0; i < threads; i++) {
-         executor.submit(() -> {
-           try {
-             startLatch.await();
-             for (int j = 0; j < incrementsPerThread; j++) {
-               task.run();
-             }
-           } catch (InterruptedException e) {
-             Thread.currentThread().interrupt();
-           } catch (Exception exception) {
-             error.compareAndSet(null, exception);
-           } finally {
-             doneLatch.countDown();
-           }
-         });
+        executor.submit(() -> {
+          try {
+            startLatch.await();
+            for (int j = 0; j < incrementsPerThread; j++) {
+              task.run();
+            }
+          } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+          } catch (Exception exception) {
+            error.compareAndSet(null, exception);
+          } finally {
+            doneLatch.countDown();
+          }
+        });
       }
       startLatch.countDown();
       if (!doneLatch.await(EXECUTION_TIMEOUT_SECONDS, TimeUnit.SECONDS)) {

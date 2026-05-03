@@ -14,7 +14,6 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.EmptyResultDataAccessException;
@@ -28,6 +27,8 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @RequiredArgsConstructor
 public class ProjectService {
+
+  private static final String PROJECT_NOT_FOUND = "Project not found";
 
   private final ProjectRepository projectRepository;
   private final UserRepository userRepository;
@@ -57,17 +58,16 @@ public class ProjectService {
   @Transactional
   public ProjectResponseDto update(Long id, ProjectRequestDto dto) {
     Project project = projectRepository.findById(id)
-        .orElseThrow(() -> new NotFoundException("Project not found"));
+        .orElseThrow(() -> new NotFoundException(PROJECT_NOT_FOUND));
 
     Long currentUserId = getCurrentUserId();
-    if (currentUserId == null || !project.getUser().getId().equals(currentUserId)) {
+    if (!project.getUser().getId().equals(currentUserId)) {
       throw new OperationFailedException("You can only update your own projects");
     }
 
     try {
       project.setName(dto.name());
       project.setDescription(dto.description());
-
 
       Project saved = projectRepository.save(project);
       invalidateSearchCache();
@@ -81,32 +81,32 @@ public class ProjectService {
   @Transactional
   public void delete(Long id) {
     Project project = projectRepository.findById(id)
-        .orElseThrow(() -> new NotFoundException("Project not found"));
+        .orElseThrow(() -> new NotFoundException(PROJECT_NOT_FOUND));
 
     Long currentUserId = getCurrentUserId();
-    if (currentUserId == null || !project.getUser().getId().equals(currentUserId)) {
+    if (!project.getUser().getId().equals(currentUserId)) {
       throw new OperationFailedException("You can only delete your own projects");
     }
 
-     try {
-       projectRepository.deleteById(id);
-       invalidateSearchCache();
-       log.info("ProjectService.delete completed");
-     } catch (EmptyResultDataAccessException e) {
-       throw new NotFoundException("Project not found");
-     } catch (RuntimeException exception) {
-       throw new OperationFailedException("Failed to delete project", exception);
-     }
+    try {
+      projectRepository.deleteById(id);
+      invalidateSearchCache();
+      log.info("ProjectService.delete completed");
+    } catch (EmptyResultDataAccessException e) {
+      throw new NotFoundException(PROJECT_NOT_FOUND);
+    } catch (RuntimeException exception) {
+      throw new OperationFailedException("Failed to delete project", exception);
+    }
   }
 
   @Transactional(readOnly = true)
   public ProjectResponseDto getById(Long id) {
     Project project = projectRepository.findById(id)
-        .orElseThrow(() -> new NotFoundException("Project not found"));
+        .orElseThrow(() -> new NotFoundException(PROJECT_NOT_FOUND));
 
     Long currentUserId = getCurrentUserId();
     if (currentUserId != null && !project.getUser().getId().equals(currentUserId)) {
-      throw new NotFoundException("Project not found");
+      throw new NotFoundException(PROJECT_NOT_FOUND);
     }
 
     log.info("ProjectService.getById completed");
@@ -154,9 +154,7 @@ public class ProjectService {
 
   @Transactional
   public List<ProjectResponseDto> createBulk(List<ProjectRequestDto> dtos) {
-    List<ProjectResponseDto> response = dtos.stream().map(this::create).toList();
-    log.info("ProjectService.createBulk completed");
-    return response;
+    return dtos.stream().map(this::create).toList();
   }
 
   private void invalidateSearchCache() {

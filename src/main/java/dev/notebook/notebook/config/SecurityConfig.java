@@ -11,6 +11,7 @@ import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
@@ -27,39 +28,43 @@ public class SecurityConfig {
   private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
   @Bean
-  public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-    http
-        .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-        .csrf(csrf -> csrf.disable())
-        .httpBasic(basic -> basic.disable())
-        .formLogin(form -> form.disable())
-        .logout(logout -> logout.disable())
+  public SecurityFilterChain securityFilterChain(HttpSecurity http) {
+    try {
+      http
+          .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+          .csrf(AbstractHttpConfigurer::disable)
+          .httpBasic(AbstractHttpConfigurer::disable)
+          .formLogin(AbstractHttpConfigurer::disable)
+          .logout(AbstractHttpConfigurer::disable)
 
-        .sessionManagement(session ->
-            session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-        )
+          .sessionManagement(session ->
+              session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+          )
 
-        .authorizeHttpRequests(auth -> auth
-            .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-            .requestMatchers(
-                "/",
-                "/api/auth/**",
-                "/api-docs/**",
-                "/v3/api-docs/**",
-                "/swagger-ui/**",
-                "/swagger-ui.html",
-                "/actuator/**",
-                "/index.html",
-                "/assets/**",
-                "/*.svg",
-                "/*.ico"
-            ).permitAll()
-            .anyRequest().authenticated()
-        )
+          .authorizeHttpRequests(auth -> auth
+              .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+              .requestMatchers(
+                  "/",
+                  "/api/auth/**",
+                  "/api-docs/**",
+                  "/v3/api-docs/**",
+                  "/swagger-ui/**",
+                  "/swagger-ui.html",
+                  "/actuator/**",
+                  "/index.html",
+                  "/assets/**",
+                  "/*.svg",
+                  "/*.ico"
+              ).permitAll()
+              .anyRequest().authenticated()
+          )
 
-        .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+          .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
-    return http.build();
+      return http.build();
+    } catch (Exception e) {
+      throw new IllegalStateException("Failed to configure Spring Security", e);
+    }
   }
 
   @Bean
@@ -69,11 +74,12 @@ public class SecurityConfig {
     configuration.setAllowedOriginPatterns(List.of(
         "http://localhost:3000",
         "http://localhost:5173",
-        "https://*.railway.app", 
+        "https://*.railway.app",
         "https://*.vercel.app"
     ));
 
-    configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
+    configuration.setAllowedMethods(
+        Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
 
     configuration.setAllowedHeaders(Arrays.asList(
         "Authorization",

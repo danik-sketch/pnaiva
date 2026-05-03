@@ -7,22 +7,22 @@ import dev.notebook.notebook.exception.EmailAlreadyExistsException;
 import dev.notebook.notebook.exception.NotFoundException;
 import dev.notebook.notebook.exception.OperationFailedException;
 import dev.notebook.notebook.repository.UserRepository;
+import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.dao.EmptyResultDataAccessException;
-
-import java.util.List;
-import java.util.Optional;
-
 import static dev.notebook.notebook.service.TestFixtures.user;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class UserServiceTest {
@@ -89,9 +89,9 @@ class UserServiceTest {
   @Test
   void update_notFound() {
     when(userRepository.findById(1L)).thenReturn(Optional.empty());
+    UserRequestDto dto = new UserRequestDto("a", "b", "c");
 
-    assertThatThrownBy(() ->
-        userService.update(1L, new UserRequestDto("a", "b", "c")))
+    assertThatThrownBy(() -> userService.update(1L, dto))
         .isInstanceOf(NotFoundException.class);
   }
 
@@ -105,8 +105,9 @@ class UserServiceTest {
     when(userRepository.save(any(User.class)))
         .thenThrow(new RuntimeException("db error"));
 
-    assertThatThrownBy(() ->
-        userService.update(1L, new UserRequestDto("john", "new@mail.com", "123")))
+    UserRequestDto dto = new UserRequestDto("john", "new@mail.com", "123");
+
+    assertThatThrownBy(() -> userService.update(1L, dto))
         .isInstanceOf(OperationFailedException.class);
   }
 
@@ -214,8 +215,9 @@ class UserServiceTest {
     when(userRepository.findById(1L)).thenReturn(Optional.of(existing));
     when(userRepository.existsByEmail("new@mail.com")).thenReturn(true);
 
-    assertThatThrownBy(() ->
-        userService.update(1L, new UserRequestDto("john", "new@mail.com", "123")))
+    UserRequestDto dto = new UserRequestDto("john", "new@mail.com", "123");
+
+    assertThatThrownBy(() -> userService.update(1L, dto))
         .isInstanceOf(EmailAlreadyExistsException.class);
   }
 }

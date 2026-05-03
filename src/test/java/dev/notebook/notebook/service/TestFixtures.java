@@ -5,7 +5,6 @@ import dev.notebook.notebook.entity.Project;
 import dev.notebook.notebook.entity.Reminder;
 import dev.notebook.notebook.entity.Task;
 import dev.notebook.notebook.entity.User;
-
 import java.time.LocalDateTime;
 
 final class TestFixtures {
@@ -13,7 +12,8 @@ final class TestFixtures {
   static final LocalDateTime FIXED_TIME = LocalDateTime.of(2026, 4, 16, 12, 0);
   static final LocalDateTime OTHER_TIME = LocalDateTime.of(2026, 4, 17, 10, 0);
 
-  private TestFixtures() {}
+  private TestFixtures() {
+  }
 
   static User user(Long id) {
     User user = new User();

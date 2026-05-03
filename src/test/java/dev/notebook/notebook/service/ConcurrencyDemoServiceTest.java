@@ -1,9 +1,8 @@
 package dev.notebook.notebook.service;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import dev.notebook.notebook.dto.CounterResponseDto;
 import org.junit.jupiter.api.Test;
+import static org.assertj.core.api.Assertions.assertThat;
 
 class ConcurrencyDemoServiceTest {
 

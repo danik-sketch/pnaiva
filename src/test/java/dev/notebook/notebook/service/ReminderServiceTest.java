@@ -8,6 +8,8 @@ import dev.notebook.notebook.exception.NotFoundException;
 import dev.notebook.notebook.exception.OperationFailedException;
 import dev.notebook.notebook.repository.ReminderRepository;
 import dev.notebook.notebook.repository.TaskRepository;
+import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -17,22 +19,28 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
-
-import java.util.List;
-import java.util.Optional;
-
-import static dev.notebook.notebook.service.TestFixtures.*;
-import static org.assertj.core.api.Assertions.*;
+import static dev.notebook.notebook.service.TestFixtures.FIXED_TIME;
+import static dev.notebook.notebook.service.TestFixtures.project;
+import static dev.notebook.notebook.service.TestFixtures.reminder;
+import static dev.notebook.notebook.service.TestFixtures.task;
+import static dev.notebook.notebook.service.TestFixtures.user;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class ReminderServiceTest {
 
-  @Mock private ReminderRepository reminderRepository;
-  @Mock private TaskRepository taskRepository;
+  @Mock
+  private ReminderRepository reminderRepository;
+  @Mock
+  private TaskRepository taskRepository;
 
-  @InjectMocks private ReminderService reminderService;
+  @InjectMocks
+  private ReminderService reminderService;
 
   @BeforeEach
   void auth() {
@@ -54,18 +62,18 @@ class ReminderServiceTest {
 
   @Test
   void create_shouldFail_whenTaskIdNull() {
-    assertThatThrownBy(() ->
-        reminderService.create(new ReminderRequestDto(FIXED_TIME, "Ping", null))
-    ).isInstanceOf(IllegalArgumentException.class);
+    ReminderRequestDto dto = new ReminderRequestDto(FIXED_TIME, "Ping", null);
+    assertThatThrownBy(() -> reminderService.create(dto))
+        .isInstanceOf(IllegalArgumentException.class);
   }
 
   @Test
   void create_shouldFail_whenTaskNotFound() {
     when(taskRepository.findById(99L)).thenReturn(Optional.empty());
+    ReminderRequestDto dto = new ReminderRequestDto(FIXED_TIME, "Ping", 99L);
 
-    assertThatThrownBy(() ->
-        reminderService.create(new ReminderRequestDto(FIXED_TIME, "Ping", 99L))
-    ).isInstanceOf(NotFoundException.class);
+    assertThatThrownBy(() -> reminderService.create(dto))
+        .isInstanceOf(NotFoundException.class);
   }
 
   @Test
@@ -73,7 +81,7 @@ class ReminderServiceTest {
     Task task = validTask(1L);
 
     when(taskRepository.findById(5L)).thenReturn(Optional.of(task));
-    when(reminderRepository.save(any())).thenAnswer(i -> i.getArgument(0));
+    when(reminderRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
 
     ReminderResponseDto result =
         reminderService.create(new ReminderRequestDto(FIXED_TIME, "Ping", 5L));
@@ -89,9 +97,10 @@ class ReminderServiceTest {
     when(reminderRepository.save(any()))
         .thenThrow(new DataAccessResourceFailureException("db"));
 
-    assertThatThrownBy(() ->
-        reminderService.create(new ReminderRequestDto(FIXED_TIME, "Ping", 5L))
-    ).isInstanceOf(OperationFailedException.class);
+    ReminderRequestDto dto = new ReminderRequestDto(FIXED_TIME, "Ping", 5L);
+
+    assertThatThrownBy(() -> reminderService.create(dto))
+        .isInstanceOf(OperationFailedException.class);
   }
 
   @Test
@@ -99,19 +108,19 @@ class ReminderServiceTest {
     Task task = validTask(2L);
 
     when(taskRepository.findById(5L)).thenReturn(Optional.of(task));
+    ReminderRequestDto dto = new ReminderRequestDto(FIXED_TIME, "Ping", 5L);
 
-    assertThatThrownBy(() ->
-        reminderService.create(new ReminderRequestDto(FIXED_TIME, "Ping", 5L))
-    ).isInstanceOf(OperationFailedException.class);
+    assertThatThrownBy(() -> reminderService.create(dto))
+        .isInstanceOf(OperationFailedException.class);
   }
 
   @Test
   void update_shouldFail_whenReminderNotFound() {
     when(reminderRepository.findById(1L)).thenReturn(Optional.empty());
+    ReminderRequestDto dto = new ReminderRequestDto(FIXED_TIME, "Ping", 5L);
 
-    assertThatThrownBy(() ->
-        reminderService.update(1L, new ReminderRequestDto(FIXED_TIME, "Ping", 5L))
-    ).isInstanceOf(NotFoundException.class);
+    assertThatThrownBy(() -> reminderService.update(1L, dto))
+        .isInstanceOf(NotFoundException.class);
   }
 
   @Test
@@ -139,9 +148,10 @@ class ReminderServiceTest {
     when(reminderRepository.save(existing))
         .thenThrow(new DataAccessResourceFailureException("db"));
 
-    assertThatThrownBy(() ->
-        reminderService.update(1L, new ReminderRequestDto(FIXED_TIME, "Updated", 5L))
-    ).isInstanceOf(OperationFailedException.class);
+    ReminderRequestDto dto = new ReminderRequestDto(FIXED_TIME, "Updated", 5L);
+
+    assertThatThrownBy(() -> reminderService.update(1L, dto))
+        .isInstanceOf(OperationFailedException.class);
   }
 
   @Test
@@ -149,10 +159,10 @@ class ReminderServiceTest {
     Reminder existing = validReminder(2L);
 
     when(reminderRepository.findById(1L)).thenReturn(Optional.of(existing));
+    ReminderRequestDto dto = new ReminderRequestDto(FIXED_TIME, "Updated", 5L);
 
-    assertThatThrownBy(() ->
-        reminderService.update(1L, new ReminderRequestDto(FIXED_TIME, "Updated", 5L))
-    ).isInstanceOf(OperationFailedException.class);
+    assertThatThrownBy(() -> reminderService.update(1L, dto))
+        .isInstanceOf(OperationFailedException.class);
   }
 
   @Test

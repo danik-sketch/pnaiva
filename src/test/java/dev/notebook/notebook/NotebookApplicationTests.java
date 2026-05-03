@@ -16,6 +16,8 @@ class NotebookApplicationTests {
 
   @Test
   void contextLoads() {
+    // Данный тест проверяет корректность конфигурации и успешный запуск
+    // контекста приложения Spring Boot.
   }
 
 }

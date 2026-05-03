@@ -65,14 +65,14 @@ public class UserService {
 
   @Transactional
   public void delete(Long id) {
-     try {
-       userRepository.deleteById(id);
-       log.info("UserService.delete completed");
-     } catch (EmptyResultDataAccessException exception) {
-       throw new NotFoundException("User not found");
-     } catch (RuntimeException exception) {
-       throw new OperationFailedException("Failed to delete user", exception);
-     }
+    try {
+      userRepository.deleteById(id);
+      log.info("UserService.delete completed");
+    } catch (EmptyResultDataAccessException exception) {
+      throw new NotFoundException("User not found");
+    } catch (RuntimeException exception) {
+      throw new OperationFailedException("Failed to delete user", exception);
+    }
   }
 
   public UserResponseDto getById(Long id) {
