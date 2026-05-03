@@ -17,7 +17,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.dao.DataAccessResourceFailureException;
-import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -49,7 +48,7 @@ class ReminderServiceTest {
 
   @BeforeEach
   void setUp() {
-    // Reset SecurityContextHolder before each test
+
     SecurityContextHolder.clearContext();
   }
 
@@ -125,14 +124,14 @@ class ReminderServiceTest {
          .isInstanceOf(NotFoundException.class)
          .hasMessage("Reminder not found");
 
-     // For the second case, we need a valid reminder but with database failure
+
      Task task = task(5L);
      task.setProject(project(1L, "Project"));
      task.getProject().setUser(user(1L, "user1"));
      Reminder reminder = reminder(4L, FIXED_TIME, "Test", task);
      when(reminderRepository.findById(4L)).thenReturn(Optional.of(reminder));
-     
-     // Mock SecurityContext to allow delete
+
+
      SecurityContext context = mock(SecurityContext.class);
      Authentication authentication = mock(Authentication.class);
      SecurityContextHolder.setContext(context);
@@ -155,7 +154,7 @@ class ReminderServiceTest {
     Reminder reminder = reminder(5L, FIXED_TIME, "Test", task);
     when(reminderRepository.findById(5L)).thenReturn(Optional.of(reminder));
 
-    // Set up SecurityContext with user ID 1
+
     SecurityContext context = mock(SecurityContext.class);
     Authentication authentication = mock(Authentication.class);
     SecurityContextHolder.setContext(context);

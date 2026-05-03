@@ -21,7 +21,6 @@
     </properties>
 
     <dependencies>
-        <!-- Web & Starter -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
@@ -35,7 +34,6 @@
             <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
 
-        <!-- Database -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-jpa</artifactId>
@@ -46,7 +44,6 @@
             <scope>runtime</scope>
         </dependency>
 
-        <!-- Security & JWT -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-security</artifactId>
@@ -69,7 +66,6 @@
             <scope>runtime</scope>
         </dependency>
 
-        <!-- Tools -->
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
@@ -85,7 +81,6 @@
             <version>3.0.0</version>
         </dependency>
 
-        <!-- Testing -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
@@ -100,7 +95,6 @@
 
     <build>
         <plugins>
-            <!-- Объединенный плагин компиляции -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
@@ -108,9 +102,6 @@
                 <configuration>
                     <release>21</release>
                     <parameters>true</parameters>
-                    <compilerArgs>
-                        <arg>--enable-preview</arg>
-                    </compilerArgs>
                     <annotationProcessorPaths>
                         <path>
                             <groupId>org.springframework.boot</groupId>
@@ -126,7 +117,6 @@
                 </configuration>
             </plugin>
 
-            <!-- Surefire для тестов -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
@@ -139,12 +129,10 @@
                 </configuration>
             </plugin>
 
-            <!-- Spring Boot плагин с фиксом поиска Main класса -->
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <configuration>
-                    <!-- Указываем явно, чтобы Docker не падал -->
                     <mainClass>dev.notebook.notebook.NotebookApplication</mainClass>
                     <excludes>
                         <exclude>
@@ -162,7 +150,6 @@
                 </executions>
             </plugin>
 
-            <!-- Checkstyle -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-checkstyle-plugin</artifactId>

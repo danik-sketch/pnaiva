@@ -316,7 +316,7 @@ export default function RemindersPage() {
 
        </div>
 
-      {/* Edit Dialog */}
+      {}
       <Dialog open={!!editingReminder} onOpenChange={() => setEditingReminder(null)}>
         <DialogContent>
           <form action={handleUpdate}>
@@ -373,7 +373,7 @@ export default function RemindersPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Delete Confirmation */}
+      {}
       <AlertDialog open={!!deletingReminder} onOpenChange={() => setDeletingReminder(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>

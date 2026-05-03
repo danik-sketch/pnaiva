@@ -25,7 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @Service
-@RequiredArgsConstructor // Автоматически создает конструктор для всех final полей
+@RequiredArgsConstructor
 @Transactional
 public class TaskService {
 
@@ -42,6 +42,11 @@ public class TaskService {
     Project project = projectRepository.findById(dto.projectId())
         .orElseThrow(() -> new NotFoundException("Project not found"));
 
+    Long currentUserId = getCurrentUserId();
+    if (currentUserId != null && !project.getUser().getId().equals(currentUserId)) {
+      throw new OperationFailedException("You can only create tasks in your own projects");
+    }
+
     try {
       Task task = TaskMapper.toEntity(dto, project);
       applyCategories(task, dto.categoryIds());
@@ -49,7 +54,7 @@ public class TaskService {
       Task savedTask = repository.save(task);
       log.info("Task created with id: {}", savedTask.getId());
       return TaskMapper.toDto(savedTask);
-    } catch (Exception exception) { // Sonar может ругаться, но здесь это обертка над логикой
+    } catch (Exception exception) {
       throw new OperationFailedException("Failed to create task", exception);
     }
   }
@@ -59,11 +64,19 @@ public class TaskService {
     Task task = repository.findById(id)
         .orElseThrow(() -> new NotFoundException("Task not found"));
 
+    Long currentUserId = getCurrentUserId();
+    if (currentUserId != null && !task.getProject().getUser().getId().equals(currentUserId)) {
+      throw new OperationFailedException("You can only update your own tasks");
+    }
+
     try {
       if (dto.projectId() != null && (task.getProject() == null
           || !task.getProject().getId().equals(dto.projectId()))) {
         Project project = projectRepository.findById(dto.projectId())
             .orElseThrow(() -> new NotFoundException("Project not found"));
+        if (currentUserId != null && !project.getUser().getId().equals(currentUserId)) {
+          throw new OperationFailedException("You can only move tasks to your own projects");
+        }
         task.setProject(project);
       }
 
@@ -83,6 +96,14 @@ public class TaskService {
 
   @Transactional
    public void delete(Long id) {
+    Task task = repository.findById(id)
+        .orElseThrow(() -> new NotFoundException("Task not found"));
+
+    Long currentUserId = getCurrentUserId();
+    if (currentUserId != null && !task.getProject().getUser().getId().equals(currentUserId)) {
+      throw new OperationFailedException("You can only delete your own tasks");
+    }
+
      try {
        repository.deleteById(id);
        log.info("Task deleted with id: {}", id);
@@ -105,9 +126,15 @@ public class TaskService {
 
   @Transactional(readOnly = true)
   public TaskResponseDto getById(Long id) {
-    return repository.findById(id)
-        .map(TaskMapper::toDto)
+    Task task = repository.findById(id)
         .orElseThrow(() -> new NotFoundException("Task not found"));
+
+    Long currentUserId = getCurrentUserId();
+    if (currentUserId != null && !task.getProject().getUser().getId().equals(currentUserId)) {
+      throw new NotFoundException("Task not found");
+    }
+
+    return TaskMapper.toDto(task);
   }
 
   @Transactional(readOnly = true)

@@ -35,8 +35,13 @@ public class ProjectService {
 
   @Transactional
   public ProjectResponseDto create(ProjectRequestDto dto) {
-    Optional<User> userOpt = userRepository.findById(dto.userId());
-    User user = userOpt.orElseThrow(() -> new NotFoundException("User not found"));
+    Long currentUserId = getCurrentUserId();
+    if (currentUserId == null) {
+      throw new OperationFailedException("User must be authenticated to create a project");
+    }
+
+    User user = userRepository.findById(currentUserId)
+        .orElseThrow(() -> new NotFoundException("User not found"));
 
     try {
       Project project = ProjectMapper.toEntity(dto, user);
@@ -54,15 +59,15 @@ public class ProjectService {
     Project project = projectRepository.findById(id)
         .orElseThrow(() -> new NotFoundException("Project not found"));
 
+    Long currentUserId = getCurrentUserId();
+    if (currentUserId == null || !project.getUser().getId().equals(currentUserId)) {
+      throw new OperationFailedException("You can only update your own projects");
+    }
+
     try {
       project.setName(dto.name());
       project.setDescription(dto.description());
 
-      if (!project.getUser().getId().equals(dto.userId())) {
-        User user = userRepository.findById(dto.userId())
-            .orElseThrow(() -> new NotFoundException("User not found"));
-        project.setUser(user);
-      }
 
       Project saved = projectRepository.save(project);
       invalidateSearchCache();
@@ -75,6 +80,14 @@ public class ProjectService {
 
   @Transactional
   public void delete(Long id) {
+    Project project = projectRepository.findById(id)
+        .orElseThrow(() -> new NotFoundException("Project not found"));
+
+    Long currentUserId = getCurrentUserId();
+    if (currentUserId == null || !project.getUser().getId().equals(currentUserId)) {
+      throw new OperationFailedException("You can only delete your own projects");
+    }
+
      try {
        projectRepository.deleteById(id);
        invalidateSearchCache();
@@ -90,6 +103,12 @@ public class ProjectService {
   public ProjectResponseDto getById(Long id) {
     Project project = projectRepository.findById(id)
         .orElseThrow(() -> new NotFoundException("Project not found"));
+
+    Long currentUserId = getCurrentUserId();
+    if (currentUserId != null && !project.getUser().getId().equals(currentUserId)) {
+      throw new NotFoundException("Project not found");
+    }
+
     log.info("ProjectService.getById completed");
     return ProjectMapper.toDto(project);
   }

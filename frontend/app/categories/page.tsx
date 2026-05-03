@@ -222,7 +222,7 @@ export default function CategoriesPage() {
         )}
       </div>
 
-      {/* Edit Dialog */}
+      {}
       <Dialog open={!!editingCategory} onOpenChange={() => setEditingCategory(null)}>
         <DialogContent>
           <form action={handleUpdate}>
@@ -254,7 +254,7 @@ export default function CategoriesPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Delete Confirmation */}
+      {}
       <AlertDialog open={!!deletingCategory} onOpenChange={() => setDeletingCategory(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>

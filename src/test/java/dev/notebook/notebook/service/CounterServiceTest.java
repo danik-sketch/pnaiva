@@ -3,7 +3,6 @@ package dev.notebook.notebook.service;
 import dev.notebook.notebook.dto.CounterResponseDto;
 import org.junit.jupiter.api.Test;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class CounterServiceTest {
 
@@ -46,7 +45,7 @@ class CounterServiceTest {
     CounterResponseDto result = counterService.runCounter(threads, incrementsPerThread);
 
     assertThat(result.getAtomicCount()).isEqualTo(expected);
-    // With high thread count, race condition should be more likely
+
     assertThat(result.getNonAtomicCount()).isLessThan(expected);
     assertThat(result.getNonAtomicLostUpdates()).isGreaterThan(0);
   }

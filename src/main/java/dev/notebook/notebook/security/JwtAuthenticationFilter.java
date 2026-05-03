@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -26,22 +27,30 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
       HttpServletRequest request, HttpServletResponse response,
       FilterChain filterChain
   ) throws ServletException, IOException {
+
+    if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
+      response.setStatus(HttpServletResponse.SC_OK);
+      return;
+    }
+
     try {
       String jwt = extractJwtFromRequest(request);
+
       if (StringUtils.hasText(jwt)) {
         if (jwtUtils.validateToken(jwt)) {
           Long userId = jwtUtils.getUserIdFromToken(jwt);
           String username = jwtUtils.getUsernameFromToken(jwt);
+
           log.debug("JWT validated successfully for user: {} (id: {})", username, userId);
 
           UsernamePasswordAuthenticationToken authentication =
-              new UsernamePasswordAuthenticationToken(
-              userId, null, Collections.emptyList());
-          authentication.setDetails(username);
+              new UsernamePasswordAuthenticationToken(userId, null, Collections.emptyList());
+
+          authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+
           SecurityContextHolder.getContext().setAuthentication(authentication);
         } else {
-          log.warn("JWT validation failed for token: {}",
-              jwt.substring(0, Math.min(20, jwt.length())));
+          log.warn("JWT validation failed");
         }
       }
     } catch (Exception ex) {

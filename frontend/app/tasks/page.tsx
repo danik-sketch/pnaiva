@@ -324,7 +324,7 @@ export default function TasksPage() {
             </div>
           </div>
 
-          {/* Filters Panel */}
+          {}
           {showFilters && (
               <Card>
                 <CardContent className="pt-6">
@@ -492,7 +492,7 @@ export default function TasksPage() {
                                     <Plus className="h-4 w-4" />
                                   </Button>
                                 </PopoverTrigger>
-                                {/* EVERYTHING BELOW MUST BE INSIDE POPOVERCONTENT */}
+                                {}
                                 <PopoverContent className="w-80">
                                   <div className="space-y-4">
                                     <div>
@@ -602,7 +602,7 @@ export default function TasksPage() {
           )}
         </div>
 
-        {/* Edit Dialog */}
+        {}
         <Dialog open={!!editingTask} onOpenChange={() => setEditingTask(null)}>
           <DialogContent className="max-w-md">
             <form action={handleUpdate}>
@@ -703,7 +703,7 @@ export default function TasksPage() {
           </DialogContent>
         </Dialog>
 
-        {/* Delete Dialog */}
+        {}
         <AlertDialog open={!!deletingTask} onOpenChange={() => setDeletingTask(null)}>
           <AlertDialogContent>
             <AlertDialogHeader>

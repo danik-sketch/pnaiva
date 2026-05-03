@@ -319,7 +319,7 @@ export default function ProjectDetailPage({ params }: PageProps) {
             </Dialog>
           </div>
 
-          {/* Stats */}
+          {}
           <div className="grid gap-4 sm:grid-cols-4">
             <Card><CardHeader className="pb-2"><CardTitle className="text-sm font-medium text-muted-foreground">Total Tasks</CardTitle></CardHeader><CardContent><div className="text-2xl font-bold">{project.tasks?.length ?? 0}</div></CardContent></Card>
             <Card><CardHeader className="pb-2"><CardTitle className="text-sm font-medium text-muted-foreground">Completed</CardTitle></CardHeader><CardContent><div className="text-2xl font-bold text-green-500">{completedTasks.length}</div></CardContent></Card>
@@ -327,7 +327,7 @@ export default function ProjectDetailPage({ params }: PageProps) {
             <Card><CardHeader className="pb-2"><CardTitle className="text-sm font-medium text-muted-foreground">Reminders</CardTitle></CardHeader><CardContent><div className="text-2xl font-bold text-blue-500">{totalReminders}</div></CardContent></Card>
           </div>
 
-          {/* Tasks Section */}
+          {}
           <Card>
             <CardHeader>
               <CardTitle>Tasks</CardTitle>
@@ -413,7 +413,7 @@ export default function ProjectDetailPage({ params }: PageProps) {
           </Card>
         </div>
 
-        {/* Dialogs & Confirmations */}
+        {}
         <Dialog open={isAddReminderOpen} onOpenChange={(open) => { setIsAddReminderOpen(open); if (!open) setSelectedTaskForReminder(null); }}>
           <DialogContent>
             <form action={handleAddReminder}>
