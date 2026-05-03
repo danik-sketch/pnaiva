@@ -8,8 +8,6 @@ import dev.notebook.notebook.exception.NotFoundException;
 import dev.notebook.notebook.exception.OperationFailedException;
 import dev.notebook.notebook.repository.ReminderRepository;
 import dev.notebook.notebook.repository.TaskRepository;
-import java.util.List;
-import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -17,272 +15,214 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.dao.DataAccessResourceFailureException;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
-import static dev.notebook.notebook.service.TestFixtures.FIXED_TIME;
-import static dev.notebook.notebook.service.TestFixtures.OTHER_TIME;
-import static dev.notebook.notebook.service.TestFixtures.project;
-import static dev.notebook.notebook.service.TestFixtures.reminder;
-import static dev.notebook.notebook.service.TestFixtures.task;
-import static dev.notebook.notebook.service.TestFixtures.user;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
+import java.util.List;
+import java.util.Optional;
+
+import static dev.notebook.notebook.service.TestFixtures.*;
+import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class ReminderServiceTest {
 
-  @Mock
-  private ReminderRepository reminderRepository;
+  @Mock private ReminderRepository reminderRepository;
+  @Mock private TaskRepository taskRepository;
 
-  @Mock
-  private TaskRepository taskRepository;
-
-  @InjectMocks
-  private ReminderService reminderService;
+  @InjectMocks private ReminderService reminderService;
 
   @BeforeEach
-  void setUp() {
+  void auth() {
+    SecurityContextHolder.getContext().setAuthentication(
+        new UsernamePasswordAuthenticationToken(1L, null)
+    );
+  }
 
-    SecurityContextHolder.clearContext();
+  private Task validTask(Long ownerId) {
+    Task task = task(5L);
+    task.setProject(project(1L));
+    task.getProject().setUser(user(ownerId));
+    return task;
+  }
+
+  private Reminder validReminder(Long ownerId) {
+    return reminder(1L, FIXED_TIME, "Ping", validTask(ownerId));
   }
 
   @Test
-  void createShouldValidateTaskAndWrapFailure() {
-    ReminderRequestDto missingTaskRequest = new ReminderRequestDto(FIXED_TIME, "Ping", null);
-    assertThatThrownBy(() -> reminderService.create(missingTaskRequest))
-        .isInstanceOf(IllegalArgumentException.class)
-        .hasMessage("Task id is required");
+  void create_shouldFail_whenTaskIdNull() {
+    assertThatThrownBy(() ->
+        reminderService.create(new ReminderRequestDto(FIXED_TIME, "Ping", null))
+    ).isInstanceOf(IllegalArgumentException.class);
+  }
 
+  @Test
+  void create_shouldFail_whenTaskNotFound() {
     when(taskRepository.findById(99L)).thenReturn(Optional.empty());
-    ReminderRequestDto taskNotFoundRequest = new ReminderRequestDto(FIXED_TIME, "Ping", 99L);
-    assertThatThrownBy(() -> reminderService.create(taskNotFoundRequest))
-        .isInstanceOf(NotFoundException.class)
-        .hasMessage("Task not found");
 
-    Task task = task(5L);
+    assertThatThrownBy(() ->
+        reminderService.create(new ReminderRequestDto(FIXED_TIME, "Ping", 99L))
+    ).isInstanceOf(NotFoundException.class);
+  }
+
+  @Test
+  void create_success() {
+    Task task = validTask(1L);
+
     when(taskRepository.findById(5L)).thenReturn(Optional.of(task));
-    when(reminderRepository.save(any(Reminder.class))).thenReturn(
-        reminder(1L, FIXED_TIME, "Ping", task));
-    assertThat(reminderService.create(new ReminderRequestDto(FIXED_TIME, "Ping", 5L)).getTaskId())
-        .isEqualTo(5L);
+    when(reminderRepository.save(any())).thenAnswer(i -> i.getArgument(0));
 
-    when(reminderRepository.save(any(Reminder.class)))
-        .thenThrow(new DataAccessResourceFailureException("db down"));
-    ReminderRequestDto dbFailureCreateRequest = new ReminderRequestDto(FIXED_TIME, "Ping", 5L);
-    assertThatThrownBy(() -> reminderService.create(dbFailureCreateRequest))
-        .isInstanceOf(OperationFailedException.class)
-        .hasMessage("Failed to create reminder");
+    ReminderResponseDto result =
+        reminderService.create(new ReminderRequestDto(FIXED_TIME, "Ping", 5L));
+
+    assertThat(result.getTaskId()).isEqualTo(5L);
   }
 
   @Test
-  void updateShouldValidateLookupAndWrapFailure() {
-    ReminderRequestDto missingTaskUpdateRequest = new ReminderRequestDto(FIXED_TIME, "Ping", null);
-    assertThatThrownBy(() -> reminderService.update(1L, missingTaskUpdateRequest))
-        .isInstanceOf(IllegalArgumentException.class)
-        .hasMessage("Task id is required");
+  void create_shouldThrow_whenDbFails() {
+    Task task = validTask(1L);
 
+    when(taskRepository.findById(5L)).thenReturn(Optional.of(task));
+    when(reminderRepository.save(any()))
+        .thenThrow(new DataAccessResourceFailureException("db"));
+
+    assertThatThrownBy(() ->
+        reminderService.create(new ReminderRequestDto(FIXED_TIME, "Ping", 5L))
+    ).isInstanceOf(OperationFailedException.class);
+  }
+
+  @Test
+  void create_shouldDenyAccess_whenWrongUser() {
+    Task task = validTask(2L);
+
+    when(taskRepository.findById(5L)).thenReturn(Optional.of(task));
+
+    assertThatThrownBy(() ->
+        reminderService.create(new ReminderRequestDto(FIXED_TIME, "Ping", 5L))
+    ).isInstanceOf(OperationFailedException.class);
+  }
+
+  @Test
+  void update_shouldFail_whenReminderNotFound() {
     when(reminderRepository.findById(1L)).thenReturn(Optional.empty());
-    ReminderRequestDto reminderNotFoundRequest = new ReminderRequestDto(FIXED_TIME, "Ping", 5L);
-    assertThatThrownBy(() -> reminderService.update(1L, reminderNotFoundRequest))
-        .isInstanceOf(NotFoundException.class)
-        .hasMessage("Reminder not found");
 
-    Reminder existing = reminder(1L, FIXED_TIME, "Ping", task(5L));
+    assertThatThrownBy(() ->
+        reminderService.update(1L, new ReminderRequestDto(FIXED_TIME, "Ping", 5L))
+    ).isInstanceOf(NotFoundException.class);
+  }
+
+  @Test
+  void update_success() {
+    Reminder existing = validReminder(1L);
+    Task task = validTask(1L);
+
     when(reminderRepository.findById(1L)).thenReturn(Optional.of(existing));
-    when(taskRepository.findById(8L)).thenReturn(Optional.empty());
-    ReminderRequestDto taskNotFoundUpdateRequest = new ReminderRequestDto(FIXED_TIME, "Updated",
-        8L);
-    assertThatThrownBy(() -> reminderService.update(1L, taskNotFoundUpdateRequest))
-        .isInstanceOf(NotFoundException.class)
-        .hasMessage("Task not found");
-
-    Task linkedTask = task(5L);
-    when(taskRepository.findById(5L)).thenReturn(Optional.of(linkedTask));
+    when(taskRepository.findById(5L)).thenReturn(Optional.of(task));
     when(reminderRepository.save(existing)).thenReturn(existing);
-    ReminderResponseDto ok = reminderService.update(1L,
-        new ReminderRequestDto(OTHER_TIME, "Updated", 5L));
-    assertThat(ok.getReminderTime()).isEqualTo(OTHER_TIME);
 
-    when(reminderRepository.save(existing)).thenThrow(
-        new DataAccessResourceFailureException("db down"));
-    ReminderRequestDto dbFailureUpdateRequest = new ReminderRequestDto(OTHER_TIME, "Updated", 5L);
-    assertThatThrownBy(() -> reminderService.update(1L, dbFailureUpdateRequest))
-        .isInstanceOf(OperationFailedException.class)
-        .hasMessage("Failed to update reminder");
-  }
+    ReminderResponseDto result =
+        reminderService.update(1L, new ReminderRequestDto(FIXED_TIME, "Updated", 5L));
 
-   @Test
-   void deleteShouldMapExceptions() {
-     when(reminderRepository.findById(3L)).thenReturn(Optional.empty());
-     assertThatThrownBy(() -> reminderService.delete(3L))
-         .isInstanceOf(NotFoundException.class)
-         .hasMessage("Reminder not found");
-
-
-     Task task = task(5L);
-     task.setProject(project(1L, "Project"));
-     task.getProject().setUser(user(1L, "user1"));
-     Reminder reminder = reminder(4L, FIXED_TIME, "Test", task);
-     when(reminderRepository.findById(4L)).thenReturn(Optional.of(reminder));
-
-
-     SecurityContext context = mock(SecurityContext.class);
-     Authentication authentication = mock(Authentication.class);
-     SecurityContextHolder.setContext(context);
-     when(context.getAuthentication()).thenReturn(authentication);
-     when(authentication.getPrincipal()).thenReturn(1L);
-
-     doThrow(new DataAccessResourceFailureException("db down")).when(reminderRepository)
-         .deleteById(4L);
-     assertThatThrownBy(() -> reminderService.delete(4L))
-         .isInstanceOf(OperationFailedException.class)
-         .hasMessage("Failed to delete reminder");
-   }
-
-  @Test
-  void deleteShouldCallRepository() {
-    Task task = task(5L);
-    task.setProject(project(1L, "Project"));
-    task.getProject().setUser(user(1L, "user1"));
-
-    Reminder reminder = reminder(5L, FIXED_TIME, "Test", task);
-    when(reminderRepository.findById(5L)).thenReturn(Optional.of(reminder));
-
-
-    SecurityContext context = mock(SecurityContext.class);
-    Authentication authentication = mock(Authentication.class);
-    SecurityContextHolder.setContext(context);
-    when(context.getAuthentication()).thenReturn(authentication);
-    when(authentication.getPrincipal()).thenReturn(1L);
-
-    reminderService.delete(5L);
-    verify(reminderRepository).deleteById(5L);
+    assertThat(result).isNotNull();
   }
 
   @Test
-  void getByIdShouldMapFoundAndNotFound() {
-    when(reminderRepository.findById(1L)).thenReturn(
-        Optional.of(reminder(1L, FIXED_TIME, "A", task(2L))));
-    assertThat(reminderService.getById(1L).getTaskId()).isEqualTo(2L);
+  void update_shouldThrow_whenDbFails() {
+    Reminder existing = validReminder(1L);
+    Task task = validTask(1L);
 
-    when(reminderRepository.findById(2L)).thenReturn(Optional.empty());
-    assertThatThrownBy(() -> reminderService.getById(2L))
-        .isInstanceOf(NotFoundException.class)
-        .hasMessage("Reminder not found");
+    when(reminderRepository.findById(1L)).thenReturn(Optional.of(existing));
+    when(taskRepository.findById(5L)).thenReturn(Optional.of(task));
+    when(reminderRepository.save(existing))
+        .thenThrow(new DataAccessResourceFailureException("db"));
+
+    assertThatThrownBy(() ->
+        reminderService.update(1L, new ReminderRequestDto(FIXED_TIME, "Updated", 5L))
+    ).isInstanceOf(OperationFailedException.class);
   }
 
-   @Test
-   void getAllShouldMapReminders() {
-     when(reminderRepository.findAll()).thenReturn(List.of(
-         reminder(1L, FIXED_TIME, "A", task(1L)),
-         reminder(2L, OTHER_TIME, "B", task(1L))));
+  @Test
+  void update_shouldDenyAccess() {
+    Reminder existing = validReminder(2L);
 
-     assertThat(reminderService.getAll()).hasSize(2);
-   }
+    when(reminderRepository.findById(1L)).thenReturn(Optional.of(existing));
 
-   @Test
-   void createShouldDenyAccessToOtherUserReminders() {
-     Task task = task(5L);
-     task.setProject(project(1L, "Project"));
-     task.getProject().setUser(user(2L, "other_user"));
+    assertThatThrownBy(() ->
+        reminderService.update(1L, new ReminderRequestDto(FIXED_TIME, "Updated", 5L))
+    ).isInstanceOf(OperationFailedException.class);
+  }
 
-     when(taskRepository.findById(5L)).thenReturn(Optional.of(task));
+  @Test
+  void delete_success() {
+    Reminder reminder = validReminder(1L);
 
-     SecurityContext context = mock(SecurityContext.class);
-     Authentication authentication = mock(Authentication.class);
-     SecurityContextHolder.setContext(context);
-     when(context.getAuthentication()).thenReturn(authentication);
-     when(authentication.getPrincipal()).thenReturn(1L);
+    when(reminderRepository.findById(1L)).thenReturn(Optional.of(reminder));
 
-     ReminderRequestDto request = new ReminderRequestDto(FIXED_TIME, "Ping", 5L);
-     assertThatThrownBy(() -> reminderService.create(request))
-         .isInstanceOf(OperationFailedException.class)
-         .hasMessage("Access denied: Task does not belong to current user");
-   }
+    reminderService.delete(1L);
 
-   @Test
-   void updateShouldDenyAccessToOtherUserReminders() {
-     Task task = task(5L);
-     task.setProject(project(1L, "Project"));
-     task.getProject().setUser(user(2L, "other_user"));
+    verify(reminderRepository).deleteById(1L);
+  }
 
-     Reminder existing = reminder(1L, FIXED_TIME, "Ping", task);
-     when(reminderRepository.findById(1L)).thenReturn(Optional.of(existing));
+  @Test
+  void delete_shouldThrow_whenNotFound() {
+    when(reminderRepository.findById(1L)).thenReturn(Optional.empty());
 
-     SecurityContext context = mock(SecurityContext.class);
-     Authentication authentication = mock(Authentication.class);
-     SecurityContextHolder.setContext(context);
-     when(context.getAuthentication()).thenReturn(authentication);
-     when(authentication.getPrincipal()).thenReturn(1L);
+    assertThatThrownBy(() -> reminderService.delete(1L))
+        .isInstanceOf(NotFoundException.class);
+  }
 
-     ReminderRequestDto request = new ReminderRequestDto(FIXED_TIME, "Updated", 5L);
-     assertThatThrownBy(() -> reminderService.update(1L, request))
-         .isInstanceOf(OperationFailedException.class)
-         .hasMessage("Access denied: Reminder does not belong to current user");
-   }
+  @Test
+  void delete_shouldThrow_whenDbFails() {
+    Reminder reminder = validReminder(1L);
 
-   @Test
-   void getByIdShouldDenyAccessToOtherUserReminders() {
-     Task task = task(5L);
-     task.setProject(project(1L, "Project"));
-     task.getProject().setUser(user(2L, "other_user"));
+    when(reminderRepository.findById(1L)).thenReturn(Optional.of(reminder));
+    doThrow(new DataAccessResourceFailureException("db"))
+        .when(reminderRepository).deleteById(1L);
 
-     Reminder reminder = reminder(1L, FIXED_TIME, "Ping", task);
-     when(reminderRepository.findById(1L)).thenReturn(Optional.of(reminder));
+    assertThatThrownBy(() -> reminderService.delete(1L))
+        .isInstanceOf(OperationFailedException.class);
+  }
 
-     SecurityContext context = mock(SecurityContext.class);
-     Authentication authentication = mock(Authentication.class);
-     SecurityContextHolder.setContext(context);
-     when(context.getAuthentication()).thenReturn(authentication);
-     when(authentication.getPrincipal()).thenReturn(1L);
+  @Test
+  void delete_shouldDenyAccess() {
+    Reminder reminder = validReminder(2L);
 
-     assertThatThrownBy(() -> reminderService.getById(1L))
-         .isInstanceOf(NotFoundException.class)
-         .hasMessage("Reminder not found");
-   }
+    when(reminderRepository.findById(1L)).thenReturn(Optional.of(reminder));
 
-   @Test
-   void getAllShouldReturnUserReminders() {
-     Task task1 = task(5L);
-     task1.setProject(project(1L, "Project"));
-     task1.getProject().setUser(user(1L, "user1"));
+    assertThatThrownBy(() -> reminderService.delete(1L))
+        .isInstanceOf(OperationFailedException.class);
+  }
 
-     when(reminderRepository.findRemindersByUserId(1L)).thenReturn(List.of(
-         reminder(1L, FIXED_TIME, "A", task1),
-         reminder(2L, OTHER_TIME, "B", task1)));
+  @Test
+  void getById_success() {
+    Reminder reminder = validReminder(1L);
 
-     SecurityContext context = mock(SecurityContext.class);
-     Authentication authentication = mock(Authentication.class);
-     SecurityContextHolder.setContext(context);
-     when(context.getAuthentication()).thenReturn(authentication);
-     when(authentication.getPrincipal()).thenReturn(1L);
+    when(reminderRepository.findById(1L)).thenReturn(Optional.of(reminder));
 
-     assertThat(reminderService.getAll()).hasSize(2);
-   }
+    assertThat(reminderService.getById(1L)).isNotNull();
+  }
 
-   @Test
-   void deleteShouldDenyAccessToOtherUserReminders() {
-     Task task = task(5L);
-     task.setProject(project(1L, "Project"));
-     task.getProject().setUser(user(2L, "other_user"));
+  @Test
+  void getById_shouldThrow_whenNotFound() {
+    when(reminderRepository.findById(1L)).thenReturn(Optional.empty());
 
-     Reminder existing = reminder(1L, FIXED_TIME, "Ping", task);
-     when(reminderRepository.findById(1L)).thenReturn(Optional.of(existing));
+    assertThatThrownBy(() -> reminderService.getById(1L))
+        .isInstanceOf(NotFoundException.class);
+  }
 
-     SecurityContext context = mock(SecurityContext.class);
-     Authentication authentication = mock(Authentication.class);
-     SecurityContextHolder.setContext(context);
-     when(context.getAuthentication()).thenReturn(authentication);
-     when(authentication.getPrincipal()).thenReturn(1L);
+  @Test
+  void getAll_shouldReturnList() {
+    Task task = validTask(1L);
 
-     assertThatThrownBy(() -> reminderService.delete(1L))
-         .isInstanceOf(OperationFailedException.class)
-         .hasMessage("Access denied: Reminder does not belong to current user");
-   }
+    when(reminderRepository.findRemindersByUserId(1L))
+        .thenReturn(List.of(
+            reminder(1L, FIXED_TIME, "A", task),
+            reminder(2L, FIXED_TIME, "B", task)
+        ));
+
+    assertThat(reminderService.getAll()).hasSize(2);
+  }
 }

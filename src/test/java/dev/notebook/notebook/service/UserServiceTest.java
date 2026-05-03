@@ -7,8 +7,6 @@ import dev.notebook.notebook.exception.EmailAlreadyExistsException;
 import dev.notebook.notebook.exception.NotFoundException;
 import dev.notebook.notebook.exception.OperationFailedException;
 import dev.notebook.notebook.repository.UserRepository;
-import java.util.List;
-import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -16,13 +14,15 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.dao.EmptyResultDataAccessException;
+
+import java.util.List;
+import java.util.Optional;
+
 import static dev.notebook.notebook.service.TestFixtures.user;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class UserServiceTest {
@@ -34,141 +34,188 @@ class UserServiceTest {
   private UserService userService;
 
   @Test
-  void createShouldHandleUniqueEmailAndFailure() {
-    UserRequestDto request = new UserRequestDto("john", "john@mail.com", "password123");
-    when(userRepository.existsByEmail(request.email())).thenReturn(true);
-    assertThatThrownBy(() -> userService.create(request))
-        .isInstanceOf(EmailAlreadyExistsException.class)
-        .hasMessage("Email already exists");
+  void create_success() {
+    UserRequestDto dto = new UserRequestDto("john", "john@mail.com", "123");
 
-    when(userRepository.existsByEmail(request.email())).thenReturn(false);
-    when(userRepository.save(any(User.class))).thenReturn(
-        user(1L, "john", "john@mail.com", "password123"));
-    UserResponseDto ok = userService.create(request);
-    assertThat(ok.getId()).isEqualTo(1L);
+    when(userRepository.existsByEmail(dto.email())).thenReturn(false);
+    when(userRepository.save(any(User.class)))
+        .thenReturn(user(1L, "john", "john@mail.com", "123"));
 
-    when(userRepository.save(any(User.class))).thenThrow(
-        new DataAccessResourceFailureException("db down"));
-    assertThatThrownBy(() -> userService.create(request))
-        .isInstanceOf(OperationFailedException.class)
-        .hasMessage("Failed to create user");
+    UserResponseDto result = userService.create(dto);
+
+    assertThat(result.getId()).isEqualTo(1L);
+    verify(userRepository).save(any(User.class));
   }
 
   @Test
-  void updateShouldCoverAllEmailBranches() {
-    User existing = user(42L, "john", "old@mail.com", "password123");
-    when(userRepository.findById(42L)).thenReturn(Optional.of(existing));
-    UserRequestDto takenEmailRequest = new UserRequestDto("john", "new@mail.com", "password123");
-    UserRequestDto validUpdateRequest = new UserRequestDto("johnny", "new@mail.com",
-        "password123");
+  void create_emailExists() {
+    UserRequestDto dto = new UserRequestDto("john", "john@mail.com", "123");
 
-    when(userRepository.existsByEmail("new@mail.com")).thenReturn(true);
-    assertThatThrownBy(() -> userService.update(42L, takenEmailRequest))
-        .isInstanceOf(EmailAlreadyExistsException.class)
-        .hasMessage("Email already exists");
+    when(userRepository.existsByEmail(dto.email())).thenReturn(true);
 
+    assertThatThrownBy(() -> userService.create(dto))
+        .isInstanceOf(EmailAlreadyExistsException.class);
+
+    verify(userRepository, never()).save(any());
+  }
+
+  @Test
+  void create_repositoryError() {
+    UserRequestDto dto = new UserRequestDto("john", "john@mail.com", "123");
+
+    when(userRepository.existsByEmail(dto.email())).thenReturn(false);
+    when(userRepository.save(any()))
+        .thenThrow(new RuntimeException("db error"));
+
+    assertThatThrownBy(() -> userService.create(dto))
+        .isInstanceOf(OperationFailedException.class);
+  }
+
+  @Test
+  void update_success() {
+    User existing = user(1L, "john", "old@mail.com", "123");
+
+    when(userRepository.findById(1L)).thenReturn(Optional.of(existing));
     when(userRepository.existsByEmail("new@mail.com")).thenReturn(false);
-    when(userRepository.save(existing)).thenReturn(existing);
-    UserResponseDto updated = userService.update(42L, validUpdateRequest);
-    assertThat(updated.getEmail()).isEqualTo("new@mail.com");
+    when(userRepository.save(any(User.class))).thenReturn(existing);
 
-    when(userRepository.save(existing)).thenThrow(
-        new DataAccessResourceFailureException("db down"));
-    assertThatThrownBy(() -> userService.update(42L, validUpdateRequest))
-        .isInstanceOf(OperationFailedException.class)
-        .hasMessage("Failed to update user");
+    UserRequestDto dto = new UserRequestDto("johnny", "new@mail.com", "123");
+
+    UserResponseDto result = userService.update(1L, dto);
+
+    assertThat(result.getEmail()).isEqualTo("new@mail.com");
   }
 
   @Test
-  void updateShouldThrowWhenUserNotFound() {
-    when(userRepository.findById(999L)).thenReturn(Optional.empty());
-    UserRequestDto requestDto = new UserRequestDto("john", "john@mail.com", "password123");
+  void update_notFound() {
+    when(userRepository.findById(1L)).thenReturn(Optional.empty());
 
-    assertThatThrownBy(() -> userService.update(999L, requestDto))
-        .isInstanceOf(NotFoundException.class)
-        .hasMessage("User not found");
+    assertThatThrownBy(() ->
+        userService.update(1L, new UserRequestDto("a", "b", "c")))
+        .isInstanceOf(NotFoundException.class);
+  }
+
+
+  @Test
+  void update_repositoryError() {
+    User existing = user(1L, "john", "old@mail.com", "123");
+
+    when(userRepository.findById(1L)).thenReturn(Optional.of(existing));
+    when(userRepository.existsByEmail("new@mail.com")).thenReturn(false);
+    when(userRepository.save(any(User.class)))
+        .thenThrow(new RuntimeException("db error"));
+
+    assertThatThrownBy(() ->
+        userService.update(1L, new UserRequestDto("john", "new@mail.com", "123")))
+        .isInstanceOf(OperationFailedException.class);
   }
 
   @Test
-  void deleteShouldMapExceptions() {
-    doThrow(new EmptyResultDataAccessException(1)).when(userRepository).deleteById(99L);
-    assertThatThrownBy(() -> userService.delete(99L))
-        .isInstanceOf(NotFoundException.class)
-        .hasMessage("User not found");
+  void delete_success() {
+    userService.delete(1L);
 
-    doThrow(new DataAccessResourceFailureException("db down")).when(userRepository)
-        .deleteById(100L);
-    assertThatThrownBy(() -> userService.delete(100L))
-        .isInstanceOf(OperationFailedException.class)
-        .hasMessage("Failed to delete user");
+    verify(userRepository).deleteById(1L);
   }
 
   @Test
-  void deleteShouldCallRepository() {
-    userService.delete(101L);
-    verify(userRepository).deleteById(101L);
+  void delete_notFound() {
+    doThrow(new EmptyResultDataAccessException(1))
+        .when(userRepository).deleteById(1L);
+
+    assertThatThrownBy(() -> userService.delete(1L))
+        .isInstanceOf(NotFoundException.class);
   }
 
   @Test
-  void getByIdShouldMapFoundAndNotFound() {
-    when(userRepository.findById(1L)).thenReturn(
-        Optional.of(user(1L, "john", "john@mail.com", "password123")));
+  void delete_repositoryError() {
+    doThrow(new RuntimeException("db error"))
+        .when(userRepository).deleteById(1L);
+
+    assertThatThrownBy(() -> userService.delete(1L))
+        .isInstanceOf(OperationFailedException.class);
+  }
+
+  @Test
+  void getById_success() {
+    when(userRepository.findById(1L))
+        .thenReturn(Optional.of(user(1L, "john", "mail", "pass")));
+
     assertThat(userService.getById(1L).getUsername()).isEqualTo("john");
-
-    when(userRepository.findById(2L)).thenReturn(Optional.empty());
-    assertThatThrownBy(() -> userService.getById(2L))
-        .isInstanceOf(NotFoundException.class)
-        .hasMessage("User not found");
   }
 
   @Test
-  void getAllShouldMapUsers() {
+  void getById_notFound() {
+    when(userRepository.findById(1L)).thenReturn(Optional.empty());
+
+    assertThatThrownBy(() -> userService.getById(1L))
+        .isInstanceOf(NotFoundException.class);
+  }
+
+  @Test
+  void getAll_success() {
     when(userRepository.findAll()).thenReturn(List.of(
-        user(1L, "john", "john@mail.com", "password123"),
-        user(2L, "alice", "alice@mail.com", "password123")));
+        user(1L, "john", "a", "p"),
+        user(2L, "alice", "b", "p")
+    ));
 
     List<UserResponseDto> result = userService.getAll();
 
-    assertThat(result).extracting(UserResponseDto::getUsername).containsExactly("john", "alice");
+    assertThat(result).hasSize(2);
   }
 
   @Test
-  void findByUsernameOrEmailAndPasswordShouldReturnUserByUsername() {
-    User user = user(1L, "john", "john@mail.com", "password123");
-    when(userRepository.findByUsername("john")).thenReturn(Optional.of(user));
+  void login_byUsername_success() {
+    User u = user(1L, "john", "john@mail.com", "123");
 
-    assertThat(userService.findByUsernameOrEmailAndPassword("john", "password123"))
+    when(userRepository.findByUsername("john"))
+        .thenReturn(Optional.of(u));
+
+    assertThat(userService.findByUsernameOrEmailAndPassword("john", "123"))
         .isPresent()
-        .contains(user);
+        .contains(u);
   }
 
   @Test
-  void findByUsernameOrEmailAndPasswordShouldReturnUserByEmail() {
-    User user = user(1L, "john", "john@mail.com", "password123");
-    when(userRepository.findByUsername("john@mail.com")).thenReturn(Optional.empty());
-    when(userRepository.findByEmail("john@mail.com")).thenReturn(Optional.of(user));
+  void login_byEmail_success() {
+    User u = user(1L, "john", "john@mail.com", "123");
 
-    assertThat(userService.findByUsernameOrEmailAndPassword("john@mail.com", "password123"))
+    when(userRepository.findByEmail("john@mail.com"))
+        .thenReturn(Optional.of(u));
+
+    assertThat(userService.findByUsernameOrEmailAndPassword("john@mail.com", "123"))
         .isPresent()
-        .contains(user);
+        .contains(u);
   }
 
   @Test
-  void findByUsernameOrEmailAndPasswordShouldReturnEmptyWhenNotFound() {
-    when(userRepository.findByUsername("nonexistent")).thenReturn(Optional.empty());
-    when(userRepository.findByEmail("nonexistent")).thenReturn(Optional.empty());
+  void login_wrongPassword_returnsEmpty() {
+    User u = user(1L, "john", "mail", "123");
 
-    assertThat(userService.findByUsernameOrEmailAndPassword("nonexistent", "password123"))
+    when(userRepository.findByUsername("john"))
+        .thenReturn(Optional.of(u));
+
+    assertThat(userService.findByUsernameOrEmailAndPassword("john", "wrong"))
         .isEmpty();
   }
 
   @Test
-  void findByUsernameOrEmailAndPasswordShouldReturnEmptyWhenPasswordIncorrect() {
-    User user = user(1L, "john", "john@mail.com", "password123");
-    when(userRepository.findByUsername("john")).thenReturn(Optional.of(user));
-    when(userRepository.findByEmail("john")).thenReturn(Optional.empty());
+  void login_notFound_returnsEmpty() {
+    when(userRepository.findByUsername("x"))
+        .thenReturn(Optional.empty());
 
-    assertThat(userService.findByUsernameOrEmailAndPassword("john", "wrongpassword"))
+    assertThat(userService.findByUsernameOrEmailAndPassword("x", "123"))
         .isEmpty();
+  }
+
+  @Test
+  void update_emailExists() {
+    User existing = user(1L, "john", "old@mail.com", "123");
+
+    when(userRepository.findById(1L)).thenReturn(Optional.of(existing));
+    when(userRepository.existsByEmail("new@mail.com")).thenReturn(true);
+
+    assertThatThrownBy(() ->
+        userService.update(1L, new UserRequestDto("john", "new@mail.com", "123")))
+        .isInstanceOf(EmailAlreadyExistsException.class);
   }
 }

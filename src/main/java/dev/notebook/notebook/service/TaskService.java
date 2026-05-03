@@ -54,8 +54,12 @@ public class TaskService {
       Task savedTask = repository.save(task);
       log.info("Task created with id: {}", savedTask.getId());
       return TaskMapper.toDto(savedTask);
-    } catch (Exception exception) {
-      throw new OperationFailedException("Failed to create task", exception);
+
+    } catch (NotFoundException e) {
+      throw e;
+
+    } catch (Exception e) {
+      throw new OperationFailedException("Failed to create task", e);
     }
   }
 
@@ -65,18 +69,24 @@ public class TaskService {
         .orElseThrow(() -> new NotFoundException("Task not found"));
 
     Long currentUserId = getCurrentUserId();
-    if (currentUserId != null && !task.getProject().getUser().getId().equals(currentUserId)) {
+    if (currentUserId != null &&
+        !task.getProject().getUser().getId().equals(currentUserId)) {
       throw new OperationFailedException("You can only update your own tasks");
     }
 
     try {
-      if (dto.projectId() != null && (task.getProject() == null
-          || !task.getProject().getId().equals(dto.projectId()))) {
+      if (dto.projectId() != null &&
+          (task.getProject() == null
+              || !task.getProject().getId().equals(dto.projectId()))) {
+
         Project project = projectRepository.findById(dto.projectId())
             .orElseThrow(() -> new NotFoundException("Project not found"));
-        if (currentUserId != null && !project.getUser().getId().equals(currentUserId)) {
+
+        if (currentUserId != null &&
+            !project.getUser().getId().equals(currentUserId)) {
           throw new OperationFailedException("You can only move tasks to your own projects");
         }
+
         task.setProject(project);
       }
 
@@ -84,13 +94,19 @@ public class TaskService {
       task.setDescription(dto.description());
       task.setDueDate(dto.dueDate());
       task.setCompleted(dto.completed());
+
       applyCategories(task, dto.categoryIds());
 
       Task saved = repository.save(task);
       log.info("Task updated with id: {}", saved.getId());
+
       return TaskMapper.toDto(saved);
-    } catch (Exception exception) {
-      throw new OperationFailedException("Failed to update task", exception);
+
+    } catch (NotFoundException e) {
+      throw e;
+
+    } catch (Exception e) {
+      throw new OperationFailedException("Failed to update task", e);
     }
   }
 

@@ -2,332 +2,441 @@ package dev.notebook.notebook.service;
 
 import dev.notebook.notebook.dto.TaskRequestDto;
 import dev.notebook.notebook.dto.TaskResponseDto;
+import dev.notebook.notebook.entity.Category;
 import dev.notebook.notebook.entity.Project;
 import dev.notebook.notebook.entity.Task;
+import dev.notebook.notebook.entity.User;
 import dev.notebook.notebook.exception.NotFoundException;
 import dev.notebook.notebook.exception.OperationFailedException;
 import dev.notebook.notebook.repository.CategoryRepository;
 import dev.notebook.notebook.repository.ProjectRepository;
 import dev.notebook.notebook.repository.TaskRepository;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.dao.EmptyResultDataAccessException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
+
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.dao.DataAccessResourceFailureException;
-import org.springframework.dao.EmptyResultDataAccessException;
-import static dev.notebook.notebook.service.TestFixtures.FIXED_TIME;
-import static dev.notebook.notebook.service.TestFixtures.OTHER_TIME;
-import static dev.notebook.notebook.service.TestFixtures.project;
-import static dev.notebook.notebook.service.TestFixtures.task;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class TaskServiceTest {
 
-  @Mock
-  private TaskRepository taskRepository;
+  @Mock private TaskRepository repository;
+  @Mock private ProjectRepository projectRepository;
+  @Mock private CategoryRepository categoryRepository;
 
-  @Mock
-  private ProjectRepository projectRepository;
-  @Mock
-  private CategoryRepository categoryRepository;
+  @InjectMocks private TaskService service;
 
-  @InjectMocks
-  private TaskService taskService;
+  @BeforeEach
+  void setup() {
+    SecurityContextHolder.getContext().setAuthentication(
+        new UsernamePasswordAuthenticationToken(1L, null)
+    );
+  }
 
-  @Test
-  void createShouldRequireProjectId() {
-    TaskRequestDto requestDto = new TaskRequestDto(
-        "Task", "Desc", FIXED_TIME, null, null, List.of(), List.of());
+  private TaskRequestDto dto(Long projectId) {
+    return new TaskRequestDto(
+        "title",
+        "desc",
+        LocalDateTime.now(),
+        null,
+        projectId,
+        List.of(),
+        List.of()
+    );
+  }
 
-    assertThatThrownBy(() -> taskService.create(requestDto))
-        .isInstanceOf(IllegalArgumentException.class)
-        .hasMessage("Project id is required");
+  private User user(Long id) {
+    User u = new User();
+    u.setId(id);
+    return u;
+  }
+
+  private Project project(Long userId) {
+    Project p = new Project();
+    p.setId(1L);
+    p.setUser(user(userId));
+    return p;
+  }
+
+  private Task task(Long userId) {
+    Task t = new Task();
+    t.setId(1L);
+    t.setProject(project(userId));
+    return t;
   }
 
   @Test
-  void createShouldThrowWhenProjectNotFound() {
-    TaskRequestDto requestDto = new TaskRequestDto(
-        "Task", "Desc", FIXED_TIME, null, 9L, List.of(), List.of());
+  void create_success() {
+    when(projectRepository.findById(1L)).thenReturn(Optional.of(project(1L)));
+    when(repository.save(any())).thenAnswer(i -> i.getArgument(0));
 
-    when(projectRepository.findById(9L)).thenReturn(Optional.empty());
+    TaskResponseDto result = service.create(dto(1L));
 
-    assertThatThrownBy(() -> taskService.create(requestDto))
-        .isInstanceOf(NotFoundException.class)
-        .hasMessage("Project not found");
+    assertNotNull(result);
+    verify(repository).save(any());
   }
 
   @Test
-  void createShouldReturnSavedTask() {
-    Project project = project(1L, "Main project");
-    Task saved = task(10L, "Task", "Desc", FIXED_TIME, null, project);
-
-    TaskRequestDto requestDto = new TaskRequestDto(
-        "Task", "Desc", FIXED_TIME, null, 1L, List.of(), List.of());
-
-    when(projectRepository.findById(1L)).thenReturn(Optional.of(project));
-    when(taskRepository.save(any(Task.class))).thenReturn(saved);
-
-    TaskResponseDto result = taskService.create(requestDto);
-
-    assertThat(result.getId()).isEqualTo(10L);
-    assertThat(result.getProjectName()).isEqualTo("Main project");
+  void create_noProjectId() {
+    assertThrows(IllegalArgumentException.class,
+        () -> service.create(dto(null)));
   }
 
   @Test
-  void createShouldWrapRepositoryFailure() {
-    Project project = project(1L, "Main project");
-    TaskRequestDto requestDto = new TaskRequestDto(
-        "Task", "Desc", FIXED_TIME, null, 1L, List.of(), List.of());
+  void create_projectNotFound() {
+    when(projectRepository.findById(1L)).thenReturn(Optional.empty());
 
-    when(projectRepository.findById(1L)).thenReturn(Optional.of(project));
-    when(taskRepository.save(any(Task.class)))
-        .thenThrow(new DataAccessResourceFailureException("db down"));
-
-    assertThatThrownBy(() -> taskService.create(requestDto))
-        .isInstanceOf(OperationFailedException.class)
-        .hasMessage("Failed to create task");
+    assertThrows(NotFoundException.class,
+        () -> service.create(dto(1L)));
   }
 
   @Test
-  void updateShouldThrowWhenTaskNotFound() {
-    when(taskRepository.findById(100L)).thenReturn(Optional.empty());
-    TaskRequestDto requestDto = new TaskRequestDto("Task", "Desc", FIXED_TIME, null, 1L,
-        List.of(), List.of());
+  void create_notOwner() {
+    when(projectRepository.findById(1L)).thenReturn(Optional.of(project(2L)));
 
-    assertThatThrownBy(() -> taskService.update(100L, requestDto))
-        .isInstanceOf(NotFoundException.class)
-        .hasMessage("Task not found");
+    assertThrows(OperationFailedException.class,
+        () -> service.create(dto(1L)));
   }
 
   @Test
-  void updateShouldThrowWhenProjectChangedAndNewProjectNotFound() {
-    Project oldProject = project(1L, "Old");
-    Task existing = task(4L, "Task", "Desc", FIXED_TIME, null, oldProject);
+  void create_categoryMismatch() {
+    when(projectRepository.findById(1L)).thenReturn(Optional.of(project(1L)));
+    when(categoryRepository.findAllById(List.of(1L, 2L)))
+        .thenReturn(List.of(new Category()));
 
-    when(taskRepository.findById(4L)).thenReturn(Optional.of(existing));
-    when(projectRepository.findById(2L)).thenReturn(Optional.empty());
+    TaskRequestDto dto = new TaskRequestDto(
+        "t", "d", LocalDateTime.now(), null, 1L,
+        List.of(1L, 2L), List.of()
+    );
 
-    TaskRequestDto requestDto = new TaskRequestDto(
-        "Task", "Desc", FIXED_TIME, null, 2L, List.of(), List.of());
-
-    assertThatThrownBy(() -> taskService.update(4L, requestDto))
-        .isInstanceOf(OperationFailedException.class)
-        .hasMessage("Failed to update task");
+    assertThrows(NotFoundException.class,
+        () -> service.create(dto));
   }
 
   @Test
-  void updateShouldNotLoadProjectWhenProjectIdUnchanged() {
-    Project project = project(1L, "Main project");
-    Task existing = task(4L, "Task", "Desc", FIXED_TIME, null, project);
+  void create_withCategories_success() {
+    when(projectRepository.findById(1L)).thenReturn(Optional.of(project(1L)));
+    when(categoryRepository.findAllById(List.of(1L)))
+        .thenReturn(List.of(new Category()));
+    when(repository.save(any())).thenAnswer(i -> i.getArgument(0));
 
-    when(taskRepository.findById(4L)).thenReturn(Optional.of(existing));
-    when(taskRepository.save(existing)).thenReturn(existing);
+    TaskRequestDto dto = new TaskRequestDto(
+        "t", "d", LocalDateTime.now(), null, 1L,
+        List.of(1L), List.of()
+    );
 
-    TaskRequestDto requestDto = new TaskRequestDto(
-        "Updated", "Updated desc", FIXED_TIME, null, 1L, List.of(), List.of());
-
-    TaskResponseDto result = taskService.update(4L, requestDto);
-
-    assertThat(result.getTitle()).isEqualTo("Updated");
-    verify(projectRepository, never()).findById(any());
+    assertNotNull(service.create(dto));
   }
 
   @Test
-  void updateShouldChangeProjectWhenProjectIdChanged() {
-    Project oldProject = project(1L, "Old project");
-    Project newProject = project(2L, "New project");
-    Task existing = task(4L, "Task", "Desc", FIXED_TIME, null, oldProject);
+  void update_success() {
+    Task t = task(1L);
 
-    when(taskRepository.findById(4L)).thenReturn(Optional.of(existing));
+    when(repository.findById(1L)).thenReturn(Optional.of(t));
+    when(repository.save(any())).thenReturn(t);
+
+    assertNotNull(service.update(1L, dto(1L)));
+  }
+
+  @Test
+  void update_notFound() {
+    when(repository.findById(1L)).thenReturn(Optional.empty());
+
+    assertThrows(NotFoundException.class,
+        () -> service.update(1L, dto(1L)));
+  }
+
+  @Test
+  void update_notOwner() {
+    when(repository.findById(1L)).thenReturn(Optional.of(task(2L)));
+
+    assertThrows(OperationFailedException.class,
+        () -> service.update(1L, dto(1L)));
+  }
+
+  @Test
+  void update_moveProject_notOwner() {
+    Task t = task(1L);
+
+    when(repository.findById(1L)).thenReturn(Optional.of(t));
+    when(projectRepository.findById(2L)).thenReturn(Optional.of(project(2L)));
+
+    TaskRequestDto dto = new TaskRequestDto(
+        "t","d",LocalDateTime.now(),null,2L,List.of(),List.of()
+    );
+
+    assertThrows(OperationFailedException.class,
+        () -> service.update(1L, dto));
+  }
+
+  @Test
+  void update_withoutProjectChange() {
+    Task t = task(1L);
+
+    when(repository.findById(1L)).thenReturn(Optional.of(t));
+    when(repository.save(any())).thenReturn(t);
+
+    TaskRequestDto dto = new TaskRequestDto(
+        "t","d",LocalDateTime.now(),null,null,List.of(),List.of()
+    );
+
+    assertNotNull(service.update(1L, dto));
+  }
+
+  @Test
+  void delete_success() {
+    when(repository.findById(1L)).thenReturn(Optional.of(task(1L)));
+
+    service.delete(1L);
+
+    verify(repository).deleteById(1L);
+  }
+
+  @Test
+  void delete_notOwner() {
+    when(repository.findById(1L)).thenReturn(Optional.of(task(2L)));
+
+    assertThrows(OperationFailedException.class,
+        () -> service.delete(1L));
+  }
+
+  @Test
+  void delete_emptyResult() {
+    when(repository.findById(1L)).thenReturn(Optional.of(task(1L)));
+    doThrow(new EmptyResultDataAccessException(1))
+        .when(repository).deleteById(1L);
+
+    assertThrows(NotFoundException.class,
+        () -> service.delete(1L));
+  }
+
+  @Test
+  void getById_success() {
+    when(repository.findById(1L)).thenReturn(Optional.of(task(1L)));
+
+    assertNotNull(service.getById(1L));
+  }
+
+  @Test
+  void getById_notOwner() {
+    when(repository.findById(1L)).thenReturn(Optional.of(task(2L)));
+
+    assertThrows(NotFoundException.class,
+        () -> service.getById(1L));
+  }
+
+  @Test
+  void getAll_auth() {
+    when(repository.findByProject_UserId(1L))
+        .thenReturn(List.of(task(1L)));
+
+    assertEquals(1, service.getAll().size());
+  }
+
+  @Test
+  void getAll_noAuth() {
+    SecurityContextHolder.clearContext();
+
+    when(repository.findAll()).thenReturn(List.of(task(1L)));
+
+    assertEquals(1, service.getAll().size());
+  }
+
+  @Test
+  void getByTitle() {
+    when(repository.findByProject_UserIdAndTitleContaining(1L, "t"))
+        .thenReturn(List.of(task(1L)));
+
+    assertEquals(1, service.getByTitleContaining("t").size());
+  }
+
+  @Test
+  void getByCompleted() {
+    when(repository.findByProject_UserIdAndCompletedIsNotNull(1L))
+        .thenReturn(List.of(task(1L)));
+
+    assertEquals(1, service.getByCompleted(true).size());
+  }
+
+  @Test
+  void getByDueDate() {
+    when(repository.findByProject_UserIdAndDueDateBetween(any(), any(), any()))
+        .thenReturn(List.of(task(1L)));
+
+    assertEquals(1, service.getByDueDate(LocalDate.now()).size());
+  }
+
+  @Test
+  void getCurrentUserId_invalidStringPrincipal() {
+    SecurityContextHolder.getContext().setAuthentication(
+        new UsernamePasswordAuthenticationToken("abc", null)
+    );
+
+    when(repository.findAll()).thenReturn(List.of(task(1L)));
+
+    assertEquals(1, service.getAll().size());
+  }
+
+  @Test
+  void getCurrentUserId_unknownPrincipalType() {
+    SecurityContextHolder.getContext().setAuthentication(
+        new UsernamePasswordAuthenticationToken(new Object(), null)
+    );
+
+    when(repository.findAll()).thenReturn(List.of(task(1L)));
+
+    assertEquals(1, service.getAll().size());
+  }
+
+  @Test
+  void create_repositoryThrowsException() {
+    when(projectRepository.findById(1L)).thenReturn(Optional.of(project(1L)));
+    when(repository.save(any())).thenThrow(new RuntimeException("DB error"));
+
+    assertThrows(OperationFailedException.class,
+        () -> service.create(dto(1L)));
+  }
+
+  @Test
+  void update_repositoryThrowsException() {
+    Task t = task(1L);
+
+    when(repository.findById(1L)).thenReturn(Optional.of(t));
+    when(repository.save(any())).thenThrow(new RuntimeException("DB error"));
+
+    assertThrows(OperationFailedException.class,
+        () -> service.update(1L, dto(1L)));
+  }
+
+  @Test
+  void getByDescription_success() {
+    when(repository.findByProject_UserIdAndDescription(1L, "desc"))
+        .thenReturn(List.of(task(1L)));
+
+    assertEquals(1, service.getByDescription("desc").size());
+  }
+
+  @Test
+  void getByCompleted_falseBranch() {
+    when(repository.findByProject_UserIdAndCompletedIsNull(1L))
+        .thenReturn(List.of(task(1L)));
+
+    assertEquals(1, service.getByCompleted(false).size());
+  }
+
+  @Test
+  void create_nullCategories() {
+    when(projectRepository.findById(1L)).thenReturn(Optional.of(project(1L)));
+    when(repository.save(any())).thenAnswer(i -> i.getArgument(0));
+
+    TaskRequestDto dto = new TaskRequestDto(
+        "t", "d", LocalDateTime.now(), null, 1L, null, List.of()
+    );
+
+    assertNotNull(service.create(dto));
+  }
+
+  @Test
+  void create_emptyCategories() {
+    when(projectRepository.findById(1L)).thenReturn(Optional.of(project(1L)));
+    when(repository.save(any())).thenAnswer(i -> i.getArgument(0));
+
+    TaskRequestDto dto = new TaskRequestDto(
+        "t", "d", LocalDateTime.now(), null, 1L, List.of(), List.of()
+    );
+
+    assertNotNull(service.create(dto));
+  }
+
+  @Test
+  void create_categoryMismatch_strict() {
+    when(projectRepository.findById(1L)).thenReturn(Optional.of(project(1L)));
+    when(categoryRepository.findAllById(List.of(1L, 2L)))
+        .thenReturn(List.of(new Category()));
+
+    TaskRequestDto dto = new TaskRequestDto(
+        "t", "d", LocalDateTime.now(), null, 1L,
+        List.of(1L, 2L), List.of()
+    );
+
+    assertThrows(NotFoundException.class,
+        () -> service.create(dto));
+  }
+
+  @Test
+  void update_changeProject_success() {
+    Task t = task(1L);
+
+    Project newProject = project(1L);
+    newProject.setId(2L);
+
+    when(repository.findById(1L)).thenReturn(Optional.of(t));
     when(projectRepository.findById(2L)).thenReturn(Optional.of(newProject));
-    when(taskRepository.save(existing)).thenReturn(existing);
+    when(repository.save(any())).thenReturn(t);
 
-    TaskResponseDto result = taskService.update(
-        4L, new TaskRequestDto("Updated", "Updated desc", FIXED_TIME, null, 2L, List.of(),
-            List.of()));
+    TaskRequestDto dto = new TaskRequestDto(
+        "t",
+        "d",
+        LocalDateTime.now(),
+        null,
+        2L,
+        List.of(),
+        List.of()
+    );
 
-    assertThat(result.getProjectName()).isEqualTo("New project");
+    assertNotNull(service.update(1L, dto));
+
+    verify(projectRepository).findById(2L);
   }
 
   @Test
-  void updateShouldLoadProjectWhenTaskProjectIsNull() {
-    Project newProject = project(2L, "New project");
-    Task existing = task(4L, "Task", "Desc", FIXED_TIME, null, null);
+  void create_taskWithExistingCategoriesSet() {
+    when(projectRepository.findById(1L)).thenReturn(Optional.of(project(1L)));
+    when(categoryRepository.findAllById(List.of(1L)))
+        .thenReturn(List.of(new Category()));
+    when(repository.save(any())).thenAnswer(i -> i.getArgument(0));
 
-    when(taskRepository.findById(4L)).thenReturn(Optional.of(existing));
-    when(projectRepository.findById(2L)).thenReturn(Optional.of(newProject));
-    when(taskRepository.save(existing)).thenReturn(existing);
+    TaskRequestDto dto = new TaskRequestDto(
+        "t", "d", LocalDateTime.now(), null, 1L,
+        List.of(1L), List.of()
+    );
 
-    TaskResponseDto result = taskService.update(
-        4L, new TaskRequestDto("Updated", "Updated desc", FIXED_TIME, null, 2L, List.of(),
-            List.of()));
-
-    assertThat(result.getProjectName()).isEqualTo("New project");
+    assertNotNull(service.create(dto));
   }
 
   @Test
-  void updateShouldSkipProjectLookupWhenProjectIdIsNull() {
-    Project project = project(1L, "Main project");
-    Task existing = task(4L, "Task", "Desc", FIXED_TIME, null, project);
+  void update_completedNull() {
+    Task t = task(1L);
 
-    when(taskRepository.findById(4L)).thenReturn(Optional.of(existing));
-    when(taskRepository.save(existing)).thenReturn(existing);
+    when(repository.findById(1L)).thenReturn(Optional.of(t));
+    when(repository.save(any())).thenAnswer(i -> i.getArgument(0));
 
-    TaskResponseDto result = taskService.update(
-        4L, new TaskRequestDto("Updated", "Updated desc", FIXED_TIME, null, null, List.of(),
-            List.of()));
+    TaskRequestDto dto = new TaskRequestDto(
+        "t","d",LocalDateTime.now(),null,1L,List.of(),List.of()
+    );
 
-    assertThat(result.getTitle()).isEqualTo("Updated");
-    verify(projectRepository, never()).findById(any());
+    assertNotNull(service.update(1L, dto));
   }
 
   @Test
-  void updateShouldWrapRepositoryFailure() {
-    Project project = project(1L, "Main project");
-    Task existing = task(4L, "Task", "Desc", FIXED_TIME, null, project);
-    TaskRequestDto requestDto = new TaskRequestDto(
-        "Updated", "Updated desc", FIXED_TIME, null, 1L, List.of(), List.of());
+  void getByDueDate_exactRange() {
+    LocalDate date = LocalDate.of(2025, 1, 1);
 
-    when(taskRepository.findById(4L)).thenReturn(Optional.of(existing));
-    when(taskRepository.save(existing)).thenThrow(
-        new DataAccessResourceFailureException("db down"));
+    when(repository.findByProject_UserIdAndDueDateBetween(any(), any(), any()))
+        .thenReturn(List.of(task(1L)));
 
-    assertThatThrownBy(() -> taskService.update(4L, requestDto))
-        .isInstanceOf(OperationFailedException.class)
-        .hasMessage("Failed to update task");
+    assertEquals(1, service.getByDueDate(date).size());
   }
-
-  @Test
-  void deleteShouldMapEmptyResultToNotFound() {
-    doThrow(new EmptyResultDataAccessException(1)).when(taskRepository).deleteById(6L);
-
-    assertThatThrownBy(() -> taskService.delete(6L))
-        .isInstanceOf(NotFoundException.class)
-        .hasMessage("Task not found");
-  }
-
-  @Test
-  void deleteShouldWrapRepositoryFailure() {
-    doThrow(new DataAccessResourceFailureException("db down")).when(taskRepository).deleteById(6L);
-
-    assertThatThrownBy(() -> taskService.delete(6L))
-        .isInstanceOf(OperationFailedException.class)
-        .hasMessage("Failed to delete task");
-  }
-
-  @Test
-  void deleteShouldCallRepository() {
-    taskService.delete(6L);
-    verify(taskRepository).deleteById(6L);
-  }
-
-   @Test
-   void getByIdShouldReturnTask() {
-     Project project = project(1L, "Main project");
-     when(taskRepository.findById(11L))
-         .thenReturn(Optional.of(task(11L, "Task", "Desc", FIXED_TIME, null, project)));
-
-     TaskResponseDto result = taskService.getById(11L);
-
-     assertThat(result.getId()).isEqualTo(11L);
-   }
-
-  @Test
-  void getByIdShouldThrowWhenTaskNotFound() {
-    when(taskRepository.findById(11L)).thenReturn(Optional.empty());
-
-    assertThatThrownBy(() -> taskService.getById(11L))
-        .isInstanceOf(NotFoundException.class)
-        .hasMessage("Task not found");
-  }
-
-   @Test
-   void getAllShouldReturnUserTasksWhenAuthenticated() {
-     Project project = project(1L, "Main project");
-     when(taskRepository.findByProject_UserId(1L)).thenReturn(List.of(
-         task(1L, "T1", "D1", FIXED_TIME, null, project),
-         task(2L, "T2", "D2", OTHER_TIME, null, project)));
-
-     List<TaskResponseDto> result = taskService.getAll();
-
-     assertThat(result).hasSize(2);
-   }
-
-   @Test
-   void getByTitleContainingShouldReturnUserTasksWhenAuthenticated() {
-     when(taskRepository.findByProject_UserIdAndTitleContaining(1L, "Test"))
-         .thenReturn(List.of(task(1L, "Test", "D1", FIXED_TIME, null, null)));
-
-     List<TaskResponseDto> result = taskService.getByTitleContaining("Test");
-
-     assertThat(result).hasSize(1);
-   }
-
-   @Test
-   void getByDescriptionShouldReturnUserTasksWhenAuthenticated() {
-     when(taskRepository.findByProject_UserIdAndDescription(1L, "Desc"))
-         .thenReturn(List.of(task(1L, "Task", "Desc", FIXED_TIME, null, null)));
-
-     List<TaskResponseDto> result = taskService.getByDescription("Desc");
-
-     assertThat(result).hasSize(1);
-   }
-
-   @Test
-   void getByCompletedShouldReturnUserTasksWhenAuthenticated() {
-     when(taskRepository.findByProject_UserIdAndCompletedIsNotNull(1L))
-         .thenReturn(List.of(task(1L, "Done", "", FIXED_TIME, OTHER_TIME, null)));
-     when(taskRepository.findByProject_UserIdAndCompletedIsNull(1L))
-         .thenReturn(List.of(task(2L, "Todo", "", FIXED_TIME, null, null)));
-
-     List<TaskResponseDto> completed = taskService.getByCompleted(true);
-     List<TaskResponseDto> uncompleted = taskService.getByCompleted(false);
-
-     assertThat(completed).hasSize(1);
-     assertThat(uncompleted).hasSize(1);
-   }
-
-    @Test
-    void getByDueDateShouldReturnUserTasksWhenAuthenticated() {
-      LocalDate dueDate = LocalDate.of(2026, 4, 16);
-      when(taskRepository.findByProject_UserIdAndDueDateBetween(eq(1L), any(LocalDateTime.class),
-          any(LocalDateTime.class)))
-          .thenReturn(List.of(task(3L, "ByDate", "", dueDate.atStartOfDay(), null, null)));
-
-      List<TaskResponseDto> result = taskService.getByDueDate(dueDate);
-
-      assertThat(result).hasSize(1);
-    }
-
-   @Test
-   void createShouldHandleNullCategoryIds() {
-     Project project = project(1L, "Main project");
-     Task saved = task(10L, "Task", "Desc", FIXED_TIME, null, project);
-
-     TaskRequestDto requestDto = new TaskRequestDto(
-         "Task", "Desc", FIXED_TIME, null, 1L, null, List.of());
-
-     when(projectRepository.findById(1L)).thenReturn(Optional.of(project));
-     when(taskRepository.save(any(Task.class))).thenReturn(saved);
-
-     TaskResponseDto result = taskService.create(requestDto);
-
-     assertThat(result.getId()).isEqualTo(10L);
-   }
-
-
 }

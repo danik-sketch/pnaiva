@@ -93,14 +93,12 @@ public class UserService {
   }
 
   public Optional<User> findByUsernameOrEmailAndPassword(String login, String password) {
-    Optional<User> byUsername = userRepository.findByUsername(login);
-    if (byUsername.isPresent() && byUsername.get().getPassword().equals(password)) {
-      return byUsername;
-    }
-    Optional<User> byEmail = userRepository.findByEmail(login);
-    if (byEmail.isPresent() && byEmail.get().getPassword().equals(password)) {
-      return byEmail;
-    }
-    return Optional.empty();
+
+    Optional<User> userOpt = login.contains("@")
+        ? userRepository.findByEmail(login)
+        : userRepository.findByUsername(login);
+
+    return userOpt
+        .filter(u -> u.getPassword().equals(password));
   }
 }

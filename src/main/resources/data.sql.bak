@@ -1,0 +1,53 @@
+TRUNCATE reminders, task_categories, tasks, projects, users, categories RESTART IDENTITY CASCADE;
+
+INSERT INTO users (username, email, password)
+VALUES ('daniil_developer', 'daniil@bsuir.by', '$2a$10$eImiTXuWVxfM37uY4JANjQ==');
+
+INSERT INTO projects (id, name, description, user_id)
+VALUES
+    (1, 'БГУИР (3 курс)', 'Учебные дисциплины, курсовые и лабы', 1),
+    (2, 'Dotfiles & OS', 'Кастомизация Arch Linux, Hyprland и скрипты', 1),
+    (3, 'PNAIVA Backend', 'Spring Boot API для личного ассистента', 1),
+    (4, 'Self-Improvement', 'Развитие, навыки и здоровье', 1);
+
+INSERT INTO categories (id, title)
+VALUES
+    (1, 'Backend'), (2, 'Frontend'), (3, 'Database'), (4, 'DevOps'),
+    (5, 'Security'), (6, 'Testing'), (7, 'Architecture'), (8, 'Refactoring'),
+    (9, 'Linux'), (10, 'C/C++'), (11, 'Java/Spring'), (12, 'Python'),
+    (13, 'University'), (14, 'OSISP'), (15, 'SPO'), (16, 'Coursework'),
+    (17, 'Bug'), (18, 'Feature'), (19, 'Idea'), (20, 'Urgent'),
+    (21, 'High Priority'), (22, 'Low Priority'), (23, 'Learning'), (24, 'English'), (25, 'Health');
+
+INSERT INTO tasks (id, title, description, completed, due_date, project_id)
+VALUES
+    (1, 'Курсач ОСиСП', 'Реализовать алгоритм поиска дубликатов через хэш-таблицу', NULL, '2026-05-20 12:00:00', 1),
+    (2, 'Лаба по СПО', 'Лексический анализатор на Flex', '2026-05-01 16:30:00', '2026-05-02 10:00:00', 1),
+    (3, 'Экзамен: Экономика', 'Подготовить ответы по списку вопросов', NULL, '2026-06-10 09:00:00', 1),
+    (4, 'Hyprland Tearing', 'Настроить tearing во встроенном конфиге для игр', NULL, '2026-05-04 15:00:00', 2),
+    (5, 'Kitty Theme Upd', 'Обновить цветовую схему и прозрачность', '2026-05-02 11:00:00', '2026-05-02 12:00:00', 2),
+    (6, 'Pacman Cache Clean', 'Настроить hook для paccache', NULL, '2026-05-10 18:00:00', 2),
+    (7, 'Hibernate N+1', 'Оптимизировать загрузку связанных сущностей', NULL, '2026-05-05 14:00:00', 3),
+    (8, 'Dockerize API', 'Собрать легкий JRE образ через multistage build', '2026-04-30 20:00:00', '2026-05-01 10:00:00', 3),
+    (9, 'Swagger UI', 'Аннотировать контроллеры для документации', NULL, '2026-05-08 17:00:00', 3),
+    (10, 'English Grammar', 'Conditionals 0, 1, 2 theory', NULL, '2026-05-06 19:00:00', 4),
+    (11, 'Workout', 'Силовая тренировка в зале', '2026-05-02 18:00:00', '2026-05-02 18:00:00', 4);
+
+INSERT INTO task_categories (task_id, category_id)
+VALUES
+    (1, 13), (1, 14), (1, 16), (1, 10), (1, 21),
+    (2, 13), (2, 15), (2, 10),
+    (4, 9), (4, 17), (4, 21),
+    (5, 9), (5, 18),
+    (6, 9), (6, 4), (6, 22),
+    (7, 1), (7, 3), (7, 11), (7, 8), (7, 21),
+    (8, 4), (8, 1), (8, 11),
+    (9, 1), (9, 23),
+    (10, 24), (10, 23),
+    (11, 25);
+
+INSERT INTO reminders (time, message, task_id)
+VALUES
+    ('2026-05-04 10:00:00', 'Разобраться с тирингом в конфигах!', 4),
+    ('2026-05-05 09:00:00', 'Нужно пофиксить N+1 запросы в API', 7),
+    ('2026-05-19 18:00:00', 'Завтра дедлайн по сдаче курсача!', 1);

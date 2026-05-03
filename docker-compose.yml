@@ -11,8 +11,8 @@ services:
 
   backend:
     build:
-      context: .                          # Корень проекта (тут лежит pom.xml и src)
-      dockerfile: docker/backend/Dockerfile # Путь к файлу сборки
+      context: .
+      dockerfile: docker/backend/Dockerfile
     container_name: notebook-backend
     depends_on:
       - db
@@ -25,7 +25,7 @@ services:
 
   frontend:
     build:
-      context: ./frontend                 # Папка с фронтендом
+      context: ./frontend
       dockerfile: ../docker/frontend/Dockerfile
     container_name: notebook-frontend
     ports:

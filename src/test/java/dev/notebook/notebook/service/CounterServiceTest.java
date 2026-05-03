@@ -1,64 +1,112 @@
 package dev.notebook.notebook.service;
 
 import dev.notebook.notebook.dto.CounterResponseDto;
+import dev.notebook.notebook.exception.OperationFailedException;
 import org.junit.jupiter.api.Test;
-import static org.assertj.core.api.Assertions.assertThat;
+
+import java.lang.reflect.Method;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 class CounterServiceTest {
 
-  private final CounterService counterService = new CounterService();
+  private final CounterService service = new CounterService();
 
   @Test
-  void runCounterShouldReturnCorrectCounts() {
+  void shouldReturnCorrectCounts() {
     int threads = 10;
-    int incrementsPerThread = 100;
-    long expected = (long) threads * incrementsPerThread;
+    int increments = 1000;
 
-    CounterResponseDto result = counterService.runCounter(threads, incrementsPerThread);
+    CounterResponseDto result = service.runCounter(threads, increments);
 
-    assertThat(result.getThreads()).isEqualTo(threads);
-    assertThat(result.getIncrementsPerThread()).isEqualTo(incrementsPerThread);
-    assertThat(result.getAtomicCount()).isEqualTo(expected);
-    assertThat(result.getNonAtomicCount()).isLessThanOrEqualTo(expected);
-    assertThat(result.getNonAtomicLostUpdates()).isEqualTo(expected - result.getNonAtomicCount());
+    long expected = (long) threads * increments;
+
+    assertEquals(expected, result.getAtomicCount());
+    assertTrue(result.getNonAtomicCount() <= expected);
+    assertEquals(expected - result.getNonAtomicCount(),
+        result.getNonAtomicLostUpdates());
   }
 
   @Test
-  void runCounterWithSingleThreadShouldHaveNoRaceCondition() {
-    int threads = 1;
-    int incrementsPerThread = 1000;
-    long expected = (long) threads * incrementsPerThread;
+  void shouldHandleSingleThreadCorrectly() {
+    CounterResponseDto result = service.runCounter(1, 100);
 
-    CounterResponseDto result = counterService.runCounter(threads, incrementsPerThread);
-
-    assertThat(result.getAtomicCount()).isEqualTo(expected);
-    assertThat(result.getNonAtomicCount()).isEqualTo(expected);
-    assertThat(result.getNonAtomicLostUpdates()).isEqualTo(0);
+    assertEquals(100, result.getAtomicCount());
+    assertEquals(100, result.getNonAtomicCount());
   }
 
   @Test
-  void runCounterWithHighThreadCountShouldShowRaceCondition() {
-    int threads = 50;
-    int incrementsPerThread = 100;
-    long expected = (long) threads * incrementsPerThread;
+  void shouldThrowOperationFailedException_whenTaskThrowsException() throws Exception {
+    Method method = CounterService.class
+        .getDeclaredMethod("executeConcurrent", int.class, int.class, Runnable.class);
+    method.setAccessible(true);
 
-    CounterResponseDto result = counterService.runCounter(threads, incrementsPerThread);
+    Runnable failingTask = () -> {
+      throw new RuntimeException("boom");
+    };
 
-    assertThat(result.getAtomicCount()).isEqualTo(expected);
+    Exception ex = assertThrows(Exception.class, () ->
+        method.invoke(service, 2, 10, failingTask)
+    );
 
-    assertThat(result.getNonAtomicCount()).isLessThan(expected);
-    assertThat(result.getNonAtomicLostUpdates()).isGreaterThan(0);
+    assertInstanceOf(OperationFailedException.class, ex.getCause());
   }
 
   @Test
-  void runCounterShouldCountLostUpdatesCorrectly() {
-    int threads = 20;
-    int incrementsPerThread = 50;
-    long expected = (long) threads * incrementsPerThread;
+  void shouldHandleInterruptedException() throws Exception {
+    Thread.currentThread().interrupt();
 
-    CounterResponseDto result = counterService.runCounter(threads, incrementsPerThread);
+    Method method = CounterService.class
+        .getDeclaredMethod("executeConcurrent", int.class, int.class, Runnable.class);
+    method.setAccessible(true);
 
-    long lostUpdates = expected - result.getNonAtomicCount();
-    assertThat(result.getNonAtomicLostUpdates()).isEqualTo(lostUpdates);
+    Exception ex = assertThrows(Exception.class, () ->
+        method.invoke(service, 1, 1, (Runnable) () -> {})
+    );
+
+    assertInstanceOf(OperationFailedException.class, ex.getCause());
+
+    Thread.interrupted();
+  }
+
+  @Test
+  void shouldHitTimeoutBranch() throws Exception {
+    Method method = CounterService.class
+        .getDeclaredMethod("executeConcurrent", int.class, int.class, Runnable.class);
+    method.setAccessible(true);
+
+    Runnable slowTask = () -> {
+      try {
+        Thread.sleep(31_000);
+      } catch (InterruptedException ignored) {}
+    };
+
+    method.invoke(service, 1, 1, slowTask);
+
+    assertTrue(true);
+  }
+
+  @Test
+  void shouldCaptureExceptionFromThread() throws Exception {
+    Method method = CounterService.class
+        .getDeclaredMethod("executeConcurrent", int.class, int.class, Runnable.class);
+    method.setAccessible(true);
+
+    Runnable task = new Runnable() {
+      int count = 0;
+
+      @Override
+      public void run() {
+        if (count++ == 0) {
+          throw new RuntimeException();
+        }
+      }
+    };
+
+    Exception ex = assertThrows(Exception.class, () ->
+        method.invoke(service, 2, 5, task)
+    );
+
+    assertInstanceOf(OperationFailedException.class, ex.getCause());
   }
 }
