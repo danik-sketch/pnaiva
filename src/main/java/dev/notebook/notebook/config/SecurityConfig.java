@@ -1,7 +1,6 @@
 package dev.notebook.notebook.config;
 
 import dev.notebook.notebook.security.JwtAuthenticationFilter;
-import java.util.Arrays;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
