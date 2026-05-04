@@ -28,72 +28,32 @@ public class SecurityConfig {
   private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
   @Bean
-  public SecurityFilterChain securityFilterChain(HttpSecurity http) {
-    try {
-      http
-          .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-          .csrf(AbstractHttpConfigurer::disable)
-          .httpBasic(AbstractHttpConfigurer::disable)
-          .formLogin(AbstractHttpConfigurer::disable)
-          .logout(AbstractHttpConfigurer::disable)
-
-          .sessionManagement(session ->
-              session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-          )
-
-          .authorizeHttpRequests(auth -> auth
-              .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-              .requestMatchers(
-                  "/",
-                  "/api/auth/**",
-                  "/api-docs/**",
-                  "/v3/api-docs/**",
-                  "/swagger-ui/**",
-                  "/swagger-ui.html",
-                  "/actuator/**",
-                  "/index.html",
-                  "/assets/**",
-                  "/*.svg",
-                  "/*.ico"
-              ).permitAll()
-              .anyRequest().authenticated()
-          )
-
-          .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
-
-      return http.build();
-    } catch (Exception e) {
-      throw new IllegalStateException("Failed to configure Spring Security", e);
-    }
+  public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    return http
+        .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+        .csrf(AbstractHttpConfigurer::disable)
+        .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+        .authorizeHttpRequests(auth -> auth
+            .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+            .requestMatchers("/", "/api/auth/**", "/swagger-ui/**", "/v3/api-docs/**", "/actuator/**").permitAll()
+            .requestMatchers("/index.html", "/assets/**", "/*.svg", "/*.ico").permitAll()
+            .anyRequest().authenticated()
+        )
+        .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+        .build();
   }
 
   @Bean
   public CorsConfigurationSource corsConfigurationSource() {
-    CorsConfiguration configuration = new CorsConfiguration();
-
-    configuration.setAllowedOriginPatterns(List.of(
-        "http://localhost:3000",
-        "http://localhost:5173",
-        "https://*.railway.app",
-        "https://*.vercel.app"
-    ));
-
-    configuration.setAllowedMethods(
-        Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
-
-    configuration.setAllowedHeaders(Arrays.asList(
-        "Authorization",
-        "Content-Type",
-        "X-Requested-With",
-        "Accept",
-        "Origin"
-    ));
-
-    configuration.setAllowCredentials(true);
-    configuration.setMaxAge(3600L);
+    CorsConfiguration config = new CorsConfiguration();
+    config.setAllowedOriginPatterns(List.of("http://localhost:*", "https://*.railway.app", "https://*.vercel.app"));
+    config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
+    config.setAllowedHeaders(List.of("*"));
+    config.setAllowCredentials(true);
+    config.setMaxAge(3600L);
 
     UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-    source.registerCorsConfiguration("/**", configuration);
+    source.registerCorsConfiguration("/**", config);
     return source;
   }
 }
