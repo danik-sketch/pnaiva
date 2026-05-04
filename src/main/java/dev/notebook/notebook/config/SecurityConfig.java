@@ -24,35 +24,32 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 @RequiredArgsConstructor
 @Order(Ordered.HIGHEST_PRECEDENCE)
 public class SecurityConfig {
-
-  private final JwtAuthenticationFilter jwtAuthenticationFilter;
+  private final JwtAuthenticationFilter jwtFilter;
 
   @Bean
-  public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+  public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
     return http
-        .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+        .cors(c -> c.configurationSource(corsSource()))
         .csrf(AbstractHttpConfigurer::disable)
         .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-        .authorizeHttpRequests(auth -> auth
+        .authorizeHttpRequests(a -> a
             .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-            .requestMatchers("/", "/api/auth/**", "/swagger-ui/**", "/v3/api-docs/**", "/actuator/**").permitAll()
-            .requestMatchers("/index.html", "/assets/**", "/*.svg", "/*.ico").permitAll()
+            .requestMatchers("/", "/api/auth/**", "/swagger-ui/**", "/v3/api-docs/**", "/actuator/**", "/index.html", "/assets/**", "/*.svg", "/*.ico").permitAll()
             .anyRequest().authenticated()
         )
-        .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+        .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
         .build();
   }
 
   @Bean
-  public CorsConfigurationSource corsConfigurationSource() {
-    CorsConfiguration config = new CorsConfiguration();
+  public CorsConfigurationSource corsSource() {
+    var config = new CorsConfiguration();
     config.setAllowedOriginPatterns(List.of("http://localhost:*", "https://*.railway.app", "https://*.vercel.app"));
     config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
     config.setAllowedHeaders(List.of("*"));
     config.setAllowCredentials(true);
-    config.setMaxAge(3600L);
 
-    UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+    var source = new UrlBasedCorsConfigurationSource();
     source.registerCorsConfiguration("/**", config);
     return source;
   }
