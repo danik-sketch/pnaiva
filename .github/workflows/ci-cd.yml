@@ -23,19 +23,23 @@ jobs:
           cache: 'maven'
 
       - name: Build and Test
-        run: mvn -B clean package -DskipTests
+        run: mvn -B clean verify
 
   deploy:
     needs: build-and-test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Install Railway CLI
+        run: npm install -g @railway/cli
       - name: Deploy to Railway
-        run: npx @railway/cli up --service pnaiva --detach
+        run: railway up --service pnaiva --detach
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
 
   healthcheck:
     needs: deploy
     runs-on: ubuntu-latest
     steps:
       - name: Health Check
-        run: curl --silent --show-error --fail --retry 12 --retry-delay 10 --retry-all-errors "$HEALTH_URL"
+        run: curl --silent --show-error --fail --retry 15 --retry-delay 10 --retry-all-errors "$HEALTH_URL"
