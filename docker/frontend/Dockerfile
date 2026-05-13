@@ -16,8 +16,7 @@ WORKDIR /app
 ENV NODE_ENV=production
 
 COPY --from=builder /app/public ./public
-COPY --from=builder /app/.next/standalone/frontend ./
-COPY --from=builder /app/.next/standalone/node_modules ./node_modules
+COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 
 CMD ["node", "server.js"]
